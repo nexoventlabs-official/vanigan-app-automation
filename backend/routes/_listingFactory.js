@@ -22,8 +22,8 @@ const MULTI_FIELDS = [
  *   multiImage       if true, enable cover/gallery/services image uploads
  *   cloudinaryService override Cloudinary service (uploadBuffer, destroy, ROOT)
  */
-function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService }) {
-  const { uploadBuffer, destroy, ROOT } = cloudinaryService || defaultCloud;
+function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService, perItemFolder = false }) {
+  const { uploadBuffer, destroy, ROOT, deleteByPrefix } = cloudinaryService || defaultCloud;
   const router = express.Router();
   const uploader = multiImage ? upload.fields(MULTI_FIELDS) : upload.single('image');
 
@@ -120,6 +120,15 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       applySimpleFields(doc, req.body, extraFields);
 
       const imgFile = getFile(req, 'image');
+      if (perItemFolder) {
+        const created = await Model.create(doc);
+        if (imgFile) {
+          const r = await uploadBuffer(imgFile.buffer, { folder: `${ROOT}/${folder}/${created._id}` });
+          created.image = r.secure_url; created.imagePublicId = r.public_id;
+          await created.save();
+        }
+        return res.json({ item: created });
+      }
       if (imgFile) {
         const r = await uploadBuffer(imgFile.buffer, { folder: `${ROOT}/${folder}` });
         doc.image = r.secure_url; doc.imagePublicId = r.public_id;
@@ -159,7 +168,8 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       const imgFile = getFile(req, 'image');
       if (imgFile) {
         if (item.imagePublicId) await destroy(item.imagePublicId).catch(() => {});
-        const r = await uploadBuffer(imgFile.buffer, { folder: `${ROOT}/${folder}` });
+        const imgFolder = perItemFolder ? `${ROOT}/${folder}/${item._id}` : `${ROOT}/${folder}`;
+        const r = await uploadBuffer(imgFile.buffer, { folder: imgFolder });
         item.image = r.secure_url; item.imagePublicId = r.public_id;
       }
       if (multiImage) {
@@ -185,10 +195,14 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
     try {
       const item = await Model.findById(req.params.id);
       if (!item) return res.json({ ok: true });
-      if (item.imagePublicId) await destroy(item.imagePublicId).catch(() => {});
-      if (item.coverImagePublicId) await destroy(item.coverImagePublicId).catch(() => {});
-      for (const g of (item.galleryImages || [])) if (g.publicId) await destroy(g.publicId).catch(() => {});
-      for (const s of (item.services || [])) if (s.imagePublicId) await destroy(s.imagePublicId).catch(() => {});
+      if (perItemFolder && deleteByPrefix) {
+        await deleteByPrefix(`${ROOT}/${folder}/${item._id}`).catch(() => {});
+      } else {
+        if (item.imagePublicId) await destroy(item.imagePublicId).catch(() => {});
+        if (item.coverImagePublicId) await destroy(item.coverImagePublicId).catch(() => {});
+        for (const g of (item.galleryImages || [])) if (g.publicId) await destroy(g.publicId).catch(() => {});
+        for (const s of (item.services || [])) if (s.imagePublicId) await destroy(s.imagePublicId).catch(() => {});
+      }
       await item.deleteOne();
       res.json({ ok: true });
     } catch (err) {

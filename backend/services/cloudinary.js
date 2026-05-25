@@ -32,4 +32,15 @@ async function destroy(publicId, { resource_type = 'image' } = {}) {
   }
 }
 
-module.exports = { cloudinary, uploadBuffer, destroy, ROOT };
+/** Delete every resource under a folder prefix, then remove the empty folder. */
+async function deleteByPrefix(prefix) {
+  if (!prefix) return;
+  try {
+    await cloudinary.api.delete_resources_by_prefix(prefix, { resource_type: 'image' });
+    await cloudinary.api.delete_folder(prefix).catch(() => {});
+  } catch (err) {
+    console.warn('[cloudinary] deleteByPrefix failed:', err.message);
+  }
+}
+
+module.exports = { cloudinary, uploadBuffer, destroy, deleteByPrefix, ROOT };
