@@ -24,8 +24,18 @@ export default function ListingPage({ title, resource, extraFields = [], default
       active: true,
       imageFile: null,
       image: '',
+      _coverFile: null,
+      coverImage: '',
+      galleryImages: [],
+      _galleryFiles: [],
+      _galleryToRemove: [],
+      services: Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null })),
     };
-    extraFields.forEach((f) => (base[f.name] = ''));
+    extraFields.forEach((f) => {
+      const t = f.type || '';
+      if (['coverimage', 'gallery', 'services', '_latlng_pair'].includes(t)) return;
+      if (!(f.name in base)) base[f.name] = '';
+    });
     return base;
   }, [extraFields]);
 
@@ -75,10 +85,18 @@ export default function ListingPage({ title, resource, extraFields = [], default
   const openEdit = (it) => {
     const next = { ...blank };
     Object.keys(next).forEach((k) => {
-      if (k === 'imageFile') return;
+      if (['imageFile', '_coverFile', '_galleryFiles', '_galleryToRemove'].includes(k)) return;
+      if (k === 'services' || k === 'galleryImages') return;
       if (it[k] !== undefined) next[k] = it[k];
     });
     next.image = it.image || '';
+    next.coverImage = it.coverImage || '';
+    next.galleryImages = Array.isArray(it.galleryImages) ? it.galleryImages : [];
+    if (Array.isArray(it.services) && it.services.length) {
+      const svcs = Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }));
+      it.services.forEach((s, i) => { if (i < 6) svcs[i] = { ...svcs[i], ...s, _file: null }; });
+      next.services = svcs;
+    }
     setForm(next);
     setEditingId(it._id);
     setShowForm(true);
@@ -98,8 +116,21 @@ export default function ListingPage({ title, resource, extraFields = [], default
       fd.append('district', form.district);
       fd.append('assembly', form.assembly);
       fd.append('active', String(form.active));
-      extraFields.forEach((f) => fd.append(f.name, form[f.name] || ''));
+      extraFields.forEach((f) => {
+        const t = f.type || '';
+        if (['coverimage', 'gallery', 'services', '_latlng_pair'].includes(t)) return;
+        fd.append(f.name, form[f.name] ?? '');
+      });
       if (form.imageFile) fd.append('image', form.imageFile);
+      if (form._coverFile) fd.append('coverImageFile', form._coverFile);
+      (form._galleryFiles || []).forEach((file) => fd.append('galleryFiles', file));
+      if ((form._galleryToRemove || []).length) fd.append('galleryToRemove', form._galleryToRemove.join(','));
+      (form.services || []).forEach((s, i) => {
+        fd.append(`service${i + 1}Name`,   s.name   || '');
+        fd.append(`service${i + 1}Price`,  s.price  || '');
+        fd.append(`service${i + 1}Detail`, s.detail || '');
+        if (s._file) fd.append(`service${i + 1}Image`, s._file);
+      });
 
       if (editingId) {
         await api.put(`/${resource}/${editingId}`, fd, {
@@ -333,6 +364,72 @@ export default function ListingPage({ title, resource, extraFields = [], default
                           </label>
                         );
                       })}
+                    </div>
+                  </div>
+                );
+
+                if (f.type === 'coverimage') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    {form.coverImage && !form._coverFile && (
+                      <img src={form.coverImage} alt="cover" className="w-full h-24 object-cover rounded-lg mb-2" />
+                    )}
+                    <input type="file" accept="image/*" className="input"
+                      onChange={(e) => setForm({ ...form, _coverFile: e.target.files?.[0] || null })} />
+                  </div>
+                );
+
+                if (f.type === 'gallery') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    {(form.galleryImages || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {form.galleryImages.map((img, idx) => (
+                          <div key={idx} className="relative">
+                            <img src={img.url} alt="" className="w-16 h-16 object-cover rounded border" />
+                            <button type="button"
+                              onClick={() => setForm((prev) => ({
+                                ...prev,
+                                galleryImages: prev.galleryImages.filter((_, i) => i !== idx),
+                                _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean),
+                              }))}
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(form._galleryFiles || []).length > 0 && (
+                      <div className="text-xs text-green-700 mb-1">{form._galleryFiles.length} new file(s) queued to upload</div>
+                    )}
+                    <input type="file" accept="image/*" multiple className="input"
+                      onChange={(e) => setForm((prev) => ({ ...prev, _galleryFiles: [...(prev._galleryFiles || []), ...Array.from(e.target.files || [])] }))} />
+                  </div>
+                );
+
+                if (f.type === 'services') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <div className="space-y-2">
+                      {(form.services || []).map((s, i) => (
+                        <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input className="input text-sm" placeholder="Name" value={s.name || ''}
+                              onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], name: e.target.value }; setForm({ ...form, services: svcs }); }} />
+                            <input className="input text-sm" placeholder="Price (₹)" value={s.price || ''}
+                              onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], price: e.target.value }; setForm({ ...form, services: svcs }); }} />
+                          </div>
+                          <textarea rows={2} className="input text-sm" placeholder="Details / Description" value={s.detail || ''}
+                            onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], detail: e.target.value }; setForm({ ...form, services: svcs }); }} />
+                          <div className="flex items-center gap-2">
+                            {s.image && !s._file && <img src={s.image} alt="" className="w-10 h-10 object-cover rounded" />}
+                            <input type="file" accept="image/*" className="input text-xs"
+                              onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], _file: e.target.files?.[0] || null }; setForm({ ...form, services: svcs }); }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
