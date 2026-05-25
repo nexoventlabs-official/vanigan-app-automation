@@ -14,9 +14,22 @@ router.get('/districts', (_req, res) => {
 });
 
 /* ── Registration form HTML ── */
-router.get('/register', (req, res) => {
+router.get('/register', async (req, res) => {
   const phone = String(req.query.phone || '').replace(/\D/g, '');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+  if (phone) {
+    const existing = await Business.findOne({ ownerPhone: phone }).lean().catch(() => null);
+    if (existing) {
+      return res.send(pageShell('Already Registered', `
+        <div class="icon">🏪</div>
+        <h1>Already Registered!</h1>
+        <p><strong>${escHtml(existing.name)}</strong> is already registered on Vanigan.</p>
+        <p class="sub">Our team will review and activate your listing shortly.<br>You'll receive a WhatsApp confirmation once approved. 🙏</p>
+      `));
+    }
+  }
+
   res.send(buildFormHtml(phone));
 });
 
@@ -205,7 +218,7 @@ function buildFormHtml(phone) {
 
       <div class="field">
         <label>Business Phone</label>
-        <input type="tel" name="phone" value="${escHtml(phone)}" placeholder="Contact number">
+        <input type="tel" name="phone" value="${escHtml(phone)}" placeholder="Contact number" style="background:#f3f4f6;color:#6b7280;cursor:not-allowed" readonly>
       </div>
 
       <div class="field">
