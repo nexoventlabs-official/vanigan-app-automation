@@ -36,24 +36,37 @@ router.get('/register', async (req, res) => {
 /* ── Handle form submission ── */
 router.post('/register', upload.single('image'), async (req, res) => {
   try {
-    const { name, category, description, district, assembly, address, phone, ownerPhone } = req.body;
+    const { name, category, description, district, assembly, address,
+            phone, ownerPhone, phone2, email, website, landmark,
+            openTime, closeTime } = req.body;
 
-    if (!name || !district || !assembly) {
+    if (!name || !address) {
       return res.status(400).setHeader('Content-Type', 'text/html').send(
-        pageShell('Missing Fields', `<div class="icon">⚠️</div><h1>Missing Required Fields</h1><p>Please go back and fill in Business Name, District, and Assembly.</p><a href="javascript:history.back()" class="btn">Go Back</a>`)
+        pageShell('Missing Fields', `<div class="icon">⚠️</div><h1>Missing Required Fields</h1><p>Please go back and fill in Business Name and Address.</p><a href="javascript:history.back()" class="btn">Go Back</a>`)
       );
     }
 
+    /* openDays checkboxes come as array or single string */
+    const rawDays = req.body.openDays;
+    const openDays = Array.isArray(rawDays) ? rawDays.join(',') : (rawDays || '');
+
     const doc = {
-      name: name.trim(),
-      category: (category || '').trim(),
+      name:        name.trim(),
+      category:    (category || '').trim(),
       description: (description || '').trim(),
-      district: district.trim(),
-      assembly: assembly.trim(),
-      address: (address || '').trim(),
-      phone: (phone || '').trim(),
-      ownerPhone: (ownerPhone || '').trim(),
-      active: false,
+      district:    (district || '').trim(),
+      assembly:    (assembly || '').trim(),
+      address:     (address || '').trim(),
+      phone:       (phone || '').trim(),
+      phone2:      (phone2 || '').trim(),
+      email:       (email || '').trim(),
+      website:     (website || '').trim(),
+      landmark:    (landmark || '').trim(),
+      openDays,
+      openTime:    (openTime || '').trim(),
+      closeTime:   (closeTime || '').trim(),
+      ownerPhone:  (ownerPhone || '').trim(),
+      active:      false,
     };
 
     if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
@@ -212,13 +225,56 @@ function buildFormHtml(phone) {
       </div>
 
       <div class="field">
-        <label>Address</label>
-        <textarea name="address" rows="2" placeholder="Full address of your business"></textarea>
+        <label>Address <span class="req">*</span></label>
+        <textarea name="address" rows="2" required placeholder="Full address of your business"></textarea>
       </div>
 
       <div class="field">
-        <label>Business Phone</label>
-        <input type="tel" name="phone" value="${escHtml(phone)}" placeholder="Contact number" style="background:#f3f4f6;color:#6b7280;cursor:not-allowed" readonly>
+        <label>Landmark / How to Reach</label>
+        <input type="text" name="landmark" placeholder="e.g. Near bus stand, opposite post office">
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>WhatsApp / Primary Phone <span class="req">*</span></label>
+          <input type="tel" name="phone" value="${escHtml(phone)}" style="background:#f3f4f6;color:#6b7280;cursor:not-allowed" readonly>
+        </div>
+        <div>
+          <label>Alternate Phone</label>
+          <input type="tel" name="phone2" placeholder="Second contact number">
+        </div>
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" placeholder="business@example.com">
+        </div>
+        <div>
+          <label>Website / Social Link</label>
+          <input type="url" name="website" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Opening Days</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="daysWrap">
+          ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d =>
+            `<label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:.85rem;cursor:pointer">
+              <input type="checkbox" name="openDays" value="${d}" style="width:auto;border:none;padding:0"> ${d}
+            </label>`).join('')}
+        </div>
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>Opening Time</label>
+          <input type="time" name="openTime">
+        </div>
+        <div>
+          <label>Closing Time</label>
+          <input type="time" name="closeTime">
+        </div>
       </div>
 
       <div class="field">
