@@ -1,8 +1,10 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 /**
  * A business listed in the directory. Shown to WhatsApp users after they
  * pick District + Assembly inside the flow.
+ * Uses BUSINESS_MONGODB_URI if set, otherwise falls back to the default connection.
  */
 const BusinessSchema = new mongoose.Schema(
   {
@@ -33,4 +35,10 @@ const BusinessSchema = new mongoose.Schema(
 
 BusinessSchema.index({ district: 1, assembly: 1, active: 1 });
 
-module.exports = mongoose.model('Business', BusinessSchema);
+const BUSINESS_URI = process.env.BUSINESS_MONGODB_URI;
+if (BUSINESS_URI) {
+  const conn = mongoose.createConnection(BUSINESS_URI);
+  module.exports = conn.model('Business', BusinessSchema);
+} else {
+  module.exports = mongoose.model('Business', BusinessSchema);
+}
