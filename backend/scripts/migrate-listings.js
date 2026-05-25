@@ -13,7 +13,7 @@ const readline = require('readline');
 const mongoose = require('mongoose');
 
 const SQL_FILE  = path.join(__dirname, '..', '..', '..', 'listings_complete.sql');
-const MONGO_URI = 'mongodb+srv://jiyasungcvslive786_db_user:GT1QzRGdednOxZgb@cluster0.qogvxjc.mongodb.net/vanigan?appName=Cluster0';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://contactgreenailabs_db_user:0jqqC0IeoU0lMKQf@cluster0.4pulawx.mongodb.net/venkatraman?appName=Cluster0';
 
 /* ── Column indices (0-based) ─────────────────────────────────── */
 const C = {
