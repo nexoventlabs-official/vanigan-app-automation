@@ -43,7 +43,13 @@ router.post('/register', upload.single('image'), async (req, res) => {
       active: false,
     };
 
-    if (req.file) {
+    if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
+      const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const result = await uploadBuffer(buffer, { folder: 'vanigan/businesses' });
+      doc.image = result.secure_url;
+      doc.imagePublicId = result.public_id;
+    } else if (req.file) {
       const result = await uploadBuffer(req.file.buffer, { folder: 'vanigan/businesses' });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
@@ -102,149 +108,240 @@ function pageShell(title, bodyContent) {
 }
 
 function buildFormHtml(phone) {
+  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Your Business — Vanigan</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config={theme:{extend:{colors:{brand:{50:'#fff7ed',100:'#ffedd5',500:'#f97316',600:'#ea580c',700:'#c2410c',800:'#9a3412',900:'#7c2d12'}}}}}</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff7ed;min-height:100vh;padding:24px 16px}
+    .wrap{max-width:560px;margin:0 auto}
+    .header{text-align:center;margin-bottom:24px}
+    .header .icon{font-size:40px;margin-bottom:6px}
+    .header h1{font-size:1.5rem;font-weight:700;color:#7c2d12}
+    .header p{font-size:.85rem;color:#888;margin-top:4px}
+    .card{background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.07);padding:24px;margin-bottom:16px}
+    label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:5px}
+    .req{color:#ef4444}
+    input,select,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:12px;padding:10px 14px;font-size:.9rem;outline:none;background:#fff;transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{border-color:#c2410c}
+    textarea{resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.row{grid-template-columns:1fr}}
+    .field{margin-bottom:16px}
+
+    /* Image crop area */
+    .img-upload-btn{width:100%;border:2px dashed #d1d5db;border-radius:14px;padding:20px;text-align:center;font-size:.85rem;color:#9ca3af;cursor:pointer;transition:border-color .2s,color .2s;background:none}
+    .img-upload-btn:hover{border-color:#c2410c;color:#c2410c}
+    .crop-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+    .crop-modal.active{display:flex}
+    .crop-box{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:480px}
+    .crop-box h2{font-size:1rem;font-weight:600;margin-bottom:12px;color:#1a1a1a}
+    .crop-img-wrap{max-height:55vh;overflow:hidden;border-radius:8px;background:#000}
+    .crop-img-wrap img{display:block;max-width:100%}
+    .crop-actions{display:flex;gap:10px;margin-top:14px}
+    .crop-actions button{flex:1;padding:11px;border-radius:10px;font-weight:600;font-size:.9rem;border:none;cursor:pointer}
+    .btn-crop{background:#c2410c;color:#fff}
+    .btn-cancel{background:#f3f4f6;color:#374151}
+    .preview-wrap{display:none;margin-bottom:10px}
+    .preview-wrap img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:2px solid #e5e7eb}
+
+    .submit-btn{width:100%;background:#c2410c;color:#fff;font-weight:600;padding:14px;border-radius:14px;border:none;font-size:1rem;cursor:pointer;transition:background .2s}
+    .submit-btn:hover{background:#9a3412}
+    .submit-btn:disabled{background:#9ca3af;cursor:not-allowed}
+    .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:12px}
+  </style>
 </head>
-<body class="bg-brand-50 min-h-screen py-8 px-4">
-  <div class="max-w-2xl mx-auto">
-
-    <div class="text-center mb-8">
-      <div class="text-4xl mb-2">🪔</div>
-      <h1 class="text-2xl font-bold text-brand-900">Vanigan</h1>
-      <p class="text-gray-500 text-sm mt-1">Register Your Business</p>
-    </div>
-
-    <form id="regForm" method="POST" action="/public/register" enctype="multipart/form-data"
-          class="bg-white rounded-2xl shadow-sm border border-brand-100 p-6 space-y-5">
-
-      <input type="hidden" name="ownerPhone" value="${escHtml(phone)}">
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Business Name <span class="text-red-500">*</span></label>
-        <input type="text" name="name" required
-               class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-               placeholder="e.g. Sri Lakshmi Stores">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Category</label>
-        <input type="text" name="category"
-               class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-               placeholder="e.g. Grocery, Textile, Restaurant">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-        <textarea name="description" rows="3"
-                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  placeholder="Brief description of your business"></textarea>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">District <span class="text-red-500">*</span></label>
-          <select name="district" id="districtSel" required
-                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-            <option value="">— Select District —</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Assembly Constituency <span class="text-red-500">*</span></label>
-          <select name="assembly" id="assemblySel" required
-                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
-            <option value="">— Select District first —</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-        <textarea name="address" rows="2"
-                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  placeholder="Full address of your business"></textarea>
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Business Phone Number</label>
-        <input type="tel" name="phone" value="${escHtml(phone)}"
-               class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-               placeholder="Contact number for this business">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Business Photo</label>
-        <input type="file" name="image" accept="image/*" id="imageInput"
-               class="hidden">
-        <div id="imagePreviewWrap" class="hidden mb-2">
-          <img id="imagePreview" class="h-32 rounded-xl object-cover border border-gray-200" alt="Preview">
-        </div>
-        <button type="button" onclick="document.getElementById('imageInput').click()"
-                class="w-full border-2 border-dashed border-gray-300 rounded-xl py-4 text-sm text-gray-500 hover:border-brand-500 hover:text-brand-600 transition">
-          📷 Tap to upload logo / storefront photo (max 5 MB)
-        </button>
-        <p class="text-xs text-gray-400 mt-1">Supported formats: JPG, PNG, WebP</p>
-      </div>
-
-      <button type="submit" id="submitBtn"
-              class="w-full bg-brand-700 hover:bg-brand-800 text-white font-semibold py-3 rounded-xl transition text-sm">
-        Submit Registration
-      </button>
-    </form>
-
-    <p class="text-center text-xs text-gray-400 mt-5">
-      Your listing will be reviewed by our team before going live.<br>
-      You will receive a WhatsApp confirmation once approved. 🙏
-    </p>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="icon">🪔</div>
+    <h1>Vanigan</h1>
+    <p>Register Your Business</p>
   </div>
 
-  <script>
-    let districtMap = {};
+  <form id="regForm" method="POST" action="${backendUrl}/public/register" enctype="multipart/form-data">
+    <div class="card">
+      <input type="hidden" name="ownerPhone" value="${escHtml(phone)}">
 
-    fetch('/public/districts')
-      .then(r => r.json())
-      .then(({ map }) => {
-        districtMap = map;
-        const sel = document.getElementById('districtSel');
-        Object.keys(map).forEach(d => {
-          const o = document.createElement('option');
-          o.value = d; o.textContent = d;
-          sel.appendChild(o);
-        });
-      });
+      <div class="field">
+        <label>Business Name <span class="req">*</span></label>
+        <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores">
+      </div>
 
-    document.getElementById('districtSel').addEventListener('change', function () {
-      const asel = document.getElementById('assemblySel');
-      asel.innerHTML = '<option value="">— Select Assembly —</option>';
-      (districtMap[this.value] || []).forEach(a => {
+      <div class="field">
+        <label>Category</label>
+        <input type="text" name="category" placeholder="e.g. Grocery, Textile, Restaurant">
+      </div>
+
+      <div class="field">
+        <label>Description</label>
+        <textarea name="description" rows="3" placeholder="Brief description of your business"></textarea>
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>District <span class="req">*</span></label>
+          <select name="district" id="districtSel" required>
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div>
+          <label>Assembly <span class="req">*</span></label>
+          <select name="assembly" id="assemblySel" required>
+            <option value="">Select district first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Address</label>
+        <textarea name="address" rows="2" placeholder="Full address of your business"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Business Phone</label>
+        <input type="tel" name="phone" value="${escHtml(phone)}" placeholder="Contact number">
+      </div>
+
+      <div class="field">
+        <label>Business Photo <span style="color:#888;font-weight:400">(1:1 square)</span></label>
+        <input type="file" name="image" id="imageInput" accept="image/*" style="display:none">
+        <input type="hidden" name="croppedImage" id="croppedImageInput">
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" src="" alt="Cropped preview">
+        </div>
+        <button type="button" class="img-upload-btn" onclick="document.getElementById('imageInput').click()">
+          📷 Tap to upload logo / photo
+        </button>
+        <p style="font-size:.75rem;color:#9ca3af;margin-top:5px">Crop to 1:1 square • JPG, PNG, WebP • max 5 MB</p>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
+    </div>
+  </form>
+
+  <p class="note">Your listing will be reviewed before going live.<br>You'll receive a WhatsApp confirmation once approved. 🙏</p>
+</div>
+
+<!-- Crop Modal -->
+<div class="crop-modal" id="cropModal">
+  <div class="crop-box">
+    <h2>✂️ Crop to Square</h2>
+    <div class="crop-img-wrap"><img id="cropImg" src="" alt="crop"></div>
+    <div class="crop-actions">
+      <button type="button" class="btn-cancel" onclick="closeCrop()">Cancel</button>
+      <button type="button" class="btn-crop" onclick="applyCrop()">Use This Crop</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+  const BACKEND = '${backendUrl}';
+  let districtMap = {};
+  let cropper = null;
+
+  /* ── Load districts ── */
+  fetch(BACKEND + '/public/districts')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(({ map }) => {
+      districtMap = map;
+      const sel = document.getElementById('districtSel');
+      sel.innerHTML = '<option value="">— Select District —</option>';
+      Object.keys(map).sort().forEach(d => {
         const o = document.createElement('option');
-        o.value = a; o.textContent = a;
-        asel.appendChild(o);
+        o.value = d; o.textContent = d;
+        sel.appendChild(o);
       });
+    })
+    .catch(err => {
+      const sel = document.getElementById('districtSel');
+      sel.innerHTML = '<option value="">Failed to load — refresh</option>';
+      console.error('Districts fetch failed:', err);
     });
 
-    document.getElementById('imageInput').addEventListener('change', function () {
-      const file = this.files[0];
-      if (!file) return;
+  document.getElementById('districtSel').addEventListener('change', function () {
+    const asel = document.getElementById('assemblySel');
+    asel.innerHTML = '<option value="">— Select Assembly —</option>';
+    (districtMap[this.value] || []).forEach(a => {
+      const o = document.createElement('option');
+      o.value = a; o.textContent = a;
+      asel.appendChild(o);
+    });
+  });
+
+  /* ── Image crop ── */
+  document.getElementById('imageInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('cropImg');
+      img.src = e.target.result;
+      document.getElementById('cropModal').classList.add('active');
+      if (cropper) { cropper.destroy(); cropper = null; }
+      cropper = new Cropper(img, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 1,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  function closeCrop() {
+    document.getElementById('cropModal').classList.remove('active');
+    if (cropper) { cropper.destroy(); cropper = null; }
+  }
+
+  function applyCrop() {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ width: 800, height: 800, imageSmoothingQuality: 'high' });
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      document.getElementById('previewImg').src = url;
+      document.getElementById('previewWrap').style.display = 'block';
+
+      /* Convert blob → base64 and store in hidden input for form submission */
       const reader = new FileReader();
       reader.onload = e => {
-        document.getElementById('imagePreview').src = e.target.result;
-        document.getElementById('imagePreviewWrap').classList.remove('hidden');
+        document.getElementById('croppedImageInput').value = e.target.result;
       };
-      reader.readAsDataURL(file);
-    });
+      reader.readAsDataURL(blob);
 
-    document.getElementById('regForm').addEventListener('submit', function () {
-      const btn = document.getElementById('submitBtn');
-      btn.textContent = 'Submitting…';
-      btn.disabled = true;
-    });
-  </script>
+      closeCrop();
+    }, 'image/jpeg', 0.88);
+  }
+
+  /* ── Submit ── */
+  document.getElementById('regForm').addEventListener('submit', function (e) {
+    const btn = document.getElementById('submitBtn');
+
+    /* If a crop was done, remove the file input so only base64 is sent */
+    const cropped = document.getElementById('croppedImageInput').value;
+    if (cropped) {
+      const fileInput = document.getElementById('imageInput');
+      fileInput.disabled = true;
+    }
+
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+  });
+</script>
 </body>
 </html>`;
 }
