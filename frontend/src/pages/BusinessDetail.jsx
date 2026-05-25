@@ -7,8 +7,27 @@ import {
 import api from '../api';
 import DistrictAssemblySelect from '../components/DistrictAssemblySelect.jsx';
 
+const CATEGORIES = [
+  'Emart','Hospitals','Transport','Electricals','Education','Sports',
+  'Real Estate','Spa and Facial','Digital Products','Anything on Hire',
+  'Automobile','B2B','Banquets','Bills & Recharge','Books',
+  'Cabs & Car rentals','Caterers','Civil Contractors','Courier',
+  'Daily Needs','Art & Artists','Doctor','Jobs','Jewellery','Labs',
+  'Language Classes','Bank','Medical','Modular Kitchen','Home Service',
+  'Packers and Movers','Party','Personal Care','Pest Control',
+  'Pet and Pet Care','Play School','Sports Goods','Training Institute',
+  'Transporters','Travel','Wedding','Auditor','Advocate','Cinema',
+  'Printing Services','Textiles','Photo Studio','Online service',
+  'Manufacturer','Export Import','Retailer and Stationery','Engineering',
+  'Distributor','Organic Products','Hotel and Restaurant',
+  'Online Ticket Booking','Advertising','Food Stall','IT And Software',
+  'All Shops','Repairs','Home Appliance','Demand Service',
+  'Spices','Butcher shop','TOURISM','Construction Materials','Insurance',
+  'Customs House','Shopping','Hostel and Mansion','AGRICULTURE','RELIGIOUS',
+];
+
 const EXTRA_FIELDS = [
-  { name: 'category',         label: 'Category',                      placeholder: 'e.g. Restaurant, Grocery, Textile' },
+  { name: 'category', label: 'Category', type: 'select', options: CATEGORIES },
   { name: 'subCategory',      label: 'Sub-Category',                  placeholder: 'e.g. Fast Food, Wholesale' },
   { name: 'address',          label: 'Address',                       type: 'textarea' },
   { name: 'landmark',         label: 'Landmark / How to Reach',       placeholder: 'Near bus stand, opp. post office' },
@@ -444,6 +463,19 @@ export default function BusinessDetail() {
                       <input className="input" placeholder="Longitude" value={form.lng || ''}
                         onChange={(e) => setForm({ ...form, lng: e.target.value })} />
                     </div>
+                  </div>
+                );
+
+                if (f.type === 'select') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <select className="input" value={form[f.name] || ''}
+                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                      <option value="">— Select —</option>
+                      {(f.options || []).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
                   </div>
                 );
 

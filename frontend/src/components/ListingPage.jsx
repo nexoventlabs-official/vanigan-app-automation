@@ -470,6 +470,19 @@ export default function ListingPage({ title, resource, extraFields = [], default
                   </div>
                 );
 
+                if (f.type === 'select') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <select className="input" value={form[f.name] || ''}
+                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                      <option value="">— Select —</option>
+                      {(f.options || []).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+
                 return (
                   <div key={f.name}>
                     <label className="label">{f.label}</label>

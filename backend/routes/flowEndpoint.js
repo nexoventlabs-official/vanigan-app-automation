@@ -10,7 +10,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const flowImages = require('../services/flowImages');
+const flowImages  = require('../services/flowImages');
+const CATEGORIES  = require('../services/categories');
 const districts = require('../services/districts');
 const { urlToBase64 } = require('../services/imageBase64');
 const meta = require('../services/metaCloud');
@@ -517,25 +518,12 @@ async function handleDataExchange({ screen, data, flow_token }) {
     };
   }
 
-  // ─── SELECT_ASSEMBLY → ITEM_LIST ───
+  // ─── SELECT_ASSEMBLY → SELECT_CATEGORY (business) or ITEM_LIST (others) ───
   if (screen === 'SELECT_ASSEMBLY') {
     const kind = data?.kind || 'business';
     const district = data?.district || '';
     const assembly = data?.assembly || '';
     const bannerKey = kindBannerKey(kind);
-    const items = await buildItemList(kind, district, assembly);
-
-    if (!items.length) {
-      return {
-        screen: 'INFO',
-        data: {
-          info_title: `No ${kindLabel(kind, true).toLowerCase()} listed yet`,
-          info_body:
-            `We do not have any ${kindLabel(kind, true).toLowerCase()} listed in ${assembly}, ${district} yet. ` +
-            `Please check back soon. 🪔`,
-        },
-      };
-    }
 
     if (phone) {
       await User.findOneAndUpdate(
@@ -545,6 +533,39 @@ async function handleDataExchange({ screen, data, flow_token }) {
       ).catch(() => {});
     }
 
+    // Business kind → show category selector before sending CTA link
+    if (kind === 'business') {
+      const catOptions = [
+        { id: 'All', title: '\uD83D\uDD0D All Categories' },
+        ...CATEGORIES.map((c) => ({ id: c, title: c })),
+      ];
+      return {
+        screen: 'SELECT_CATEGORY',
+        data: {
+          screen_banner: images[bannerKey] || '',
+          has_screen_banner: !!images[bannerKey],
+          screen_heading: `${assembly} — Select Category`,
+          kind,
+          district,
+          assembly,
+          categories: catOptions,
+        },
+      };
+    }
+
+    // Organizer / Member → existing list flow
+    const items = await buildItemList(kind, district, assembly);
+    if (!items.length) {
+      return {
+        screen: 'INFO',
+        data: {
+          info_title: `No ${kindLabel(kind, true).toLowerCase()} listed yet`,
+          info_body:
+            `We do not have any ${kindLabel(kind, true).toLowerCase()} listed in ${assembly}, ${district} yet. ` +
+            `Please check back soon. \uD83E\uDD54`,
+        },
+      };
+    }
     return {
       screen: 'ITEM_LIST',
       data: {
@@ -555,6 +576,47 @@ async function handleDataExchange({ screen, data, flow_token }) {
         district,
         assembly,
         items,
+      },
+    };
+  }
+
+  // ─── SELECT_CATEGORY → send CTA URL message + close flow ───
+  if (screen === 'SELECT_CATEGORY') {
+    const kind     = data?.kind || 'business';
+    const district = data?.district || '';
+    const assembly = data?.assembly || '';
+    const category = data?.selected_category || 'All';
+
+    const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+    const params = new URLSearchParams({ district, assembly });
+    if (category && category !== 'All') params.set('category', category);
+    const dirUrl = `${backendUrl}/public/dir?${params.toString()}`;
+
+    if (phone) {
+      const catLabel2 = (category && category !== 'All') ? category : 'All Categories';
+      const bodyText =
+        `\uD83C\uDFEA *Businesses in ${assembly}, ${district}*\n` +
+        `Category: *${catLabel2}*\n\n` +
+        `Tap the button below to browse the full listing with details and reviews.`;
+
+      // Fetch original banner URL (not base64) for the CTA image header
+      const bannerMap = await flowImages.getMap(['banner_business']);
+      const bannerUrl = bannerMap['banner_business'] || '';
+
+      meta.sendCtaUrlMessage(phone, {
+        headerImageUrl: bannerUrl || undefined,
+        bodyText,
+        footerText: 'Powered by Vanigan \uD83E\uDD54',
+        buttonText: '\uD83C\uDFEA View Businesses',
+        url: dirUrl,
+      }).catch(() => {});
+    }
+
+    return {
+      screen: 'INFO',
+      data: {
+        info_title: '\uD83C\uDFEA Business Directory',
+        info_body: `Tap *Close* \u2014 we\'re sending you the business list link for *${assembly}* right now! \uD83D\uDE4F`,
       },
     };
   }

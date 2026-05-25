@@ -7,6 +7,7 @@ const compression = require('compression');
 
 const authRoutes = require('./routes/auth');
 const publicRegisterRoutes = require('./routes/publicRegister');
+const publicBizDirRoutes   = require('./routes/publicBizDir');
 const webhookRoutes = require('./routes/webhook');
 const flowEndpointRoutes = require('./routes/flowEndpoint');
 const businessRoutes = require('./routes/businesses');
@@ -62,6 +63,7 @@ app.get('/', (_req, res) =>
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 app.use('/public', publicRegisterRoutes);
+app.use('/public/dir', publicBizDirRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/flow-endpoint', flowEndpointRoutes);

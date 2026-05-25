@@ -23,7 +23,8 @@ function buildFlowJSON() {
     routing_model: {
       SERVICE_SELECT: ['SELECT_DISTRICT', 'MY_BUSINESS_LIST', 'INFO'],
       SELECT_DISTRICT: ['SELECT_ASSEMBLY', 'INFO'],
-      SELECT_ASSEMBLY: ['ITEM_LIST', 'INFO'],
+      SELECT_ASSEMBLY: ['SELECT_CATEGORY', 'ITEM_LIST', 'INFO'],
+      SELECT_CATEGORY: ['INFO'],
       ITEM_LIST: ['ITEM_DETAILS', 'INFO'],
       MY_BUSINESS_LIST: ['ITEM_DETAILS', 'INFO'],
       ITEM_DETAILS: ['REVIEW', 'INFO'],
@@ -200,6 +201,69 @@ function buildFlowJSON() {
                   kind: '${data.kind}',
                   district: '${data.district}',
                   assembly: '${form.selected_assembly}',
+                },
+              },
+            },
+          ],
+        },
+      },
+
+      // ─── SELECT_CATEGORY ───
+      {
+        id: 'SELECT_CATEGORY',
+        title: 'Select Category',
+        data: {
+          screen_banner: { type: 'string', __example__: 'iVBORw0KGgo' },
+          has_screen_banner: { type: 'boolean', __example__: false },
+          screen_heading: { type: 'string', __example__: 'Select Category' },
+          kind: { type: 'string', __example__: 'business' },
+          district: { type: 'string', __example__: 'Chennai' },
+          assembly: { type: 'string', __example__: 'Mylapore' },
+          categories: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                title: { type: 'string' },
+              },
+            },
+            __example__: [
+              { id: 'All', title: '\uD83D\uDD0D All Categories' },
+              { id: 'Hospitals', title: 'Hospitals' },
+            ],
+          },
+        },
+        layout: {
+          type: 'SingleColumnLayout',
+          children: [
+            {
+              type: 'Image',
+              src: '${data.screen_banner}',
+              width: 1000,
+              height: 125,
+              'scale-type': 'cover',
+              'alt-text': 'Select category',
+              visible: '${data.has_screen_banner}',
+            },
+            { type: 'TextHeading', text: '${data.screen_heading}' },
+            {
+              type: 'Dropdown',
+              name: 'selected_category',
+              label: 'Category',
+              required: true,
+              'data-source': '${data.categories}',
+            },
+            {
+              type: 'Footer',
+              label: '\uD83C\uDFEA View Businesses',
+              'on-click-action': {
+                name: 'data_exchange',
+                payload: {
+                  kind: '${data.kind}',
+                  district: '${data.district}',
+                  assembly: '${data.assembly}',
+                  selected_category: '${form.selected_category}',
                 },
               },
             },
