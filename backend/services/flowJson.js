@@ -21,10 +21,10 @@ function buildFlowJSON() {
     version: '7.0',
     data_api_version: '3.0',
     routing_model: {
-      SERVICE_SELECT: ['SELECT_DISTRICT', 'MY_BUSINESS_LIST', 'INFO'],
+      SERVICE_SELECT: ['SELECT_DISTRICT', 'MY_BUSINESS_LIST', 'ADD_BUSINESS', 'INFO'],
       SELECT_DISTRICT: ['SELECT_ASSEMBLY', 'INFO'],
       SELECT_ASSEMBLY: ['SELECT_CATEGORY', 'ITEM_LIST', 'INFO'],
-      SELECT_CATEGORY: ['INFO'],
+      SELECT_CATEGORY: [],
       ITEM_LIST: ['ITEM_DETAILS', 'INFO'],
       MY_BUSINESS_LIST: ['ITEM_DETAILS', 'INFO'],
       ITEM_DETAILS: ['REVIEW', 'INFO'],
@@ -212,6 +212,8 @@ function buildFlowJSON() {
       {
         id: 'SELECT_CATEGORY',
         title: 'Select Category',
+        terminal: true,
+        success: true,
         data: {
           screen_banner: { type: 'string', __example__: 'iVBORw0KGgo' },
           has_screen_banner: { type: 'boolean', __example__: false },
@@ -258,13 +260,52 @@ function buildFlowJSON() {
               type: 'Footer',
               label: '\uD83C\uDFEA View Businesses',
               'on-click-action': {
-                name: 'data_exchange',
+                name: 'complete',
                 payload: {
                   kind: '${data.kind}',
                   district: '${data.district}',
                   assembly: '${data.assembly}',
                   selected_category: '${form.selected_category}',
                 },
+              },
+            },
+          ],
+        },
+      },
+
+      // ─── ADD_BUSINESS ───
+      {
+        id: 'ADD_BUSINESS',
+        title: 'Register Business',
+        terminal: true,
+        success: true,
+        data: {
+          screen_banner: { type: 'string', __example__: 'iVBORw0KGgo' },
+          has_screen_banner: { type: 'boolean', __example__: false },
+        },
+        layout: {
+          type: 'SingleColumnLayout',
+          children: [
+            {
+              type: 'Image',
+              src: '${data.screen_banner}',
+              width: 1000,
+              height: 125,
+              'scale-type': 'cover',
+              'alt-text': 'Add Business',
+              visible: '${data.has_screen_banner}',
+            },
+            { type: 'TextHeading', text: '\uD83C\uDFEA Register Your Business' },
+            {
+              type: 'TextBody',
+              text: 'Tap the button below to receive your registration link on WhatsApp. Fill in your business details to get listed on Vanigan!',
+            },
+            {
+              type: 'Footer',
+              label: 'Get Registration Link',
+              'on-click-action': {
+                name: 'complete',
+                payload: {},
               },
             },
           ],

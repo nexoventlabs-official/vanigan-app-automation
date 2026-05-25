@@ -400,7 +400,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
     const sel = data?.selected_service;
 
     if (sel === 'add_business') {
-      // Save pendingAction — webhook will send the CTA after the nfm_reply arrives
+      // Save pendingAction — webhook will send the CTA after nfm_reply from ADD_BUSINESS screen
       if (phone) {
         await User.findOneAndUpdate(
           { phone },
@@ -409,10 +409,10 @@ async function handleDataExchange({ screen, data, flow_token }) {
         ).catch(() => {});
       }
       return {
-        screen: 'INFO',
+        screen: 'ADD_BUSINESS',
         data: {
-          info_title: '🏪 Add Your Business',
-          info_body: 'Tap *Close* — we\'ll send you the registration link right away!',
+          screen_banner: images.banner_add_business || '',
+          has_screen_banner: !!images.banner_add_business,
         },
       };
     }
@@ -576,47 +576,6 @@ async function handleDataExchange({ screen, data, flow_token }) {
         district,
         assembly,
         items,
-      },
-    };
-  }
-
-  // ─── SELECT_CATEGORY → send CTA URL message + close flow ───
-  if (screen === 'SELECT_CATEGORY') {
-    const kind     = data?.kind || 'business';
-    const district = data?.district || '';
-    const assembly = data?.assembly || '';
-    const category = data?.selected_category || 'All';
-
-    const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
-    const params = new URLSearchParams({ district, assembly });
-    if (category && category !== 'All') params.set('category', category);
-    const dirUrl = `${backendUrl}/public/dir?${params.toString()}`;
-
-    if (phone) {
-      const catLabel2 = (category && category !== 'All') ? category : 'All Categories';
-      const bodyText =
-        `\uD83C\uDFEA *Businesses in ${assembly}, ${district}*\n` +
-        `Category: *${catLabel2}*\n\n` +
-        `Tap the button below to browse the full listing with details and reviews.`;
-
-      // Fetch original banner URL (not base64) for the CTA image header
-      const bannerMap = await flowImages.getMap(['banner_business']);
-      const bannerUrl = bannerMap['banner_business'] || '';
-
-      meta.sendCtaUrlMessage(phone, {
-        headerImageUrl: bannerUrl || undefined,
-        bodyText,
-        footerText: 'Powered by Vanigan \uD83E\uDD54',
-        buttonText: '\uD83C\uDFEA View Businesses',
-        url: dirUrl,
-      }).catch(() => {});
-    }
-
-    return {
-      screen: 'INFO',
-      data: {
-        info_title: '\uD83C\uDFEA Business Directory',
-        info_body: `Tap *Close* \u2014 we\'re sending you the business list link for *${assembly}* right now! \uD83D\uDE4F`,
       },
     };
   }
