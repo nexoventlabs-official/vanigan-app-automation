@@ -36,9 +36,10 @@ router.get('/register', async (req, res) => {
 /* ── Handle form submission ── */
 router.post('/register', upload.single('image'), async (req, res) => {
   try {
-    const { name, category, description, district, assembly, address,
-            phone, ownerPhone, phone2, email, website, landmark,
-            openTime, closeTime, lat, lng } = req.body;
+    const { name, category, subCategory, description, district, assembly, address,
+            phone, whatsappNo, landline, ownerPhone, phone2, email, website, landmark,
+            serviceLocations, city, pincode, openTime, closeTime, lat, lng,
+            fbLink, twitterLink, googleMap, videoUrl, infoQuestion, infoAnswer } = req.body;
 
     if (!name || !address) {
       return res.status(400).setHeader('Content-Type', 'text/html').send(
@@ -51,24 +52,36 @@ router.post('/register', upload.single('image'), async (req, res) => {
     const openDays = Array.isArray(rawDays) ? rawDays.join(',') : (rawDays || '');
 
     const doc = {
-      name:        name.trim(),
-      category:    (category || '').trim(),
-      description: (description || '').trim(),
-      district:    (district || '').trim(),
-      assembly:    (assembly || '').trim(),
-      address:     (address || '').trim(),
-      phone:       (phone || '').trim(),
-      phone2:      (phone2 || '').trim(),
-      email:       (email || '').trim(),
-      website:     (website || '').trim(),
-      landmark:    (landmark || '').trim(),
+      name:             name.trim(),
+      category:         (category || '').trim(),
+      subCategory:      (subCategory || '').trim(),
+      description:      (description || '').trim(),
+      district:         (district || '').trim(),
+      assembly:         (assembly || '').trim(),
+      address:          (address || '').trim(),
+      landmark:         (landmark || '').trim(),
+      serviceLocations: (serviceLocations || '').trim(),
+      city:             (city || '').trim(),
+      pincode:          (pincode || '').trim(),
+      phone:            (phone || '').trim(),
+      whatsappNo:       (whatsappNo || '').trim(),
+      landline:         (landline || '').trim(),
+      phone2:           (phone2 || '').trim(),
+      email:            (email || '').trim(),
+      website:          (website || '').trim(),
+      fbLink:           (fbLink || '').trim(),
+      twitterLink:      (twitterLink || '').trim(),
+      googleMap:        (googleMap || '').trim(),
+      videoUrl:         (videoUrl || '').trim(),
       openDays,
-      openTime:    (openTime || '').trim(),
-      closeTime:   (closeTime || '').trim(),
-      lat:         (lat || '').trim(),
-      lng:         (lng || '').trim(),
-      ownerPhone:  (ownerPhone || '').trim(),
-      active:      false,
+      openTime:         (openTime || '').trim(),
+      closeTime:        (closeTime || '').trim(),
+      lat:              (lat || '').trim(),
+      lng:              (lng || '').trim(),
+      infoQuestion:     (infoQuestion || '').trim(),
+      infoAnswer:       (infoAnswer || '').trim(),
+      ownerPhone:       (ownerPhone || '').trim(),
+      active:           false,
     };
 
     if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
@@ -182,6 +195,7 @@ function buildFormHtml(phone) {
     .submit-btn:hover{background:#9a3412}
     .submit-btn:disabled{background:#9ca3af;cursor:not-allowed}
     .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:12px}
+    .sec-title{font-size:.75rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;padding-bottom:6px;border-bottom:1.5px solid #fde8d8}
   </style>
 </head>
 <body>
@@ -201,9 +215,15 @@ function buildFormHtml(phone) {
         <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores">
       </div>
 
-      <div class="field">
-        <label>Category</label>
-        <input type="text" name="category" placeholder="e.g. Grocery, Textile, Restaurant">
+      <div class="row field">
+        <div>
+          <label>Category</label>
+          <input type="text" name="category" placeholder="e.g. Grocery, Textile">
+        </div>
+        <div>
+          <label>Sub-Category</label>
+          <input type="text" name="subCategory" placeholder="e.g. Fast Food, Wholesale">
+        </div>
       </div>
 
       <div class="field">
@@ -242,25 +262,77 @@ function buildFormHtml(phone) {
         <input type="text" name="landmark" placeholder="e.g. Near bus stand, opposite post office">
       </div>
 
+      <div class="field">
+        <label>Areas / Service Locations</label>
+        <input type="text" name="serviceLocations" placeholder="Areas you serve, e.g. Anna Nagar, T. Nagar">
+      </div>
+
       <div class="row field">
         <div>
-          <label>WhatsApp / Primary Phone <span class="req">*</span></label>
-          <input type="tel" name="phone" value="${escHtml(phone)}" style="background:#f3f4f6;color:#6b7280;cursor:not-allowed" readonly>
+          <label>City</label>
+          <input type="text" name="city" placeholder="e.g. Chennai">
         </div>
         <div>
-          <label>Alternate Phone</label>
-          <input type="tel" name="phone2" placeholder="Second contact number">
+          <label>Pincode</label>
+          <input type="text" name="pincode" placeholder="6-digit PIN" maxlength="6" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="sec-title" style="margin-top:4px">Contact</div>
+
+      <div class="field">
+        <label>WhatsApp / Primary Phone <span class="req">*</span></label>
+        <input type="tel" name="phone" value="${escHtml(phone)}" style="background:#f3f4f6;color:#6b7280;cursor:not-allowed" readonly>
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>WhatsApp No <span style="color:#888;font-weight:400">(if different)</span></label>
+          <input type="tel" name="whatsappNo" placeholder="WhatsApp number">
+        </div>
+        <div>
+          <label>Landline</label>
+          <input type="tel" name="landline" placeholder="STD code + number">
         </div>
       </div>
 
       <div class="row field">
         <div>
+          <label>Alternate Phone</label>
+          <input type="tel" name="phone2" placeholder="Second mobile">
+        </div>
+        <div>
           <label>Email</label>
           <input type="email" name="email" placeholder="business@example.com">
         </div>
+      </div>
+
+      <div class="field">
+        <label>Website</label>
+        <input type="url" name="website" placeholder="https://...">
+      </div>
+
+      <div class="sec-title" style="margin-top:4px">Social &amp; Media</div>
+
+      <div class="row field">
         <div>
-          <label>Website / Social Link</label>
-          <input type="url" name="website" placeholder="https://...">
+          <label>Facebook Page</label>
+          <input type="url" name="fbLink" placeholder="https://facebook.com/...">
+        </div>
+        <div>
+          <label>Twitter / X</label>
+          <input type="url" name="twitterLink" placeholder="https://twitter.com/...">
+        </div>
+      </div>
+
+      <div class="row field">
+        <div>
+          <label>Google Maps Link</label>
+          <input type="url" name="googleMap" placeholder="https://maps.google.com/...">
+        </div>
+        <div>
+          <label>YouTube / Video URL</label>
+          <input type="url" name="videoUrl" placeholder="https://youtube.com/...">
         </div>
       </div>
 
@@ -284,6 +356,20 @@ function buildFormHtml(phone) {
           <input type="time" name="closeTime">
         </div>
       </div>
+
+      <div class="sec-title" style="margin-top:4px">FAQ <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional)</span></div>
+
+      <div class="field">
+        <label>Frequently Asked Question</label>
+        <input type="text" name="infoQuestion" placeholder="e.g. Do you offer home delivery?">
+      </div>
+
+      <div class="field">
+        <label>Answer</label>
+        <textarea name="infoAnswer" rows="2" placeholder="Your answer to the above question"></textarea>
+      </div>
+
+      <div class="sec-title" style="margin-top:4px">Photo</div>
 
       <div class="field">
         <label>Business Photo <span style="color:#888;font-weight:400">(1:1 square)</span></label>
