@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Image as ImageIcon, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../api';
 import DistrictAssemblySelect from './DistrictAssemblySelect.jsx';
@@ -15,6 +15,8 @@ import DistrictAssemblySelect from './DistrictAssemblySelect.jsx';
  */
 export default function ListingPage({ title, resource, extraFields = [], defaultDescription, detailPath }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const pendingEditRef = useRef(location.state?.editId || null);
   const blank = useMemo(() => {
     const base = {
       name: '',
@@ -149,6 +151,16 @@ export default function ListingPage({ title, resource, extraFields = [], default
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    if (loading || !pendingEditRef.current) return;
+    const editId = pendingEditRef.current;
+    pendingEditRef.current = null;
+    navigate(location.pathname, { replace: true, state: {} });
+    api.get(`/${resource}/${editId}`)
+      .then(({ data }) => { if (data.item) openEdit(data.item); })
+      .catch(() => {});
+  }, [loading]);
 
   const remove = async (id) => {
     if (!confirm('Delete this listing?')) return;

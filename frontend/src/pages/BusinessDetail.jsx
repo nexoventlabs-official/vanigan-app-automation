@@ -53,7 +53,7 @@ export default function BusinessDetail() {
           <ArrowLeft size={16} /> Back to Businesses
         </button>
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/businesses/${id}/edit`)} className="btn-secondary gap-2">
+          <button onClick={() => navigate('/businesses', { state: { editId: id } })} className="btn-secondary gap-2">
             <Pencil size={15} /> Edit
           </button>
           <button onClick={handleDelete} disabled={deleting} className="btn-danger gap-2">
