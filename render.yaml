@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: vanigan-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: false
+      - key: MONGODB_URI
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_PHONE_NUMBER_ID
+        sync: false
+      - key: META_WABA_ID
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: META_GRAPH_VERSION
+        value: v22.0
+      - key: WHATSAPP_FLOW_ID
+        sync: false
+      - key: WHATSAPP_FLOW_STATUS
+        sync: false
+      - key: FLOW_PRIVATE_KEY
+        sync: false
+      - key: FLOW_PUBLIC_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: vanigan
+      - key: ALLOWED_ORIGINS
+        sync: false
