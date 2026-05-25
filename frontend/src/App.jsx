@@ -5,6 +5,7 @@ import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Businesses from './pages/Businesses.jsx';
+import BusinessDetail from './pages/BusinessDetail.jsx';
 import Organizers from './pages/Organizers.jsx';
 import Members from './pages/Members.jsx';
 import Plans from './pages/Plans.jsx';
@@ -50,6 +51,7 @@ function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="businesses" element={<Businesses />} />
+          <Route path="businesses/:id" element={<BusinessDetail />} />
           <Route path="organizers" element={<Organizers />} />
           <Route path="members" element={<Members />} />
           <Route path="plans" element={<Plans />} />
