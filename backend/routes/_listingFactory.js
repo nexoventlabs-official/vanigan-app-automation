@@ -16,14 +16,20 @@ function listingRouter({ Model, folder, extraFields = [] }) {
 
   router.get('/', auth, async (req, res) => {
     try {
-      const { district, assembly, q } = req.query;
+      const { district, assembly, q, page = 1, limit = 50 } = req.query;
       const filter = {};
       if (district) filter.district = district;
       if (assembly) filter.assembly = assembly;
       if (q) filter.name = new RegExp(String(q).trim(), 'i');
-      const items = await Model.find(filter).sort({ createdAt: -1 }).lean();
-      res.json({ items });
+      const skip = (Math.max(1, parseInt(page)) - 1) * Math.min(200, parseInt(limit));
+      const take = Math.min(200, parseInt(limit));
+      const [items, total] = await Promise.all([
+        Model.find(filter).sort({ createdAt: -1 }).skip(skip).limit(take).lean().maxTimeMS(15000),
+        Model.countDocuments(filter).maxTimeMS(15000),
+      ]);
+      res.json({ items, total, page: parseInt(page), limit: take });
     } catch (err) {
+      console.error('[listing.list]', err.message);
       res.status(500).json({ error: err.message });
     }
   });
