@@ -38,7 +38,7 @@ router.post('/register', upload.single('image'), async (req, res) => {
   try {
     const { name, category, description, district, assembly, address,
             phone, ownerPhone, phone2, email, website, landmark,
-            openTime, closeTime } = req.body;
+            openTime, closeTime, lat, lng } = req.body;
 
     if (!name || !address) {
       return res.status(400).setHeader('Content-Type', 'text/html').send(
@@ -65,6 +65,8 @@ router.post('/register', upload.single('image'), async (req, res) => {
       openDays,
       openTime:    (openTime || '').trim(),
       closeTime:   (closeTime || '').trim(),
+      lat:         (lat || '').trim(),
+      lng:         (lng || '').trim(),
       ownerPhone:  (ownerPhone || '').trim(),
       active:      false,
     };
@@ -225,8 +227,14 @@ function buildFormHtml(phone) {
       </div>
 
       <div class="field">
-        <label>Address <span class="req">*</span></label>
-        <textarea name="address" rows="2" required placeholder="Full address of your business"></textarea>
+        <label style="display:flex;justify-content:space-between;align-items:center">
+          <span>Address <span class="req">*</span></span>
+          <button type="button" id="locBtn" onclick="useMyLocation()" style="background:none;border:none;color:#c2410c;font-size:.8rem;font-weight:600;cursor:pointer;padding:0">📍 Use Current Location</button>
+        </label>
+        <textarea name="address" id="addressField" rows="2" required placeholder="Full address of your business"></textarea>
+        <input type="hidden" name="lat" id="latField">
+        <input type="hidden" name="lng" id="lngField">
+        <div id="locStatus" style="font-size:.75rem;color:#9ca3af;margin-top:3px"></div>
       </div>
 
       <div class="field">
@@ -394,6 +402,43 @@ function buildFormHtml(phone) {
 
       closeCrop();
     }, 'image/jpeg', 0.88);
+  }
+
+  /* ── Current location ── */
+  function useMyLocation() {
+    const btn = document.getElementById('locBtn');
+    const status = document.getElementById('locStatus');
+    if (!navigator.geolocation) { status.textContent = 'GPS not supported on this browser.'; return; }
+    btn.textContent = '⏳ Getting location…';
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        document.getElementById('latField').value = lat;
+        document.getElementById('lngField').value = lng;
+        status.textContent = 'GPS: ' + lat + ', ' + lng + ' ✓';
+        status.style.color = '#16a34a';
+        btn.textContent = '📍 Location Set ✓';
+        /* Reverse geocode via Nominatim */
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+          .then(r => r.json())
+          .then(d => {
+            const addr = d.display_name || '';
+            if (addr && !document.getElementById('addressField').value.trim()) {
+              document.getElementById('addressField').value = addr;
+            }
+          })
+          .catch(() => {});
+      },
+      err => {
+        status.textContent = 'Location denied or unavailable.';
+        status.style.color = '#dc2626';
+        btn.textContent = '📍 Use Current Location';
+        btn.disabled = false;
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   }
 
   /* ── Submit ── */

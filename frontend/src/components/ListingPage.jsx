@@ -303,18 +303,73 @@ export default function ListingPage({ title, resource, extraFields = [], default
                 onChange={({ district, assembly }) => setForm((f) => ({ ...f, district, assembly }))}
               />
 
-              {extraFields.map((f) => (
-                <div key={f.name}>
-                  <label className="label">{f.label}</label>
-                  <input
-                    type={f.type || 'text'}
-                    className="input"
-                    placeholder={f.placeholder || ''}
-                    value={form[f.name] || ''}
-                    onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
-                  />
-                </div>
-              ))}
+              {extraFields.map((f) => {
+                if (f.type === '_latlng_pair') return null; // rendered by latlng partner
+
+                if (f.type === 'textarea') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <textarea rows={2} className="input" placeholder={f.placeholder || ''}
+                      value={form[f.name] || ''}
+                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                  </div>
+                );
+
+                if (f.type === 'dayspicker') return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d) => {
+                        const days = (form[f.name] || '').split(',').map(x => x.trim()).filter(Boolean);
+                        const checked = days.includes(d);
+                        return (
+                          <label key={d} className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer border transition ${checked ? 'bg-brand-700 text-white border-brand-700' : 'bg-white text-gray-600 border-gray-300 hover:border-brand-400'}`}>
+                            <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => {
+                              const next = [...days];
+                              e.target.checked ? next.push(d) : next.splice(next.indexOf(d), 1);
+                              setForm({ ...form, [f.name]: next.join(',') });
+                            }} />
+                            {d}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+
+                if (f.type === 'latlng') return (
+                  <div key={f.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="label mb-0">{f.label}</label>
+                      <button type="button" className="text-xs text-brand-700 font-medium flex items-center gap-1 hover:underline"
+                        onClick={() => {
+                          if (!navigator.geolocation) return alert('Geolocation not supported');
+                          navigator.geolocation.getCurrentPosition(
+                            (pos) => setForm((prev) => ({ ...prev, lat: String(pos.coords.latitude), lng: String(pos.coords.longitude) })),
+                            () => alert('Location access denied')
+                          );
+                        }}>
+                        📍 Use current location
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className="input" placeholder="Latitude" value={form.lat || ''}
+                        onChange={(e) => setForm({ ...form, lat: e.target.value })} />
+                      <input className="input" placeholder="Longitude" value={form.lng || ''}
+                        onChange={(e) => setForm({ ...form, lng: e.target.value })} />
+                    </div>
+                  </div>
+                );
+
+                return (
+                  <div key={f.name}>
+                    <label className="label">{f.label}</label>
+                    <input type={f.type || 'text'} className="input" placeholder={f.placeholder || ''}
+                      value={form[f.name] || ''}
+                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                  </div>
+                );
+              })}
 
               <div>
                 <label className="label">Description</label>
