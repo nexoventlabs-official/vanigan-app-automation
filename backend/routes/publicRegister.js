@@ -1,12 +1,19 @@
 const express = require('express');
 const multer = require('multer');
 const { uploadBuffer } = require('../services/cloudinary');
+const { uploadBuffer: bizUpload } = require('../services/businessCloudinary');
 const districts = require('../services/districts');
 const Business = require('../models/Business');
 const meta = require('../services/metaCloud');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadFields = upload.fields([
+  { name: 'image',        maxCount: 1 },
+  { name: 'coverImage',   maxCount: 1 },
+  { name: 'galleryImages', maxCount: 10 },
+  ...Array.from({ length: 6 }, (_, i) => ({ name: `service${i + 1}Image`, maxCount: 1 })),
+]);
 
 /* ── Public: district map (no auth) ── */
 router.get('/districts', (_req, res) => {
@@ -34,12 +41,18 @@ router.get('/register', async (req, res) => {
 });
 
 /* ── Handle form submission ── */
-router.post('/register', upload.single('image'), async (req, res) => {
+router.post('/register', uploadFields, async (req, res) => {
   try {
     const { name, category, subCategory, description, district, assembly, address,
             phone, whatsappNo, landline, ownerPhone, phone2, email, website, landmark,
             serviceLocations, city, pincode, openTime, closeTime, lat, lng,
-            fbLink, twitterLink, googleMap, videoUrl, infoQuestion, infoAnswer } = req.body;
+            fbLink, twitterLink, googleMap, videoUrl, infoQuestion, infoAnswer,
+            service1Name, service1Price, service1Detail,
+            service2Name, service2Price, service2Detail,
+            service3Name, service3Price, service3Detail,
+            service4Name, service4Price, service4Detail,
+            service5Name, service5Price, service5Detail,
+            service6Name, service6Price, service6Detail } = req.body;
 
     if (!name || !address) {
       return res.status(400).setHeader('Content-Type', 'text/html').send(
@@ -84,17 +97,54 @@ router.post('/register', upload.single('image'), async (req, res) => {
       active:           false,
     };
 
+    /* ── Profile image ── */
     if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
       const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
-      const result = await uploadBuffer(buffer, { folder: 'vanigan/businesses' });
+      const result = await bizUpload(buffer, { folder: 'vanigan_biz' });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
-    } else if (req.file) {
-      const result = await uploadBuffer(req.file.buffer, { folder: 'vanigan/businesses' });
+    } else if (req.files?.image?.[0]) {
+      const result = await bizUpload(req.files.image[0].buffer, { folder: 'vanigan_biz' });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
     }
+
+    /* ── Cover image ── */
+    if (req.files?.coverImage?.[0]) {
+      const result = await bizUpload(req.files.coverImage[0].buffer, { folder: 'vanigan_biz' });
+      doc.coverImage = result.secure_url;
+      doc.coverImagePublicId = result.public_id;
+    }
+
+    /* ── Gallery images ── */
+    if (req.files?.galleryImages?.length) {
+      doc.galleryImages = await Promise.all(
+        req.files.galleryImages.map(async (f) => {
+          const r = await bizUpload(f.buffer, { folder: 'vanigan_biz' });
+          return { url: r.secure_url, publicId: r.public_id };
+        })
+      );
+    }
+
+    /* ── Services ── */
+    const svcNames   = [service1Name,service2Name,service3Name,service4Name,service5Name,service6Name];
+    const svcPrices  = [service1Price,service2Price,service3Price,service4Price,service5Price,service6Price];
+    const svcDetails = [service1Detail,service2Detail,service3Detail,service4Detail,service5Detail,service6Detail];
+    const services = [];
+    for (let i = 0; i < 6; i++) {
+      const n = (svcNames[i] || '').trim();
+      const p = (svcPrices[i] || '').trim();
+      const d = (svcDetails[i] || '').trim();
+      let img = '', imgId = '';
+      const imgFile = req.files?.[`service${i + 1}Image`]?.[0];
+      if (imgFile) {
+        const r = await bizUpload(imgFile.buffer, { folder: 'vanigan_biz' });
+        img = r.secure_url; imgId = r.public_id;
+      }
+      if (n || p || d || img) services.push({ name: n, price: p, detail: d, image: img, imagePublicId: imgId });
+    }
+    if (services.length) doc.services = services;
 
     await Business.create(doc);
 
@@ -196,6 +246,11 @@ function buildFormHtml(phone) {
     .submit-btn:disabled{background:#9ca3af;cursor:not-allowed}
     .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:12px}
     .sec-title{font-size:.75rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;padding-bottom:6px;border-bottom:1.5px solid #fde8d8}
+    .svc-card{background:#fafafa;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px}
+    .svc-num{font-size:.7rem;font-weight:700;color:#c2410c;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+    .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
+    .gallery-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
   </style>
 </head>
 <body>
@@ -369,7 +424,51 @@ function buildFormHtml(phone) {
         <textarea name="infoAnswer" rows="2" placeholder="Your answer to the above question"></textarea>
       </div>
 
-      <div class="sec-title" style="margin-top:4px">Photo</div>
+      <div class="sec-title" style="margin-top:4px">Cover / Banner Image <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional)</span></div>
+
+      <div class="field">
+        <label>Cover / Banner Photo <span style="color:#888;font-weight:400">(wide banner image)</span></label>
+        <input type="file" name="coverImage" id="coverImageInput" accept="image/*">
+        <div id="coverPreview" style="display:none;margin-top:8px">
+          <img id="coverPreviewImg" style="width:100%;height:110px;object-fit:cover;border-radius:10px;border:1.5px solid #e5e7eb">
+        </div>
+      </div>
+
+      <div class="sec-title" style="margin-top:4px">Gallery Images <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional — up to 10)</span></div>
+
+      <div class="field">
+        <label>Upload multiple photos of your business</label>
+        <input type="file" name="galleryImages" id="galleryInput" accept="image/*" multiple>
+        <div class="gallery-preview" id="galleryPreview"></div>
+      </div>
+
+      <div class="sec-title" style="margin-top:4px">Services / Products <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional — up to 6)</span></div>
+
+      ${[1,2,3,4,5,6].map(i => `
+      <div class="svc-card">
+        <div class="svc-num">Service ${i}</div>
+        <div class="row" style="margin-bottom:10px">
+          <div>
+            <label>Name</label>
+            <input type="text" name="service${i}Name" placeholder="Service / product name">
+          </div>
+          <div>
+            <label>Price (\u20b9)</label>
+            <input type="text" name="service${i}Price" placeholder="e.g. 500" inputmode="decimal">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label>Details / Description</label>
+          <textarea name="service${i}Detail" rows="2" placeholder="Brief description"></textarea>
+        </div>
+        <div>
+          <label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>
+          <input type="file" name="service${i}Image" accept="image/*" onchange="previewSvcImg(this,${i})">
+          <div id="svcPrev${i}" style="display:none;margin-top:6px"><img id="svcPrevImg${i}" class="img-thumb"></div>
+        </div>
+      </div>`).join('')}
+
+      <div class="sec-title" style="margin-top:4px">Profile Photo</div>
 
       <div class="field">
         <label>Business Photo <span style="color:#888;font-weight:400">(1:1 square)</span></label>
@@ -526,6 +625,43 @@ function buildFormHtml(phone) {
       { timeout: 10000, enableHighAccuracy: true }
     );
   }
+
+  /* ── Service image preview ── */
+  function previewSvcImg(input, idx) {
+    if (!input.files?.[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('svcPrevImg' + idx).src = e.target.result;
+      document.getElementById('svcPrev' + idx).style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  /* ── Cover image preview ── */
+  document.getElementById('coverImageInput').addEventListener('change', function () {
+    if (!this.files?.[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('coverPreviewImg').src = e.target.result;
+      document.getElementById('coverPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(this.files[0]);
+  });
+
+  /* ── Gallery preview ── */
+  document.getElementById('galleryInput').addEventListener('change', function () {
+    const preview = document.getElementById('galleryPreview');
+    preview.innerHTML = '';
+    Array.from(this.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
 
   /* ── Submit ── */
   document.getElementById('regForm').addEventListener('submit', function (e) {

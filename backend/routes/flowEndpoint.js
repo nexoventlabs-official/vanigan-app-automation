@@ -576,12 +576,41 @@ async function handleDataExchange({ screen, data, flow_token }) {
       imgB64 = await urlToBase64(doc.image, { width: 1000, height: 600, crop: 'fill', quality: 75, format: 'jpg' });
     }
     const subtitle = [doc.assembly, doc.district].filter(Boolean).join(', ');
-    const extra = [
-      doc.category && `Category: ${doc.category}`,
-      doc.address && `Address: ${doc.address}`,
-      doc.phone && `Phone: ${doc.phone}`,
-    ].filter(Boolean).join('\n');
-    const description = [doc.description, extra].filter(Boolean).join('\n\n');
+    const lines = [];
+    if (doc.description) { lines.push(doc.description); lines.push(''); }
+    const cat = [doc.category, doc.subCategory].filter(Boolean).join(' › ');
+    if (cat) lines.push(`🏷️ ${cat}`);
+    if (doc.address) lines.push(`📍 ${doc.address}`);
+    if (doc.landmark) lines.push(`   📌 ${doc.landmark}`);
+    if (doc.city || doc.pincode) lines.push(`   ${[doc.city, doc.pincode].filter(Boolean).join(' – ')}`);
+    if (doc.serviceLocations) lines.push(`🗺️ Serves: ${doc.serviceLocations}`);
+    if (doc.phone) lines.push(`📞 ${doc.phone}`);
+    if (doc.whatsappNo) lines.push(`💬 WA: ${doc.whatsappNo}`);
+    if (doc.landline) lines.push(`☎️ ${doc.landline}`);
+    if (doc.phone2) lines.push(`📱 Alt: ${doc.phone2}`);
+    if (doc.email) lines.push(`✉️ ${doc.email}`);
+    if (doc.website) lines.push(`🌐 ${doc.website}`);
+    if (doc.fbLink) lines.push(`📘 FB: ${doc.fbLink}`);
+    if (doc.googleMap) lines.push(`🗺️ Maps: ${doc.googleMap}`);
+    if (doc.openDays || doc.openTime || doc.closeTime) {
+      const timeStr = [doc.openTime, doc.closeTime].filter(Boolean).join(' – ');
+      lines.push(`🕐 ${[doc.openDays, timeStr].filter(Boolean).join('  |  ')}`);
+    }
+    const validSvcs = (doc.services || []).filter(s => s.name);
+    if (validSvcs.length) {
+      lines.push(''); lines.push('🛍️ Services:');
+      validSvcs.forEach(s => {
+        const pr = s.price ? ` — ₹${s.price}` : '';
+        lines.push(`  • ${s.name}${pr}`);
+        if (s.detail) lines.push(`    ${s.detail}`);
+      });
+    }
+    if (doc.infoQuestion) {
+      lines.push('');
+      lines.push(`❓ ${doc.infoQuestion}`);
+      if (doc.infoAnswer) lines.push(`   ${doc.infoAnswer}`);
+    }
+    const description = lines.join('\n').trim();
     const { meta: revMetaMb, recent: recentMb } = await reviewSummary(kind, itemId);
     return {
       screen: 'ITEM_DETAILS',
