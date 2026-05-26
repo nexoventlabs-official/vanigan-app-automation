@@ -372,8 +372,8 @@ router.get('/', async (req, res) => {
   const catLabel = (category && category !== 'All') ? category : 'All Categories';
   const pageTitle = `Businesses – ${locLabel}`;
 
-  const { name: userName = '' } = req.query;
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}`;
+  const { name: userName = '', phone: userPhone = '' } = req.query;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
   let cards = '';
   if (!businesses.length) {
@@ -417,8 +417,8 @@ router.get('/', async (req, res) => {
 
 /* ── GET /public/dir/:id — business detail ── */
 router.get('/:id', async (req, res) => {
-  const { district = '', assembly = '', category = '', name: userName = '' } = req.query;
-  const backUrl = `/public/dir?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}`;
+  const { district = '', assembly = '', category = '', name: userName = '', phone: userPhone = '' } = req.query;
+  const backUrl = `/public/dir?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
   let biz;
   try { biz = await Business.findById(req.params.id).lean(); } catch { biz = null; }
@@ -497,7 +497,12 @@ router.get('/:id', async (req, res) => {
     ${r.text ? `<div class="rev-text">${esc(r.text)}</div>` : ''}
   </div>`).join('');
 
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}`;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
+
+  /* check if this phone already left a review */
+  const alreadyReviewed = userPhone
+    ? !!(await Review.findOne({ targetKind: 'business', targetId: req.params.id, phone: userPhone }).lean())
+    : false;
 
   const activeBadge = biz.active
     ? `<svg viewBox="0 0 24 24" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-left:6px;flex-shrink:0" fill="currentColor" title="Verified active business"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/><path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/></svg>`
@@ -588,22 +593,28 @@ router.get('/:id', async (req, res) => {
 
   <div class="section">
     <div class="sec-head">Add Your Review</div>
-    <form method="POST" action="/public/dir/${esc(req.params.id)}/review${listQ}">
-      <label>Your Name *</label>
-      <input type="text" name="reviewerName" required placeholder="Enter your name" value="${esc(userName)}">
-      <label>Rating *</label>
-      <select name="rating" required>
-        <option value="">— Select Rating —</option>
-        <option value="5">★★★★★ Excellent</option>
-        <option value="4">★★★★☆ Very Good</option>
-        <option value="3">★★★☆☆ Good</option>
-        <option value="2">★★☆☆☆ Fair</option>
-        <option value="1">★☆☆☆☆ Poor</option>
-      </select>
-      <label>Review</label>
-      <textarea name="text" rows="3" placeholder="Share your experience…"></textarea>
-      <button type="submit" class="submit-btn">Submit Review</button>
-    </form>
+    ${alreadyReviewed
+      ? `<div style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(102,255,76,0.06);border:1px solid rgba(102,255,76,0.2);border-radius:12px;font-size:.85rem;color:#66ff4c;font-weight:700">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#66ff4c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+           You have already submitted a review for this business.
+         </div>`
+      : `<form method="POST" action="/public/dir/${esc(req.params.id)}/review${listQ}">
+           <label>Your Name *</label>
+           <input type="text" name="reviewerName" required placeholder="Enter your name" value="${esc(userName)}">
+           <label>Rating *</label>
+           <select name="rating" required>
+             <option value="">— Select Rating —</option>
+             <option value="5">★★★★★ Excellent</option>
+             <option value="4">★★★★☆ Very Good</option>
+             <option value="3">★★★☆☆ Good</option>
+             <option value="2">★★☆☆☆ Fair</option>
+             <option value="1">★☆☆☆☆ Poor</option>
+           </select>
+           <label>Review</label>
+           <textarea name="text" rows="3" placeholder="Share your experience…"></textarea>
+           <button type="submit" class="submit-btn">Submit Review</button>
+         </form>`
+    }
   </div>
 </div>`;
 
@@ -613,18 +624,25 @@ router.get('/:id', async (req, res) => {
 
 /* ── POST /public/dir/:id/review ── */
 router.post('/:id/review', async (req, res) => {
-  const { district = '', assembly = '', category = '' } = req.query;
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}`;
+  const { district = '', assembly = '', category = '', name: userName = '', phone: userPhone = '' } = req.query;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
   const { reviewerName, rating, text } = req.body;
   const ratingNum = parseInt(rating, 10);
   if (reviewerName && ratingNum >= 1 && ratingNum <= 5) {
-    await Review.create({
-      targetKind: 'business',
-      targetId: req.params.id,
-      rating: ratingNum,
-      text: (text || '').trim(),
-      reviewerName: reviewerName.trim(),
-    }).catch(() => {});
+    /* one review per phone per business */
+    const duplicate = userPhone
+      ? await Review.findOne({ targetKind: 'business', targetId: req.params.id, phone: userPhone }).lean()
+      : null;
+    if (!duplicate) {
+      await Review.create({
+        targetKind: 'business',
+        targetId: req.params.id,
+        rating: ratingNum,
+        text: (text || '').trim(),
+        reviewerName: reviewerName.trim(),
+        phone: userPhone || '',
+      }).catch(() => {});
+    }
   }
   res.redirect(`/public/dir/${req.params.id}${listQ}&submitted=1`);
 });

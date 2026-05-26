@@ -104,6 +104,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       const params = new URLSearchParams({ district, assembly });
       if (category && category !== 'All') params.set('category', category);
       if (profileName) params.set('name', profileName);
+      if (phone) params.set('phone', phone);
       const dirUrl = `${backend}/public/dir?${params.toString()}`;
       const catLabel = (category && category !== 'All') ? category : 'All Categories';
       const bannerUrl = await flowImages.getUrl('banner_business');
