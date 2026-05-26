@@ -47,10 +47,7 @@ export default function Businesses() {
         { name: 'website',          label: 'Website',                    type: 'url', placeholder: 'https://...' },
 
         /* ── Social / Media ── */
-        { name: 'fbLink',           label: 'Facebook Page Link',         type: 'url', placeholder: 'https://facebook.com/...' },
-        { name: 'twitterLink',      label: 'Twitter / X Link',           type: 'url', placeholder: 'https://twitter.com/...' },
-        { name: 'googleMap',        label: 'Google Maps Link',           type: 'url', placeholder: 'https://maps.google.com/...' },
-        { name: 'videoUrl',         label: 'Video URL (YouTube etc.)',   type: 'url', placeholder: 'https://youtube.com/...' },
+        { name: 'social', label: 'Social Media Links', type: 'social' },
 
         /* ── Hours ── */
         { name: 'openDays',         label: 'Opening Days',               type: 'dayspicker' },

@@ -195,6 +195,7 @@ router.get('/:id', async (req, res) => {
     biz.website    && ['🌐', `<a href="${esc(biz.website)}" target="_blank">${esc(biz.website)}</a>`],
     biz.fbLink     && ['📘', `<a href="${esc(biz.fbLink)}" target="_blank">Facebook Page</a>`],
     biz.twitterLink && ['𝕏', `<a href="${esc(biz.twitterLink)}" target="_blank">Twitter / X</a>`],
+    biz.instaLink  && ['📸', `<a href="${esc(biz.instaLink)}" target="_blank">Instagram</a>`],
     biz.googleMap  && ['🗺️', `<a href="${esc(biz.googleMap)}" target="_blank">Open in Google Maps</a>`],
     biz.videoUrl   && ['▶️', `<a href="${esc(biz.videoUrl)}" target="_blank">Watch Video</a>`],
   ].filter(Boolean);

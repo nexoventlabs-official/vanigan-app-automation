@@ -46,7 +46,7 @@ router.post('/register', uploadFields, async (req, res) => {
     const { name, category, subCategory, description, district, assembly, address,
             phone, whatsappNo, landline, ownerPhone, phone2, email, website, landmark,
             serviceLocations, city, pincode, openTime, closeTime, lat, lng,
-            fbLink, twitterLink, googleMap, videoUrl, infoQuestion, infoAnswer,
+            fbLink, twitterLink, instaLink, googleMap, videoUrl, infoQuestion, infoAnswer,
             service1Name, service1Price, service1Detail,
             service2Name, service2Price, service2Detail,
             service3Name, service3Price, service3Detail,
@@ -84,6 +84,7 @@ router.post('/register', uploadFields, async (req, res) => {
       website:          (website || '').trim(),
       fbLink:           (fbLink || '').trim(),
       twitterLink:      (twitterLink || '').trim(),
+      instaLink:        (instaLink || '').trim(),
       googleMap:        (googleMap || '').trim(),
       videoUrl:         (videoUrl || '').trim(),
       openDays,
@@ -247,10 +248,17 @@ function buildFormHtml(phone) {
     .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:12px}
     .sec-title{font-size:.75rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;padding-bottom:6px;border-bottom:1.5px solid #fde8d8}
     .svc-card{background:#fafafa;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px}
-    .svc-num{font-size:.7rem;font-weight:700;color:#c2410c;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
     .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
     .gallery-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
     .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
+    .add-dyn-btn{width:100%;padding:11px;background:#fff7ed;color:#c2410c;border:1.5px dashed #fdba74;border-radius:12px;font-size:.85rem;font-weight:600;cursor:pointer;margin:0 0 16px;text-align:center;display:block}
+    .add-dyn-btn:active{background:#fde8d8}
+    .social-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .social-item .s-label{font-size:.8rem;font-weight:600;color:#374151;width:110px;min-width:110px}
+    .social-item input{flex:1;margin:0}
+    .social-item .rm-btn{background:none;border:none;color:#ef4444;font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+    .svc-num{font-size:.7rem;font-weight:700;color:#c2410c;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+    .svc-rm{background:none;border:none;color:#ef4444;font-size:.75rem;font-weight:700;cursor:pointer;padding:0;text-transform:none;letter-spacing:0}
   </style>
 </head>
 <body>
@@ -371,28 +379,8 @@ function buildFormHtml(phone) {
       </div>
 
       <div class="sec-title" style="margin-top:4px">Social &amp; Media</div>
-
-      <div class="row field">
-        <div>
-          <label>Facebook Page</label>
-          <input type="url" name="fbLink" placeholder="https://facebook.com/...">
-        </div>
-        <div>
-          <label>Twitter / X</label>
-          <input type="url" name="twitterLink" placeholder="https://twitter.com/...">
-        </div>
-      </div>
-
-      <div class="row field">
-        <div>
-          <label>Google Maps Link</label>
-          <input type="url" name="googleMap" placeholder="https://maps.google.com/...">
-        </div>
-        <div>
-          <label>YouTube / Video URL</label>
-          <input type="url" name="videoUrl" placeholder="https://youtube.com/...">
-        </div>
-      </div>
+      <div id="socialRows"></div>
+      <button type="button" id="addSocialBtn" class="add-dyn-btn">+ Add Social Media</button>
 
       <div class="field">
         <label>Opening Days</label>
@@ -446,30 +434,8 @@ function buildFormHtml(phone) {
       </div>
 
       <div class="sec-title" style="margin-top:4px">Services / Products <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional — up to 6)</span></div>
-
-      ${[1,2,3,4,5,6].map(i => `
-      <div class="svc-card">
-        <div class="svc-num">Service ${i}</div>
-        <div class="row" style="margin-bottom:10px">
-          <div>
-            <label>Name</label>
-            <input type="text" name="service${i}Name" placeholder="Service / product name">
-          </div>
-          <div>
-            <label>Price (\u20b9)</label>
-            <input type="text" name="service${i}Price" placeholder="e.g. 500" inputmode="decimal">
-          </div>
-        </div>
-        <div style="margin-bottom:10px">
-          <label>Details / Description</label>
-          <textarea name="service${i}Detail" rows="2" placeholder="Brief description"></textarea>
-        </div>
-        <div>
-          <label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>
-          <input type="file" name="service${i}Image" accept="image/*" onchange="previewSvcImg(this,${i})">
-          <div id="svcPrev${i}" style="display:none;margin-top:6px"><img id="svcPrevImg${i}" class="img-thumb"></div>
-        </div>
-      </div>`).join('')}
+      <div id="svcContainer"></div>
+      <button type="button" id="addSvcBtn" class="add-dyn-btn" onclick="addSvc()">+ Add Service</button>
 
       <div class="sec-title" style="margin-top:4px">Profile Photo</div>
 
@@ -629,14 +595,110 @@ function buildFormHtml(phone) {
     );
   }
 
-  /* ── Service image preview ── */
-  function previewSvcImg(input, idx) {
+  /* ── Dynamic Social Media ── */
+  const SOCIAL_PLATFORMS = [
+    {id:'fbLink',      label:'Facebook',      placeholder:'https://facebook.com/...'},
+    {id:'twitterLink', label:'Twitter / X',   placeholder:'https://twitter.com/...'},
+    {id:'instaLink',   label:'Instagram',     placeholder:'https://instagram.com/...'},
+    {id:'googleMap',   label:'Google Maps',   placeholder:'https://maps.google.com/...'},
+    {id:'videoUrl',    label:'YouTube',       placeholder:'https://youtube.com/...'},
+  ];
+  let shownSocial = [];
+
+  function getSocialAvailable() {
+    return SOCIAL_PLATFORMS.filter(p => !shownSocial.includes(p.id));
+  }
+
+  function addSocialRow() {
+    const avail = getSocialAvailable();
+    if (!avail.length) return;
+    // Show platform picker chips
+    const existing = document.getElementById('socialPicker');
+    if (existing) { existing.remove(); return; }
+    const picker = document.createElement('div');
+    picker.id = 'socialPicker';
+    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px';
+    avail.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = p.label;
+      btn.style.cssText = 'padding:6px 14px;border:1.5px solid #c2410c;color:#c2410c;background:#fff7ed;border-radius:20px;font-size:.8rem;font-weight:600;cursor:pointer';
+      btn.onclick = () => { picker.remove(); _addSocialPlatform(p); };
+      picker.appendChild(btn);
+    });
+    document.getElementById('socialRows').appendChild(picker);
+  }
+
+  function _addSocialPlatform(p) {
+    shownSocial.push(p.id);
+    const row = document.createElement('div');
+    row.className = 'social-item';
+    row.id = 'srow_' + p.id;
+    row.innerHTML = `<span class="s-label">${p.label}</span><input type="url" name="${p.id}" placeholder="${p.placeholder}"><button type="button" class="rm-btn" onclick="removeSocialRow('${p.id}')">\u00d7</button>`;
+    document.getElementById('socialRows').appendChild(row);
+    if (!getSocialAvailable().length) document.getElementById('addSocialBtn').style.display = 'none';
+    else document.getElementById('addSocialBtn').style.display = '';
+  }
+
+  function removeSocialRow(id) {
+    shownSocial = shownSocial.filter(x => x !== id);
+    const row = document.getElementById('srow_' + id);
+    if (row) row.remove();
+    document.getElementById('addSocialBtn').style.display = '';
+  }
+
+  document.getElementById('addSocialBtn').addEventListener('click', addSocialRow);
+
+  /* ── Dynamic Services ── */
+  let svcCount = 0;
+
+  function addSvc() {
+    if (svcCount >= 6) return;
+    svcCount++;
+    const n = svcCount;
+    const card = document.createElement('div');
+    card.className = 'svc-card';
+    card.dataset.svcn = n;
+    card.innerHTML = `
+      <div class="svc-num"><span class="svc-title">Service ${n}</span><button type="button" class="svc-rm" onclick="removeSvc(this)">✕ Remove</button></div>
+      <div class="row" style="margin-bottom:10px">
+        <div><label>Name</label><input type="text" name="service${n}Name" placeholder="Service / product name"></div>
+        <div><label>Price (\u20b9)</label><input type="text" name="service${n}Price" placeholder="e.g. 500" inputmode="decimal"></div>
+      </div>
+      <div style="margin-bottom:10px"><label>Details</label><textarea name="service${n}Detail" rows="2" placeholder="Brief description"></textarea></div>
+      <div><label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>
+        <input type="file" name="service${n}Image" accept="image/*" onchange="_previewSvc(this)">
+        <div style="display:none;margin-top:6px" class="svc-prev-wrap"><img style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb" class="svc-prev-img"></div>
+      </div>`;
+    document.getElementById('svcContainer').appendChild(card);
+    if (svcCount >= 6) document.getElementById('addSvcBtn').style.display = 'none';
+  }
+
+  function removeSvc(btn) {
+    btn.closest('.svc-card').remove();
+    svcCount--;
+    // Renumber remaining cards
+    document.querySelectorAll('.svc-card').forEach((card, idx) => {
+      const num = idx + 1;
+      card.dataset.svcn = num;
+      card.querySelector('.svc-title').textContent = 'Service ' + num;
+      const inp = card.querySelectorAll('input,textarea');
+      const names = ['Name','Price','Detail','Image'];
+      // Update field names based on position
+      card.querySelector('input[type=text]:nth-of-type(1)') && (card.querySelectorAll('input[type=text]')[0].name = 'service'+num+'Name');
+      card.querySelector('input[type=text]:nth-of-type(2)') && (card.querySelectorAll('input[type=text]')[1].name = 'service'+num+'Price');
+      const ta = card.querySelector('textarea'); if(ta) ta.name = 'service'+num+'Detail';
+      const fi = card.querySelector('input[type=file]'); if(fi) fi.name = 'service'+num+'Image';
+    });
+    document.getElementById('addSvcBtn').style.display = '';
+  }
+
+  function _previewSvc(input) {
     if (!input.files?.[0]) return;
+    const wrap = input.closest('.svc-card').querySelector('.svc-prev-wrap');
+    const img  = input.closest('.svc-card').querySelector('.svc-prev-img');
     const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('svcPrevImg' + idx).src = e.target.result;
-      document.getElementById('svcPrev' + idx).style.display = 'block';
-    };
+    reader.onload = e => { img.src = e.target.result; wrap.style.display = 'block'; };
     reader.readAsDataURL(input.files[0]);
   }
 

@@ -12,7 +12,7 @@ module.exports = listingRouter({
     'address', 'landmark', 'serviceLocations',
     'city', 'pincode',
     'phone', 'whatsappNo', 'landline', 'phone2', 'email', 'website',
-    'fbLink', 'twitterLink', 'googleMap', 'videoUrl',
+    'fbLink', 'twitterLink', 'instaLink', 'googleMap', 'videoUrl',
     'openDays', 'openTime', 'closeTime',
     'lat', 'lng',
     'infoQuestion', 'infoAnswer',

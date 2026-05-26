@@ -45,6 +45,7 @@ const BusinessSchema = new mongoose.Schema(
     /* ── Social / Media ── */
     fbLink:           { type: String, default: '' },
     twitterLink:      { type: String, default: '' },
+    instaLink:        { type: String, default: '' },
     googleMap:        { type: String, default: '' },
     videoUrl:         { type: String, default: '' },
 

@@ -42,10 +42,7 @@ const EXTRA_FIELDS = [
   { name: 'phone2',           label: 'Alternate Phone',               placeholder: 'Optional' },
   { name: 'email',            label: 'Email',                         type: 'email' },
   { name: 'website',          label: 'Website',                       type: 'url', placeholder: 'https://...' },
-  { name: 'fbLink',           label: 'Facebook Page Link',            type: 'url', placeholder: 'https://facebook.com/...' },
-  { name: 'twitterLink',      label: 'Twitter / X Link',              type: 'url', placeholder: 'https://twitter.com/...' },
-  { name: 'googleMap',        label: 'Google Maps Link',              type: 'url', placeholder: 'https://maps.google.com/...' },
-  { name: 'videoUrl',         label: 'Video URL (YouTube etc.)',      type: 'url', placeholder: 'https://youtube.com/...' },
+  { name: 'social',           label: 'Social Media Links',           type: 'social' },
   { name: 'openDays',         label: 'Opening Days',                  type: 'dayspicker' },
   { name: 'openTime',         label: 'Opening Time',                  type: 'time' },
   { name: 'closeTime',        label: 'Closing Time',                  type: 'time' },
@@ -58,16 +55,19 @@ const EXTRA_FIELDS = [
   { name: 'ownerPhone',       label: 'Owner Phone (internal)',        placeholder: 'For WhatsApp auto-register flow' },
 ];
 
+const SOCIAL_IDS = ['fbLink', 'twitterLink', 'instaLink', 'googleMap', 'videoUrl'];
+
 const BLANK = {
   name: '', description: '', district: '', assembly: '', active: true,
   imageFile: null, image: '',
   _coverFile: null, coverImage: '',
   galleryImages: [], _galleryFiles: [], _galleryToRemove: [],
-  services: Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null })),
+  services: [],
+  _shownSocial: [],
   category: '', subCategory: '', address: '', landmark: '', serviceLocations: '',
   city: '', pincode: '', lat: '', lng: '',
   phone: '', whatsappNo: '', landline: '', phone2: '', email: '', website: '',
-  fbLink: '', twitterLink: '', googleMap: '', videoUrl: '',
+  fbLink: '', twitterLink: '', instaLink: '', googleMap: '', videoUrl: '',
   openDays: '', openTime: '', closeTime: '',
   infoQuestion: '', infoAnswer: '', listingCode: '', ownerPhone: '',
 };
@@ -114,11 +114,11 @@ export default function BusinessDetail() {
       next.image = biz.image || '';
       next.coverImage = biz.coverImage || '';
       next.galleryImages = Array.isArray(biz.galleryImages) ? biz.galleryImages : [];
-      if (Array.isArray(biz.services) && biz.services.length) {
-        const svcs = Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }));
-        biz.services.forEach((s, i) => { if (i < 6) svcs[i] = { ...svcs[i], ...s, _file: null }; });
-        next.services = svcs;
-      }
+      next.services = Array.isArray(biz.services)
+        ? biz.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null, ...s, _file: null }))
+        : [];
+      SOCIAL_IDS.forEach((k) => { next[k] = biz[k] || ''; });
+      next._shownSocial = SOCIAL_IDS.filter((k) => biz[k]);
     }
     setForm(next);
     setShowForm(true);
@@ -137,9 +137,10 @@ export default function BusinessDetail() {
       fd.append('active', String(form.active));
       EXTRA_FIELDS.forEach((f) => {
         const t = f.type || '';
-        if (['coverimage', 'gallery', 'services', '_latlng_pair'].includes(t)) return;
+        if (['coverimage', 'gallery', 'services', '_latlng_pair', 'social'].includes(t)) return;
         fd.append(f.name, form[f.name] ?? '');
       });
+      SOCIAL_IDS.forEach((k) => fd.append(k, form[k] || ''));
       if (form.imageFile) fd.append('image', form.imageFile);
       if (form._coverFile) fd.append('coverImageFile', form._coverFile);
       (form._galleryFiles || []).forEach((file) => fd.append('galleryFiles', file));
@@ -421,10 +422,14 @@ export default function BusinessDetail() {
                 if (f.type === 'services') return (
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-2">
                       {(form.services || []).map((s, i) => (
                         <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</span>
+                            <button type="button" onClick={() => setForm({ ...form, services: form.services.filter((_, j) => j !== i) })}
+                              className="text-xs text-red-500 hover:text-red-700 font-semibold">✕ Remove</button>
+                          </div>
                           <div className="grid grid-cols-2 gap-2">
                             <input className="input text-sm" placeholder="Name" value={s.name || ''}
                               onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], name: e.target.value }; setForm({ ...form, services: svcs }); }} />
@@ -441,6 +446,13 @@ export default function BusinessDetail() {
                         </div>
                       ))}
                     </div>
+                    {(form.services || []).length < 6 && (
+                      <button type="button"
+                        onClick={() => setForm({ ...form, services: [...(form.services || []), { name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }] })}
+                        className="w-full py-2 text-sm font-semibold text-brand-700 border border-dashed border-brand-400 rounded-lg bg-brand-50/40 hover:bg-brand-50 transition">
+                        + Add Service
+                      </button>
+                    )}
                   </div>
                 );
 
@@ -478,6 +490,50 @@ export default function BusinessDetail() {
                     </select>
                   </div>
                 );
+
+                if (f.type === 'social') {
+                  const SPLATFORMS = [
+                    { id: 'fbLink',      label: 'Facebook',    placeholder: 'https://facebook.com/...' },
+                    { id: 'twitterLink', label: 'Twitter / X', placeholder: 'https://twitter.com/...' },
+                    { id: 'instaLink',   label: 'Instagram',   placeholder: 'https://instagram.com/...' },
+                    { id: 'googleMap',   label: 'Google Maps', placeholder: 'https://maps.google.com/...' },
+                    { id: 'videoUrl',    label: 'YouTube',     placeholder: 'https://youtube.com/...' },
+                  ];
+                  const shown = form._shownSocial || [];
+                  const available = SPLATFORMS.filter((p) => !shown.includes(p.id));
+                  return (
+                    <div key="social">
+                      <label className="label">{f.label}</label>
+                      <div className="space-y-2 mb-2">
+                        {shown.map((pid) => {
+                          const p = SPLATFORMS.find((x) => x.id === pid);
+                          if (!p) return null;
+                          return (
+                            <div key={pid} className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-gray-500 w-24 shrink-0">{p.label}</span>
+                              <input type="url" className="input text-sm flex-1" placeholder={p.placeholder}
+                                value={form[pid] || ''}
+                                onChange={(e) => setForm({ ...form, [pid]: e.target.value })} />
+                              <button type="button" onClick={() => setForm({ ...form, [pid]: '', _shownSocial: shown.filter((x) => x !== pid) })}
+                                className="text-red-400 hover:text-red-600 text-xl leading-none px-1">×</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {available.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {available.map((p) => (
+                            <button key={p.id} type="button"
+                              onClick={() => setForm({ ...form, _shownSocial: [...shown, p.id] })}
+                              className="px-3 py-1 text-xs font-semibold border border-brand-400 text-brand-700 rounded-full bg-white hover:bg-brand-50 transition">
+                              + {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <div key={f.name}>

@@ -31,13 +31,17 @@ export default function ListingPage({ title, resource, extraFields = [], default
       galleryImages: [],
       _galleryFiles: [],
       _galleryToRemove: [],
-      services: Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null })),
+      services: [],
+      _shownSocial: [],
     };
     extraFields.forEach((f) => {
       const t = f.type || '';
-      if (['coverimage', 'gallery', 'services', '_latlng_pair'].includes(t)) return;
+      if (['coverimage', 'gallery', 'services', '_latlng_pair', 'social'].includes(t)) return;
       if (!(f.name in base)) base[f.name] = '';
     });
+    if (extraFields.some((f) => f.type === 'social')) {
+      base.fbLink = ''; base.twitterLink = ''; base.googleMap = ''; base.videoUrl = ''; base.instaLink = '';
+    }
     return base;
   }, [extraFields]);
 
@@ -94,11 +98,12 @@ export default function ListingPage({ title, resource, extraFields = [], default
     next.image = it.image || '';
     next.coverImage = it.coverImage || '';
     next.galleryImages = Array.isArray(it.galleryImages) ? it.galleryImages : [];
-    if (Array.isArray(it.services) && it.services.length) {
-      const svcs = Array.from({ length: 6 }, () => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }));
-      it.services.forEach((s, i) => { if (i < 6) svcs[i] = { ...svcs[i], ...s, _file: null }; });
-      next.services = svcs;
-    }
+    next.services = Array.isArray(it.services)
+      ? it.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null, ...s, _file: null }))
+      : [];
+    const SOCIAL_IDS = ['fbLink', 'twitterLink', 'googleMap', 'videoUrl', 'instaLink'];
+    SOCIAL_IDS.forEach((k) => { next[k] = it[k] || ''; });
+    next._shownSocial = SOCIAL_IDS.filter((k) => it[k]);
     setForm(next);
     setEditingId(it._id);
     setShowForm(true);
@@ -120,9 +125,12 @@ export default function ListingPage({ title, resource, extraFields = [], default
       fd.append('active', String(form.active));
       extraFields.forEach((f) => {
         const t = f.type || '';
-        if (['coverimage', 'gallery', 'services', '_latlng_pair'].includes(t)) return;
+        if (['coverimage', 'gallery', 'services', '_latlng_pair', 'social'].includes(t)) return;
         fd.append(f.name, form[f.name] ?? '');
       });
+      if (extraFields.some((f) => f.type === 'social')) {
+        ['fbLink', 'twitterLink', 'googleMap', 'videoUrl', 'instaLink'].forEach((k) => fd.append(k, form[k] || ''));
+      }
       if (form.imageFile) fd.append('image', form.imageFile);
       if (form._coverFile) fd.append('coverImageFile', form._coverFile);
       (form._galleryFiles || []).forEach((file) => fd.append('galleryFiles', file));
@@ -420,13 +428,61 @@ export default function ListingPage({ title, resource, extraFields = [], default
                   </div>
                 );
 
+                if (f.type === 'social') {
+                  const SPLATFORMS = [
+                    { id: 'fbLink',      label: 'Facebook',    placeholder: 'https://facebook.com/...' },
+                    { id: 'twitterLink', label: 'Twitter / X', placeholder: 'https://twitter.com/...' },
+                    { id: 'instaLink',   label: 'Instagram',   placeholder: 'https://instagram.com/...' },
+                    { id: 'googleMap',   label: 'Google Maps', placeholder: 'https://maps.google.com/...' },
+                    { id: 'videoUrl',    label: 'YouTube',     placeholder: 'https://youtube.com/...' },
+                  ];
+                  const shown = form._shownSocial || [];
+                  const available = SPLATFORMS.filter((p) => !shown.includes(p.id));
+                  return (
+                    <div key="social">
+                      <label className="label">{f.label}</label>
+                      <div className="space-y-2 mb-2">
+                        {shown.map((pid) => {
+                          const p = SPLATFORMS.find((x) => x.id === pid);
+                          if (!p) return null;
+                          return (
+                            <div key={pid} className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-gray-500 w-24 shrink-0">{p.label}</span>
+                              <input type="url" className="input text-sm flex-1" placeholder={p.placeholder}
+                                value={form[pid] || ''}
+                                onChange={(e) => setForm({ ...form, [pid]: e.target.value })} />
+                              <button type="button" onClick={() => setForm({ ...form, [pid]: '', _shownSocial: shown.filter((x) => x !== pid) })}
+                                className="text-red-400 hover:text-red-600 text-xl leading-none px-1">×</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {available.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {available.map((p) => (
+                            <button key={p.id} type="button"
+                              onClick={() => setForm({ ...form, _shownSocial: [...shown, p.id] })}
+                              className="px-3 py-1 text-xs font-semibold border border-brand-400 text-brand-700 rounded-full bg-white hover:bg-brand-50 transition">
+                              + {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 if (f.type === 'services') return (
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-2">
                       {(form.services || []).map((s, i) => (
                         <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</span>
+                            <button type="button" onClick={() => setForm({ ...form, services: form.services.filter((_, j) => j !== i) })}
+                              className="text-xs text-red-500 hover:text-red-700 font-semibold">✕ Remove</button>
+                          </div>
                           <div className="grid grid-cols-2 gap-2">
                             <input className="input text-sm" placeholder="Name" value={s.name || ''}
                               onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], name: e.target.value }; setForm({ ...form, services: svcs }); }} />
@@ -443,6 +499,13 @@ export default function ListingPage({ title, resource, extraFields = [], default
                         </div>
                       ))}
                     </div>
+                    {(form.services || []).length < 6 && (
+                      <button type="button"
+                        onClick={() => setForm({ ...form, services: [...(form.services || []), { name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }] })}
+                        className="w-full py-2 text-sm font-semibold text-brand-700 border border-dashed border-brand-400 rounded-lg bg-brand-50/40 hover:bg-brand-50 transition">
+                        + Add Service
+                      </button>
+                    )}
                   </div>
                 );
 
