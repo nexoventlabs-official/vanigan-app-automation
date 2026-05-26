@@ -188,7 +188,7 @@ function pageShell(title, bodyContent) {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000000;color:#ffffff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
     .card{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 12px 40px rgba(0,0,0,0.5);padding:48px 40px;max-width:480px;width:100%;text-align:center}
-    .icon{font-size:56px;margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(102,255,76,0.25))}
+    .icon{margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(102,255,76,0.25))}
     h1{font-size:1.8rem;color:#ffffff;margin-bottom:14px;font-weight:900;letter-spacing:-0.02em}
     p{color:#9ca3af;line-height:1.65;margin-bottom:8px;font-size:0.92rem;font-weight:500}
     p.sub{font-size:0.85rem;color:#6b7280;margin-top:16px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px}
@@ -315,7 +315,7 @@ function buildFormHtml(phone) {
 <body>
 <div class="wrap">
   <div class="header">
-    <div class="icon">🪔</div>
+    <div class="icon"><img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:48px;width:auto"></div>
     <h1>Vanigan</h1>
     <p>Register Your Business</p>
   </div>
