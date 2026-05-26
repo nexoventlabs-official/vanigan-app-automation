@@ -123,17 +123,17 @@ function CropModal({ file, aspect, onDone, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl p-4 w-full max-w-lg shadow-2xl">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-800">Crop Image</h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+      <div className="bg-[#0A0E17] border border-white/[0.08] rounded-2xl p-5 w-full max-w-lg shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-sm uppercase tracking-wider text-white">Crop Image</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-white transition-all"><X size={18} /></button>
         </div>
-        <div className="bg-black rounded-lg overflow-hidden" style={{ maxHeight: '60vh' }}>
+        <div className="bg-black rounded-xl overflow-hidden border border-white/[0.08]" style={{ maxHeight: '60vh' }}>
           <img ref={imgRef} alt="crop source" style={{ display: 'block', maxWidth: '100%' }} />
         </div>
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-5">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button type="button" onClick={handleCrop} className="btn-primary flex-1">✓ Crop &amp; Use</button>
         </div>
@@ -144,12 +144,12 @@ function CropModal({ file, aspect, onDone, onClose }) {
 
 function Field({ icon: Icon, label, children }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-100 last:border-0">
-      <Icon size={15} className="text-brand-400 mt-0.5 flex-shrink-0" />
+    <div className="flex items-start gap-3 py-3 border-b border-white/[0.06] last:border-0">
+      <Icon size={15} className="text-gray-400 mt-0.5 flex-shrink-0" />
       <div className="min-w-0 flex-1">
-        {label && <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{label}</div>}
-        <div className="text-sm text-gray-700 break-words">
-          {children ?? <span className="text-gray-300 italic text-xs">—</span>}
+        {label && <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</div>}
+        <div className="text-sm text-gray-200 break-words font-medium">
+          {children ?? <span className="text-gray-600 italic text-xs">—</span>}
         </div>
       </div>
     </div>
@@ -270,15 +270,45 @@ export default function BusinessDetail() {
     },
     {
       id: 'twitterLink', label: 'Twitter / X', color: '#000000', bg: '#f0f0f0',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="#000000"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" style={{
+          background: '#000000',
+          borderRadius: '4px',
+          padding: '2.5px',
+          boxSizing: 'border-box',
+          display: 'block'
+        }}>
+          <path fill="#ffffff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      ),
     },
     {
       id: 'instaLink', label: 'Instagram', color: '#C13584', bg: '#fce4f1',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="#C13584"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" style={{
+          background: 'radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)',
+          borderRadius: '4px',
+          padding: '2.2px',
+          boxSizing: 'border-box',
+          display: 'block'
+        }}>
+          <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#ffffff" strokeWidth="2" />
+          <circle cx="12" cy="12" r="4.5" fill="none" stroke="#ffffff" strokeWidth="2" />
+          <circle cx="17.5" cy="6.5" r="1.5" fill="#ffffff" />
+        </svg>
+      ),
     },
     {
       id: 'googleMap', label: 'Google Maps', color: '#1A73E8', bg: '#e8f0fe',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 1.7.52 3.28 1.41 4.58L12 22l5.59-8.42A6.96 6.96 0 0 0 19 9c0-3.87-3.13-7-7-7z"/><path fill="#34A853" d="M12 22l5.59-8.42A6.96 6.96 0 0 1 12 9v13z"/><path fill="#FBBC04" d="M5 9c0 1.7.52 3.28 1.41 4.58L12 22V9H5z"/><circle fill="white" cx="12" cy="9" r="2.8"/></svg>,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 92.3 132.3">
+          <path fill="#1a73e8" d="M60.2 2.2C55.8.8 51 0 46.1 0 32 0 19.3 6.4 10.8 16.5l21.8 18.3L60.2 2.2z"/>
+          <path fill="#ea4335" d="M10.8 16.5C4.1 24.5 0 34.9 0 46.1c0 8.7 1.7 15.7 4.6 22l28-33.3-21.8-18.3z"/>
+          <path fill="#4285f4" d="M46.2 28.5c9.8 0 17.7 7.9 17.7 17.7 0 4.3-1.6 8.3-4.2 11.4 0 0 13.9-16.6 27.5-32.7-5.6-10.8-15.3-19-27-22.7L32.6 34.8c3.3-3.8 8.1-6.3 13.6-6.3"/>
+          <path fill="#fbbc04" d="M46.2 63.8c-9.8 0-17.7-7.9-17.7-17.7 0-4.3 1.5-8.3 4.1-11.3l-28 33.3c4.8 10.6 12.8 19.2 21 29.9l34.1-40.5c-3.3 3.9-8.1 6.3-13.5 6.3"/>
+          <path fill="#34a853" d="M59.1 109.2c15.4-24.1 33.3-35 33.3-63 0-7.7-1.9-14.9-5.2-21.3L25.6 98c2.6 3.4 5.3 7.3 7.9 11.3 9.4 14.5 6.8 23.1 12.8 23.1s3.4-8.7 12.8-23.2"/>
+        </svg>
+      ),
     },
     {
       id: 'videoUrl', label: 'YouTube', color: '#FF0000', bg: '#ffe8e8',
@@ -287,186 +317,275 @@ export default function BusinessDetail() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="w-full space-y-6">
       {/* Crop Modal */}
       {cropTarget && (
         <CropModal file={cropTarget.file} aspect={cropTarget.aspect}
           onDone={onCropDone} onClose={() => setCropTarget(null)} />
       )}
-      {/* Top bar */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <button onClick={() => navigate('/businesses')} className="btn-secondary gap-2">
-          <ArrowLeft size={16} /> Back to Businesses
-        </button>
-        <div className="flex gap-2">
-          <button onClick={openEdit} className="btn-secondary gap-2">
-            <Pencil size={15} /> Edit
-          </button>
-          <button onClick={handleDelete} disabled={deleting} className="btn-danger gap-2">
-            <Trash2 size={15} /> {deleting ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
-      </div>
 
-      {/* Hero card */}
-      <div className="card overflow-hidden">
-        {/* Cover / banner area */}
-        <div className="h-44 bg-gradient-to-r from-brand-800 to-brand-600 relative">
-          {biz.coverImage
-            ? <img src={biz.coverImage} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
-            : biz.image && <img src={biz.image} alt={biz.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
-          }
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 p-4 flex items-end gap-4">
-            <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white flex-shrink-0">
+      {/* Main unified layout sheet inspired by Sisyphus Ventures */}
+      <div className="w-full bg-[#0A0E17]/30 border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl">
+        
+        {/* Cover banner & Profile Header */}
+        <div className="relative">
+          {/* Cover banner */}
+          <div className="h-52 bg-gradient-to-r from-[#0B0F19] to-[#06080D] relative border-b border-white/[0.08]">
+            {biz.coverImage
+              ? <img src={biz.coverImage} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+              : biz.image && <img src={biz.image} alt={biz.name} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+            }
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            
+            {/* Absolute overlapping round profile logo */}
+            <div className="absolute -bottom-12 left-8 z-10 w-28 h-28 rounded-full border-4 border-[#000000] bg-[#0A0E17] shadow-2xl overflow-hidden flex-shrink-0">
               {biz.image
                 ? <img src={biz.image} alt={biz.name} className="w-full h-full object-cover" />
-                : <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300"><ImageIcon size={26} /></div>
+                : <div className="w-full h-full flex items-center justify-center bg-black/40 text-gray-600"><ImageIcon size={36} /></div>
               }
             </div>
-            <div className="pb-1">
-              <h1 className="text-xl font-bold text-white drop-shadow">{biz.name}</h1>
-              {biz.listingCode && <div className="text-xs text-white/70 mt-0.5">{biz.listingCode}</div>}
+            
+            {/* Active status indicator absolute inside banner */}
+            <div className="absolute top-4 right-4 z-10">
+              {biz.active
+                ? <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-[#66ff4c]/10 text-[#66ff4c] border border-[#66ff4c]/20 px-3 py-1.5 rounded-full"><CheckCircle size={12} /> Active</span>
+                : <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-white/[0.04] text-gray-400 border border-white/[0.08] px-3 py-1.5 rounded-full"><XCircle size={12} /> Inactive</span>
+              }
             </div>
           </div>
-          <div className="absolute top-3 right-4 flex items-center gap-2">
-            {biz.active
-              ? <span className="flex items-center gap-1 text-xs font-semibold bg-green-500 text-white px-2.5 py-1 rounded-full"><CheckCircle size={12} /> Active</span>
-              : <span className="flex items-center gap-1 text-xs font-semibold bg-gray-400 text-white px-2.5 py-1 rounded-full"><XCircle size={12} /> Inactive</span>
-            }
-          </div>
-        </div>
 
-        {/* Quick chips row */}
-        <div className="px-5 pt-4 pb-3 flex flex-wrap gap-2 border-b border-gray-100">
-          {biz.category && <span className="flex items-center gap-1 pill bg-orange-50 text-orange-700 text-xs"><Tag size={11} /> {biz.category}</span>}
-          {biz.subCategory && <span className="pill bg-orange-50 text-orange-600 text-xs">{biz.subCategory}</span>}
-          {biz.district && <span className="pill bg-blue-50 text-blue-700 text-xs">{biz.district}</span>}
-          {biz.assembly && <span className="pill bg-blue-50 text-blue-600 text-xs">{biz.assembly}</span>}
-        </div>
-
-        {/* Body — two column */}
-        <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-          <div className="p-5 space-y-0">
-            <Field icon={MapPin} label="Address">
-              {biz.address ? <><div>{biz.address}</div>{biz.landmark && <div className="text-gray-400 text-xs mt-1">📍 {biz.landmark}</div>}</> : null}
-            </Field>
-            <Field icon={MapPin} label="City / Pincode">
-              {[biz.city, biz.pincode].filter(Boolean).join(', ') || null}
-            </Field>
-            <Field icon={MapPin} label="Service Locations">{biz.serviceLocations || null}</Field>
-            <Field icon={Phone} label="Primary Phone">
-              {biz.phone ? <a href={`tel:${biz.phone}`} className="font-medium text-brand-700 hover:underline">{biz.phone}</a> : null}
-            </Field>
-            <Field icon={Phone} label="Alternate Phone">{biz.phone2 || null}</Field>
-            <Field icon={Phone} label="WhatsApp">{biz.whatsappNo || null}</Field>
-            <Field icon={Phone} label="Landline">{biz.landline || null}</Field>
-            <Field icon={Mail} label="Email">
-              {biz.email ? <a href={`mailto:${biz.email}`} className="text-brand-700 hover:underline">{biz.email}</a> : null}
-            </Field>
-            <Field icon={Globe} label="Website">
-              {biz.website ? <a href={biz.website} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline flex items-center gap-1 truncate">{biz.website} <ExternalLink size={12} /></a> : null}
-            </Field>
-          </div>
-          <div className="p-5 space-y-0">
-            <Field icon={Clock} label="Opening Hours">
-              {(biz.openDays || biz.openTime || biz.closeTime) ? (
-                <div>
-                  {biz.openDays && <div className="flex flex-wrap gap-1 mb-1.5">{biz.openDays.split(',').map(d=>d.trim()).filter(Boolean).map(d=><span key={d} className="pill bg-gray-100 text-gray-600 text-xs">{d}</span>)}</div>}
-                  {(biz.openTime || biz.closeTime) && <div className="font-medium">{biz.openTime||'—'} – {biz.closeTime||'—'}</div>}
-                </div>
-              ) : null}
-            </Field>
-            <Field icon={MapPin} label="GPS Location">
-              {biz.lat && biz.lng ? <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline flex items-center gap-1">View on Google Maps <ExternalLink size={12} /></a> : null}
-            </Field>
-            <Field icon={Tag} label="Listing Code">{biz.listingCode || null}</Field>
-            <Field icon={Phone} label="Owner / WhatsApp Reg">{biz.ownerPhone || null}</Field>
-            <Field icon={Clock} label="Registered on">
-              {biz.createdAt ? new Date(biz.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : null}
-            </Field>
-          </div>
-        </div>
-      </div>
-
-      {/* About */}
-      <div className="card p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">About</h2>
-        <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-          {biz.description || <span className="text-gray-300 italic">—</span>}
-        </p>
-      </div>
-
-      {/* Social media */}
-      <div className="card p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Social &amp; Media</h2>
-        {SPLATFORMS_DETAIL.some(p => biz[p.id]) ? (
-          <div className="flex flex-wrap gap-2">
-            {SPLATFORMS_DETAIL.filter(p => biz[p.id]).map(p => (
-              <a key={p.id} href={biz[p.id]} target="_blank" rel="noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition hover:opacity-80"
-                style={{ background: p.bg, borderColor: p.color + '55', color: p.color }}>
-                {p.icon} {p.label}
-              </a>
-            ))}
-          </div>
-        ) : <span className="text-gray-300 italic text-sm">—</span>}
-      </div>
-
-      {/* Gallery */}
-      <div className="card p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Gallery ({(biz.galleryImages||[]).length})</h2>
-        {(biz.galleryImages||[]).length > 0 ? (
-          <div className="grid grid-cols-3 gap-2">
-            {biz.galleryImages.map((img, i) => (
-              <img key={i} src={img.url} alt="" className="w-full aspect-square object-cover rounded-xl border border-gray-100" />
-            ))}
-          </div>
-        ) : <span className="text-gray-300 italic text-sm">—</span>}
-      </div>
-
-      {/* Services */}
-      <div className="card p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Services / Products ({(biz.services||[]).length})</h2>
-        {(biz.services||[]).length > 0 ? (
-          <div className="space-y-3">
-            {biz.services.map((s, i) => (
-              <div key={i} className="flex gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                {s.image && <img src={s.image} alt={s.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-gray-200" />}
-                <div className="min-w-0">
-                  <div className="font-medium text-sm">{s.name || <span className="text-gray-300">—</span>}</div>
-                  {s.price && <div className="text-xs font-semibold text-brand-700 mt-0.5">₹{s.price}</div>}
-                  {s.detail && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{s.detail}</div>}
-                </div>
+          {/* Under-banner Profile Header Info (Next to logo) */}
+          <div className="pt-16 pb-6 px-8 flex justify-between items-start flex-wrap gap-4 border-b border-white/[0.08] bg-[#0A0E17]/60">
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-sm flex items-center flex-wrap gap-2">
+                <span>{biz.name}</span>
+                {biz.active ? (
+                  <svg viewBox="0 0 24 24" width="20" height="20" className="inline-block shrink-0 align-middle select-none" fill="currentColor" title="Verified active listing">
+                    <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/>
+                    <path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20" className="inline-block shrink-0 align-middle select-none animate-[pulse_3s_infinite]" fill="currentColor" title="Pending review">
+                    <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#F59E0B"/>
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 9c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm.5-4H10V9h1v2h1.5v1z" fill="white"/>
+                  </svg>
+                )}
+              </h1>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {biz.listingCode && <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{biz.listingCode}</span>}
+                {biz.website && (
+                  <>
+                    <span className="text-gray-600">•</span>
+                    <a href={biz.website} target="_blank" rel="noreferrer" className="text-xs font-bold text-gray-400 hover:text-[#66ff4c] transition-all flex items-center gap-1">
+                      {biz.website.replace(/^https?:\/\//, '')} <ExternalLink size={10} />
+                    </a>
+                  </>
+                )}
               </div>
-            ))}
-          </div>
-        ) : <span className="text-gray-300 italic text-sm">—</span>}
-      </div>
+            </div>
 
-      {/* FAQ */}
-      <div className="card p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">FAQ</h2>
-        {(biz.infoQuestion || biz.infoAnswer) ? (
-          <div>
-            {biz.infoQuestion && <div className="font-medium text-sm mb-1">{biz.infoQuestion}</div>}
-            {biz.infoAnswer && <div className="text-sm text-gray-600 whitespace-pre-line">{biz.infoAnswer}</div>}
+            {/* Action buttons on the far right */}
+            <div className="flex gap-2.5">
+              <button onClick={() => navigate('/businesses')} className="btn-secondary gap-2 px-4.5 py-3">
+                <ArrowLeft size={15} /> Back
+              </button>
+              <button onClick={openEdit} className="btn-secondary gap-2 px-4.5 py-3 text-white border-white/[0.08] hover:border-white/[0.15]">
+                <Pencil size={14} /> Edit profile
+              </button>
+              <button onClick={handleDelete} disabled={deleting} className="btn-danger gap-2 px-4.5 py-3">
+                <Trash2 size={14} /> Delete
+              </button>
+            </div>
           </div>
-        ) : <span className="text-gray-300 italic text-sm">—</span>}
+        </div>
+
+        {/* Horizontal Section Rows (Sisyphus Ventures Style) */}
+        <div className="divide-y divide-white/[0.08] bg-[#0E131F]/10">
+          
+          {/* Row 1: Profile & About Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Company profile</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Overview narrative, categorizations, and district assembly regions.
+              </p>
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              <div className="text-sm text-gray-200 whitespace-pre-line leading-relaxed font-medium">
+                {biz.description || <span className="text-gray-600 italic">— No description available —</span>}
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {biz.category && <span className="flex items-center gap-1.5 pill bg-orange-500/10 text-orange-400 border border-orange-500/20"><Tag size={11} /> {biz.category}</span>}
+                {biz.subCategory && <span className="pill bg-orange-500/10 text-orange-300 border border-orange-500/10">{biz.subCategory}</span>}
+                {biz.district && <span className="pill bg-blue-500/10 text-blue-400 border border-blue-500/20">{biz.district}</span>}
+                {biz.assembly && <span className="pill bg-blue-500/10 text-blue-300 border border-blue-500/10">{biz.assembly}</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Contact Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Contact Coordinates</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Address details, phone numbers, online support, and physical locations.
+              </p>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                <Field icon={MapPin} label="Address">
+                  {biz.address ? <><div>{biz.address}</div>{biz.landmark && <div className="text-gray-400 text-xs mt-1">📍 {biz.landmark}</div>}</> : null}
+                </Field>
+                <Field icon={MapPin} label="City / Pincode">
+                  {[biz.city, biz.pincode].filter(Boolean).join(', ') || null}
+                </Field>
+                <Field icon={MapPin} label="Service Locations">{biz.serviceLocations || null}</Field>
+                <Field icon={Phone} label="Primary Phone">
+                  {biz.phone ? <a href={`tel:${biz.phone}`} className="font-bold text-[#66ff4c] hover:underline transition-all">{biz.phone}</a> : null}
+                </Field>
+                <Field icon={Phone} label="Alternate Phone">{biz.phone2 || null}</Field>
+                <Field icon={Phone} label="WhatsApp">{biz.whatsappNo || null}</Field>
+                <Field icon={Phone} label="Landline">{biz.landline || null}</Field>
+                <Field icon={Mail} label="Email">
+                  {biz.email ? <a href={`mailto:${biz.email}`} className="font-bold text-[#66ff4c] hover:underline transition-all">{biz.email}</a> : null}
+                </Field>
+                <Field icon={Globe} label="Website">
+                  {biz.website ? <a href={biz.website} target="_blank" rel="noreferrer" className="font-bold text-[#66ff4c] hover:underline flex items-center gap-1 truncate transition-all">{biz.website} <ExternalLink size={12} /></a> : null}
+                </Field>
+                <Field icon={Tag} label="Listing Code">{biz.listingCode || null}</Field>
+                <Field icon={Phone} label="Owner / WhatsApp Reg">{biz.ownerPhone || null}</Field>
+                <Field icon={Clock} label="Registered on">
+                  {biz.createdAt ? new Date(biz.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : null}
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Operating Hours & GPS coordinates */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Business Schedule</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Weekly calendar days, timing range, and geographic coordinates.
+              </p>
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                <Field icon={Clock} label="Opening Hours">
+                  {(biz.openDays || biz.openTime || biz.closeTime) ? (
+                    <div>
+                      {biz.openDays && <div className="flex flex-wrap gap-1.5 mb-2 mt-1">{biz.openDays.split(',').map(d=>d.trim()).filter(Boolean).map(d=><span key={d} className="pill bg-white/[0.04] text-gray-400 border border-white/[0.08]">{d}</span>)}</div>}
+                      {(biz.openTime || biz.closeTime) && <div className="font-bold text-gray-200 mt-1">{biz.openTime||'—'} – {biz.closeTime||'—'}</div>}
+                    </div>
+                  ) : null}
+                </Field>
+                <Field icon={MapPin} label="GPS Location">
+                  {biz.lat && biz.lng ? <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer" className="font-bold text-[#66ff4c] hover:underline flex items-center gap-1 transition-all">View on Google Maps <ExternalLink size={12} /></a> : null}
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Services / Products portfolio */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Services &amp; Products</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Listing of featured services and items catalog with prices.
+              </p>
+            </div>
+            <div className="lg:col-span-2">
+              {(biz.services||[]).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {biz.services.map((s, i) => (
+                    <div key={i} className="flex gap-3.5 p-3.5 bg-[#000000]/40 rounded-xl border border-white/[0.08] hover:border-white/[0.15] transition-all">
+                      {s.image && <img src={s.image} alt={s.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white/[0.08] bg-[#0A0E17]" />}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-sm text-gray-200">{s.name || <span className="text-gray-600">—</span>}</div>
+                        {s.price && <div className="text-xs font-bold text-[#66ff4c] mt-1">₹{s.price}</div>}
+                        {s.detail && <div className="text-xs text-gray-400 mt-1.5 line-clamp-2 leading-relaxed">{s.detail}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <span className="text-gray-600 italic text-sm">— No services added yet —</span>}
+            </div>
+          </div>
+
+          {/* Row 5: Gallery Visual Showcase */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Visual Gallery</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Photo album showcase representing product collections or facilities.
+              </p>
+            </div>
+            <div className="lg:col-span-2">
+              {(biz.galleryImages||[]).length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {biz.galleryImages.map((img, i) => (
+                    <img key={i} src={img.url} alt="" className="w-full aspect-square object-cover rounded-xl border border-white/[0.08] bg-[#0A0E17]" />
+                  ))}
+                </div>
+              ) : <span className="text-gray-600 italic text-sm">— No photos uploaded —</span>}
+            </div>
+          </div>
+
+          {/* Row 6: Social media channels */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Social profiles</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Connected external pages, networks, and video channels.
+              </p>
+            </div>
+            <div className="lg:col-span-2">
+              {SPLATFORMS_DETAIL.some(p => biz[p.id]) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {SPLATFORMS_DETAIL.filter(p => biz[p.id]).map(p => (
+                    <a key={p.id} href={biz[p.id]} target="_blank" rel="noreferrer"
+                      className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-[#06080D] hover:bg-white/[0.02] hover:border-[#66ff4c] hover:border-white/[0.15] text-xs font-bold uppercase tracking-wider text-gray-200 transition-all">
+                      {p.icon} {p.label}
+                    </a>
+                  ))}
+                </div>
+              ) : <span className="text-gray-600 italic text-sm">— No social accounts connected —</span>}
+            </div>
+          </div>
+
+          {/* Row 7: Frequently Asked Questions */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Frequently Asked Questions</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Helpful details about common queries and answers.
+              </p>
+            </div>
+            <div className="lg:col-span-2">
+              {(biz.infoQuestion || biz.infoAnswer) ? (
+                <div className="border border-white/[0.08] bg-[#000000]/20 rounded-2xl p-5 space-y-2 max-w-2xl">
+                  {biz.infoQuestion && <div className="font-bold text-sm text-gray-200 leading-relaxed">{biz.infoQuestion}</div>}
+                  {biz.infoAnswer && <div className="text-sm text-gray-400 whitespace-pre-line leading-relaxed">{biz.infoAnswer}</div>}
+                </div>
+              ) : <span className="text-gray-600 italic text-sm">— No FAQs configured —</span>}
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* ── Edit Modal ── */}
       {showForm && (
-        <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={submitEdit} className="card w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="font-semibold text-brand-800">Edit Business</div>
-              <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-700">
+            <div className="px-5 py-4 border-b border-white/[0.08] bg-[#0E131F]/50 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md">
+              <div className="font-bold text-white uppercase tracking-wider text-xs">Edit Business</div>
+              <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white transition-all">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-4">
               <div>
                 <label className="label">Name *</label>
                 <input className="input" value={form.name}
@@ -497,7 +616,7 @@ export default function BusinessDetail() {
                         const days = (form[f.name] || '').split(',').map(x => x.trim()).filter(Boolean);
                         const checked = days.includes(d);
                         return (
-                          <label key={d} className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer border transition ${checked ? 'bg-brand-700 text-white border-brand-700' : 'bg-white text-gray-600 border-gray-300 hover:border-brand-400'}`}>
+                          <label key={d} className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer border transition-all ${checked ? 'bg-[#66ff4c] text-black border-[#66ff4c] shadow-[0_0_8px_rgba(102,255,76,0.2)]' : 'bg-black/60 text-gray-400 border-white/[0.08] hover:border-[#66ff4c]/50'}`}>
                             <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => {
                               const next = [...days];
                               e.target.checked ? next.push(d) : next.splice(next.indexOf(d), 1);
@@ -515,8 +634,8 @@ export default function BusinessDetail() {
                   const coverPrev = form._coverFile ? URL.createObjectURL(form._coverFile) : form.coverImage || null;
                   return (
                     <div key={f.name}>
-                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(banner ratio ~5:1)</span></label>
-                      {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-lg mb-2 object-cover" style={{height:'80px'}} />}
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal normal-case text-xs">(banner ratio ~5:1)</span></label>
+                      {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-xl mb-2.5 object-cover border border-white/[0.08] bg-[#0A0E17]" style={{height:'80px'}} />}
                       <input type="file" accept="image/*" className="input"
                         onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 896/176, 'cover'); e.target.value = ''; }} />
                     </div>
@@ -531,19 +650,19 @@ export default function BusinessDetail() {
                   const canAdd = totalCount < GALLERY_MAX;
                   return (
                     <div key={f.name}>
-                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(max {GALLERY_MAX} images, {totalCount}/{GALLERY_MAX})</span></label>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal normal-case text-xs">(max {GALLERY_MAX} images, {totalCount}/{GALLERY_MAX})</span></label>
                       {existingCount > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-2">
+                        <div className="flex flex-wrap gap-2 mb-2.5">
                           {form.galleryImages.map((img, idx) => (
                             <div key={idx} className="relative">
-                              <img src={img.url} alt="" className="w-16 h-16 object-cover rounded-lg border" />
+                              <img src={img.url} alt="" className="w-16 h-16 object-cover rounded-xl border border-white/[0.08] bg-[#0A0E17]" />
                               <button type="button"
                                 onClick={() => setForm((prev) => ({
                                   ...prev,
                                   galleryImages: prev.galleryImages.filter((_, i) => i !== idx),
                                   _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean),
                                 }))}
-                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+                                className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none hover:bg-red-700 transition-all shadow shadow-black/50">
                                 ×
                               </button>
                             </div>
@@ -551,13 +670,13 @@ export default function BusinessDetail() {
                         </div>
                       )}
                       {newCount > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-2">
+                        <div className="flex flex-wrap gap-2 mb-2.5">
                           {form._galleryFiles.map((file, idx) => (
                             <div key={idx} className="relative">
-                              <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 object-cover rounded-lg border border-green-300" />
+                              <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 object-cover rounded-xl border border-[#66ff4c]/40 bg-[#0A0E17]" />
                               <button type="button"
                                 onClick={() => setForm((prev) => ({ ...prev, _galleryFiles: prev._galleryFiles.filter((_, i) => i !== idx) }))}
-                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+                                className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none hover:bg-red-700 transition-all shadow shadow-black/50">
                                 ×
                               </button>
                             </div>
@@ -573,7 +692,7 @@ export default function BusinessDetail() {
                             e.target.value = '';
                           }} />
                       ) : (
-                        <div className="text-xs text-amber-600 font-medium py-2">⚠️ Gallery limit reached ({GALLERY_MAX} images max). Remove one to add more.</div>
+                        <div className="text-xs text-amber-500 font-bold py-2 bg-amber-500/5 px-3 border border-amber-500/20 rounded-xl">⚠️ Gallery limit reached ({GALLERY_MAX} images max). Remove one to add more.</div>
                       )}
                     </div>
                   );
@@ -582,13 +701,13 @@ export default function BusinessDetail() {
                 if (f.type === 'services') return (
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
-                    <div className="space-y-2 mb-2">
+                    <div className="space-y-3 mb-3">
                       {(form.services || []).map((s, i) => (
-                        <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
+                        <div key={i} className="border border-white/[0.08] rounded-xl p-4 space-y-3 bg-[#000000]/40">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service {i + 1}</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Service {i + 1}</span>
                             <button type="button" onClick={() => setForm({ ...form, services: form.services.filter((_, j) => j !== i) })}
-                              className="text-xs text-red-500 hover:text-red-700 font-semibold">✕ Remove</button>
+                              className="text-xs font-bold text-red-400 hover:text-red-500 transition-all">✕ Remove</button>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <input className="input text-sm" placeholder="Name" value={s.name || ''}
@@ -598,12 +717,12 @@ export default function BusinessDetail() {
                           </div>
                           <textarea rows={2} className="input text-sm" placeholder="Details / Description" value={s.detail || ''}
                             onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], detail: e.target.value }; setForm({ ...form, services: svcs }); }} />
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             {(s._file ? URL.createObjectURL(s._file) : s.image) && (
-                              <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                              <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-xl border border-white/[0.08] bg-[#0A0E17] flex-shrink-0" />
                             )}
                             <div className="flex-1">
-                              <label className="text-xs font-semibold text-gray-600 mb-1 block">Photo <span className="text-red-500">*</span></label>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Photo <span className="text-red-500">*</span></label>
                               <input type="file" accept="image/*" className="input text-xs w-full"
                                 onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
                             </div>
@@ -614,7 +733,7 @@ export default function BusinessDetail() {
                     {(form.services || []).length < 6 && (
                       <button type="button"
                         onClick={() => setForm({ ...form, services: [...(form.services || []), { name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null }] })}
-                        className="w-full py-2 text-sm font-semibold text-brand-700 border border-dashed border-brand-400 rounded-lg bg-brand-50/40 hover:bg-brand-50 transition">
+                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#66ff4c] border border-dashed border-[#66ff4c]/30 rounded-xl bg-[#66ff4c]/5 hover:bg-[#66ff4c]/10 hover:border-[#66ff4c]/65 transition-all">
                         + Add Service
                       </button>
                     )}
@@ -623,16 +742,25 @@ export default function BusinessDetail() {
 
                 if (f.type === 'latlng') return (
                   <div key={f.name}>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1.5">
                       <label className="label mb-0">{f.label}</label>
-                      <button type="button" className="text-xs text-brand-700 font-medium flex items-center gap-1 hover:underline"
+                      <button type="button" className="text-xs font-bold uppercase tracking-wider text-[#66ff4c] flex items-center gap-1.5 hover:underline transition-all"
                         onClick={() => {
                           if (!navigator.geolocation) return alert('Geolocation not supported');
                           navigator.geolocation.getCurrentPosition(
                             (pos) => setForm((prev) => ({ ...prev, lat: String(pos.coords.latitude), lng: String(pos.coords.longitude) })),
                             () => alert('Location access denied')
                           );
-                        }}>📍 Use current location</button>
+                        }}>
+                        <svg width="12" height="12" viewBox="0 0 92.3 132.3" className="shrink-0 animate-pulse">
+                          <path fill="#66ff4c" d="M60.2 2.2C55.8.8 51 0 46.1 0 32 0 19.3 6.4 10.8 16.5l21.8 18.3L60.2 2.2z"/>
+                          <path fill="#52e038" d="M10.8 16.5C4.1 24.5 0 34.9 0 46.1c0 8.7 1.7 15.7 4.6 22l28-33.3-21.8-18.3z"/>
+                          <path fill="#66ff4c" d="M46.2 28.5c9.8 0 17.7 7.9 17.7 17.7 0 4.3-1.6 8.3-4.2 11.4 0 0 13.9-16.6 27.5-32.7-5.6-10.8-15.3-19-27-22.7L32.6 34.8c3.3-3.8 8.1-6.3 13.6-6.3"/>
+                          <path fill="#52e038" d="M46.2 63.8c-9.8 0-17.7-7.9-17.7-17.7 0-4.3 1.5-8.3 4.1-11.3l-28 33.3c4.8 10.6 12.8 19.2 21 29.9l34.1-40.5c-3.3 3.9-8.1 6.3-13.5 6.3"/>
+                          <path fill="#34a853" d="M59.1 109.2c15.4-24.1 33.3-35 33.3-63 0-7.7-1.9-14.9-5.2-21.3L25.6 98c2.6 3.4 5.3 7.3 7.9 11.3 9.4 14.5 6.8 23.1 12.8 23.1s3.4-8.7 12.8-23.2"/>
+                        </svg>
+                        <span>Use current location</span>
+                      </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input className="input" placeholder="Latitude" value={form.lat || ''}
@@ -669,18 +797,18 @@ export default function BusinessDetail() {
                   return (
                     <div key="social">
                       <label className="label">{f.label}</label>
-                      <div className="space-y-2 mb-2">
+                      <div className="space-y-2 mb-2.5">
                         {shown.map((pid) => {
                           const p = SPLATFORMS.find((x) => x.id === pid);
                           if (!p) return null;
                           return (
                             <div key={pid} className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-gray-500 w-24 shrink-0">{p.label}</span>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-24 shrink-0">{p.label}</span>
                               <input type="url" className="input text-sm flex-1" placeholder={p.placeholder}
                                 value={form[pid] || ''}
                                 onChange={(e) => setForm({ ...form, [pid]: e.target.value })} />
                               <button type="button" onClick={() => setForm({ ...form, [pid]: '', _shownSocial: shown.filter((x) => x !== pid) })}
-                                className="text-red-400 hover:text-red-600 text-xl leading-none px-1">×</button>
+                                className="text-red-400 hover:text-red-500 text-xl leading-none px-1 transition-all">×</button>
                             </div>
                           );
                         })}
@@ -690,7 +818,7 @@ export default function BusinessDetail() {
                           {available.map((p) => (
                             <button key={p.id} type="button"
                               onClick={() => setForm({ ...form, _shownSocial: [...shown, p.id] })}
-                              className="px-3 py-1 text-xs font-semibold border border-brand-400 text-brand-700 rounded-full bg-white hover:bg-brand-50 transition">
+                              className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-white/[0.08] text-gray-300 rounded-full bg-[#06080D] hover:bg-white/[0.02] hover:border-white/[0.15] hover:text-white transition-all">
                               + {p.label}
                             </button>
                           ))}
@@ -717,22 +845,23 @@ export default function BusinessDetail() {
               </div>
 
               <div>
-                <label className="label">Listing Image <span className="text-gray-400 font-normal text-xs">(1:1 square)</span></label>
+                <label className="label">Listing Image <span className="text-gray-400 font-normal normal-case text-xs">(1:1 square)</span></label>
                 {(form.imageFile ? URL.createObjectURL(form.imageFile) : form.image) && (
-                  <img src={form.imageFile ? URL.createObjectURL(form.imageFile) : form.image} alt="" className="w-24 h-24 object-cover rounded-xl mb-2" />
+                  <img src={form.imageFile ? URL.createObjectURL(form.imageFile) : form.image} alt="" className="w-24 h-24 object-cover rounded-xl border border-white/[0.08] bg-[#0A0E17] mb-2.5" />
                 )}
                 <input type="file" accept="image/*" className="input"
                   onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, 'listing'); e.target.value = ''; }} />
               </div>
 
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2.5 text-sm text-gray-300 cursor-pointer select-none">
                 <input type="checkbox" checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })} />
-                Show this listing in the WhatsApp flow
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  className="rounded border-white/[0.08] bg-[#000000]/65 text-[#66ff4c] focus:ring-[#66ff4c]/30" />
+                <span>Show this listing in the WhatsApp flow</span>
               </label>
             </div>
 
-            <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-white/[0.08] bg-[#0E131F]/50 flex justify-end gap-2 sticky bottom-0 z-10 backdrop-blur-md">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? 'Saving…' : 'Update'}

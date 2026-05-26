@@ -35,24 +35,34 @@ export default function Layout({ user, setAuth }) {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#000000]">
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-brand-900 text-white flex flex-col transition-transform ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 text-white flex flex-col transition-transform duration-300 ${
           open ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
+        style={{
+          backgroundColor: '#000000',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+        }}
       >
-        <div className="px-5 py-6 flex items-center gap-3 border-b border-brand-800">
-          <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-xl">
-            🪔
-          </div>
+        <div 
+          className="px-5 py-6 flex items-center gap-1.5"
+          style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}
+        >
+          <img
+            src="https://vanigan.org/front/images/home/tnvslogo.png"
+            alt="TNVS Logo"
+            className="w-14 h-14 object-contain"
+            style={{ filter: 'drop-shadow(0 0 10px rgba(102, 255, 76, 0.35))' }}
+          />
           <div>
-            <div className="font-bold leading-tight">Vanigan</div>
-            <div className="text-xs text-brand-200">Tamil Nadu Directory</div>
+            <div className="font-extrabold text-white text-lg tracking-tight leading-tight">Vanigan</div>
+            <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Directory Admin</div>
           </div>
         </div>
 
-        <nav className="flex-1 py-4 space-y-1 px-3 overflow-y-auto">
+        <nav className="flex-1 py-6 space-y-1.5 px-4 overflow-y-auto" style={{ backgroundColor: '#000000' }}>
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -60,26 +70,26 @@ export default function Layout({ user, setAuth }) {
               end={end}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+                `flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-200 relative group font-semibold ${
                   isActive
-                    ? 'bg-brand-700 text-white font-medium'
-                    : 'text-brand-100 hover:bg-brand-800 hover:text-white'
+                    ? 'text-[#66ff4c] bg-[#66ff4c]/10 border-l-[3px] border-[#66ff4c] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                    : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                 }`
               }
             >
-              <Icon size={18} />
+              <Icon size={18} className="shrink-0" />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-3 border-t border-brand-800">
-          <div className="px-3 py-2 mb-2 text-xs text-brand-200">
-            Signed in as <span className="text-white font-medium">{user?.username}</span>
+        <div className="p-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div className="px-3 py-2 mb-2 text-xs text-gray-500 font-bold uppercase tracking-wider">
+            Admin: <span className="text-white font-extrabold normal-case">{user?.username}</span>
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-100 hover:bg-brand-800"
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/[0.03] transition-all font-semibold"
           >
             <LogOut size={16} /> Logout
           </button>
@@ -89,20 +99,20 @@ export default function Layout({ user, setAuth }) {
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/75 z-20 lg:hidden backdrop-blur-sm transition-all"
         />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-          <button onClick={() => setOpen(true)} className="lg:hidden p-2 -ml-2">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#000000] lg:pl-64">
+        <header className="bg-[#000000] border-b border-gray-800/60 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 lg:hidden">
+          <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-white hover:text-[#66ff4c] transition-colors">
             <Menu size={22} />
           </button>
-          <div className="font-semibold text-brand-800 truncate">Vanigan Admin Console</div>
+          <div className="font-black text-sm text-white tracking-widest uppercase">Vanigan Console</div>
           <div className="w-8" />
         </header>
 
-        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden bg-[#000000]">
           <Outlet />
         </main>
       </div>

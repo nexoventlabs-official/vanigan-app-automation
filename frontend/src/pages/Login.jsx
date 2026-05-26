@@ -28,8 +28,12 @@ export default function Login({ setAuth }) {
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-brand-50 via-white to-brand-100">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-brand-600 text-white flex items-center justify-center text-3xl mx-auto shadow-lg">
-            🪔
+          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto shadow-md border border-brand-100 p-0.5">
+            <img
+              src="https://vanigan.org/front/images/home/tnvslogo.png"
+              alt="TNVS Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
           <h1 className="mt-4 text-2xl font-bold text-brand-900">Vanigan</h1>
           <p className="text-sm text-brand-700/70">Tamil Nadu Directory Admin</p>

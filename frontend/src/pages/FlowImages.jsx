@@ -62,8 +62,8 @@ export default function FlowImages() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-brand-900">Flow Images</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Flow Images</h1>
+        <p className="text-sm text-gray-400 mt-1 font-semibold">
           Upload banner & icon images used by the WhatsApp chatbot and flow screens.
           Changes go live within ~10 minutes (image cache).
         </p>
@@ -76,23 +76,30 @@ export default function FlowImages() {
           const group = groups[gkey] || [];
           if (!group.length) return null;
           return (
-            <div key={gkey} className="card overflow-hidden">
-              <div className="px-5 py-3 bg-brand-50 border-b border-brand-100 font-semibold text-brand-800">
+            <div key={gkey} className="card overflow-hidden bg-[#0A0E17]/60 border border-white/[0.08] shadow-2xl">
+              <div className="px-5 py-3 bg-white/[0.02] border-b border-white/[0.08] font-bold text-xs uppercase tracking-wider text-gray-300">
                 {GROUP_LABELS[gkey]}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
                 {group.map((item) => (
-                  <div key={item.key} className="border border-gray-200 rounded-lg p-3 flex flex-col">
-                    <div className="aspect-square bg-gray-50 rounded-md overflow-hidden flex items-center justify-center mb-2">
+                  <div key={item.key} className="bg-[#06080D]/40 border border-white/[0.06] rounded-xl p-4 flex flex-col group hover:border-[#66ff4c]/30 hover:shadow-[0_0_12px_rgba(102,255,76,0.04)] transition-all duration-300">
+                    <div className="aspect-video bg-gradient-to-br from-[#06080D] to-[#0D1527] rounded-lg overflow-hidden flex items-center justify-center mb-3.5 border border-white/[0.08] relative">
+                      {/* Subtle pattern overlay */}
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+                        backgroundSize: '12px 12px'
+                      }} />
                       {item.url ? (
-                        <img src={item.url} alt={item.label} className="w-full h-full object-cover" />
+                        <img src={item.url} alt={item.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <ImageIcon size={36} className="text-gray-300" />
+                        <ImageIcon size={32} className="text-gray-600 stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
                       )}
                     </div>
-                    <div className="text-sm font-medium text-gray-800 line-clamp-2">{item.label}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">key: {item.key}</div>
-                    <div className="mt-3 flex gap-2">
+                    
+                    <div className="text-sm font-black text-white group-hover:text-[#66ff4c] transition-colors duration-200 line-clamp-2 leading-snug">{item.label}</div>
+                    <div className="text-[10px] font-mono font-bold text-gray-500 mt-1">key: {item.key}</div>
+                    
+                    <div className="mt-4 flex gap-2">
                       <input
                         type="file"
                         accept="image/*"
@@ -103,29 +110,29 @@ export default function FlowImages() {
                       <button
                         onClick={() => onPick(item.key)}
                         disabled={uploadingKey === item.key}
-                        className="btn-primary !py-1.5 flex-1 !text-xs"
+                        className="btn-primary !py-2 flex-1 flex items-center justify-center gap-1.5"
                       >
                         {uploadingKey === item.key ? (
                           'Uploading…'
                         ) : item.url ? (
                           <>
-                            <Upload size={14} /> Replace
+                            <Upload size={13} className="stroke-[2.5]" /> Replace
                           </>
                         ) : (
                           <>
-                            <Upload size={14} /> Upload
+                            <Upload size={13} className="stroke-[2.5]" /> Upload
                           </>
                         )}
                       </button>
                       {item.url && (
-                        <button onClick={() => onClear(item.key)} className="btn-danger !py-1.5 !text-xs">
-                          <Trash2 size={14} />
+                        <button onClick={() => onClear(item.key)} className="btn bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 !py-2 !px-3.5 transition-all duration-300">
+                          <Trash2 size={13} />
                         </button>
                       )}
                     </div>
                     {item.url && (
-                      <div className="mt-2 inline-flex items-center gap-1 text-xs text-green-700">
-                        <CheckCircle2 size={12} /> Uploaded
+                      <div className="mt-3.5 inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-md bg-[#66ff4c]/10 border border-[#66ff4c]/20 text-[#66ff4c] text-[10px] font-extrabold uppercase tracking-wider">
+                        <CheckCircle2 size={10} className="stroke-[2.5]" /> Uploaded
                       </div>
                     )}
                   </div>

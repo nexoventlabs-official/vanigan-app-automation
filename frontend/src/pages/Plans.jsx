@@ -66,10 +66,10 @@ export default function Plans() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-brand-900">Subscription Plans</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Subscription Plans</h1>
+        <p className="text-sm text-gray-400 mt-1 font-semibold">
           Free is highlighted as the current plan to all users by default. Upload a tile image, edit the
           price label and features below.
         </p>
@@ -78,44 +78,66 @@ export default function Plans() {
       {loading ? (
         <div className="card p-8 text-center text-gray-500">Loading…</div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((p) => (
-            <div key={p._id} className="card overflow-hidden flex flex-col">
-              <div className="aspect-video bg-gradient-to-br from-brand-100 to-brand-200 relative">
+            <div key={p._id} className="card overflow-hidden flex flex-col group hover:border-[#66ff4c]/30 hover:shadow-[0_0_20px_rgba(102,255,76,0.06)] transition-all duration-300">
+              <div className="aspect-video bg-gradient-to-br from-[#06080D] to-[#0D1527] relative overflow-hidden flex items-center justify-center border-b border-white/[0.08]">
+                {/* Subtle grid pattern background */}
+                <div className="absolute inset-0 opacity-15" style={{
+                  backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+                  backgroundSize: '16px 16px'
+                }} />
+                
+                {/* Radial glowing spotlight */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(102,255,76,0.05)_0%,transparent_70%)]" />
+
                 {p.image ? (
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-brand-500">
-                    <Sparkles size={36} />
+                  <div className="w-full h-full flex items-center justify-center text-[#66ff4c]/85 drop-shadow-[0_0_12px_rgba(102,255,76,0.3)] group-hover:scale-110 transition-transform duration-500">
+                    <Sparkles size={40} className="stroke-[1.5]" />
                   </div>
                 )}
+                
                 <span
-                  className={`absolute top-2 left-2 pill ${
-                    p.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                  className={`absolute top-3 left-3 pill ${
+                    p.active 
+                      ? 'bg-[#66ff4c]/10 border border-[#66ff4c]/30 text-[#66ff4c] shadow-[0_0_8px_rgba(102,255,76,0.15)]' 
+                      : 'bg-white/5 border border-white/10 text-gray-400'
                   }`}
                 >
+                  <span className={`w-1.5 h-1.5 rounded-full ${p.active ? 'bg-[#66ff4c] animate-pulse' : 'bg-gray-500'}`} />
                   {p.active ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold text-brand-900">{p.name}</div>
-                  <span className="pill bg-brand-50 text-brand-700">{CODE_LABEL[p.code] || p.code}</span>
+
+              <div className="p-5 flex-1 flex flex-col bg-[#0A0E17]/40">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-black text-lg text-white group-hover:text-[#66ff4c] transition-colors duration-200">{p.name}</div>
+                  <span className="pill bg-white/5 border border-white/[0.08] text-gray-300">{CODE_LABEL[p.code] || p.code}</span>
                 </div>
-                <div className="text-sm font-medium text-brand-700 mt-1">{p.priceLabel}</div>
+                <div className="text-xl font-black text-[#66ff4c] mt-1.5 tracking-tight">{p.priceLabel || '—'}</div>
                 {p.description && (
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-3">{p.description}</p>
+                  <p className="text-xs text-gray-400 mt-2.5 line-clamp-3 leading-relaxed">{p.description}</p>
                 )}
+                
                 {p.features?.length > 0 && (
-                  <ul className="mt-2 space-y-1 text-xs text-gray-600">
-                    {p.features.slice(0, 4).map((f, i) => (
-                      <li key={i}>• {f}</li>
-                    ))}
-                  </ul>
+                  <div className="mt-4 pt-4 border-t border-white/[0.06] flex-1">
+                    <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2.5">Included Features</div>
+                    <ul className="space-y-2">
+                      {p.features.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                          <span className="text-[#66ff4c] font-bold select-none">✓</span>
+                          <span className="leading-tight">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-                <div className="mt-auto pt-3">
-                  <button onClick={() => openEdit(p)} className="btn-secondary w-full !py-1.5">
-                    <Pencil size={14} /> Edit Plan
+                
+                <div className="mt-5">
+                  <button onClick={() => openEdit(p)} className="btn-secondary w-full flex items-center justify-center gap-1.5 !py-2 hover:border-[#66ff4c] hover:text-[#66ff4c] hover:shadow-[0_0_12px_rgba(102,255,76,0.12)] transition-all duration-300">
+                    <Pencil size={12} className="stroke-[2.5]" /> Edit Plan
                   </button>
                 </div>
               </div>
@@ -125,16 +147,18 @@ export default function Plans() {
       )}
 
       {editing && form && (
-        <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4">
-          <form onSubmit={submit} className="card w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="font-semibold text-brand-800">Edit Plan — {CODE_LABEL[form.code]}</div>
-              <button type="button" onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-700">
+        <div className="fixed inset-0 z-40 bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300">
+          <form onSubmit={submit} className="card w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#0A0E17' }}>
+            <div className="px-6 py-4.5 border-b border-white/[0.08] flex items-center justify-between">
+              <div className="font-black text-white text-lg tracking-tight">
+                Edit Plan — {CODE_LABEL[form.code]}
+              </div>
+              <button type="button" onClick={() => setEditing(null)} className="text-gray-400 hover:text-white transition-colors">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-5 space-y-3">
+            <div className="p-6 space-y-4">
               <div>
                 <label className="label">Name *</label>
                 <input
@@ -174,7 +198,7 @@ export default function Plans() {
               <div>
                 <label className="label">Tile image</label>
                 {form.image && !form.imageFile && (
-                  <img src={form.image} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+                  <img src={form.image} alt="" className="w-full h-32 object-cover rounded-xl mb-3 border border-white/[0.08]" />
                 )}
                 <input
                   type="file"
@@ -183,7 +207,7 @@ export default function Plans() {
                   onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] || null })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Sort order</label>
                   <input
@@ -193,18 +217,19 @@ export default function Plans() {
                     onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
                   />
                 </div>
-                <label className="flex items-center gap-2 text-sm mt-6">
+                <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-300 mt-7 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={form.active}
                     onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                    className="w-4 h-4 rounded bg-[#000000] border-white/[0.08] text-[#66ff4c] focus:ring-[#66ff4c]/30"
                   />
                   Show in WhatsApp flow
                 </label>
               </div>
             </div>
 
-            <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+            <div className="px-6 py-4.5 border-t border-white/[0.08] flex justify-end gap-2 bg-[#06080D]/40">
               <button type="button" onClick={() => setEditing(null)} className="btn-secondary">
                 Cancel
               </button>
