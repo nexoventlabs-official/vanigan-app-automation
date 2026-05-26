@@ -51,7 +51,7 @@ const EXTRA_FIELDS = [
   { name: 'services',         label: 'Services / Products (up to 6)', type: 'services' },
   { name: 'infoQuestion',     label: 'FAQ Question',                  placeholder: 'Common question about your business' },
   { name: 'infoAnswer',       label: 'FAQ Answer',                    type: 'textarea' },
-  { name: 'listingCode',      label: 'Listing Code',                  placeholder: 'Legacy code (optional)' },
+  { name: 'listingCode',      label: 'Listing Code',                  placeholder: 'Auto-generated if blank' },
   { name: 'ownerPhone',       label: 'Owner Phone (internal)',        placeholder: 'For WhatsApp auto-register flow' },
 ];
 
@@ -907,12 +907,17 @@ export default function BusinessDetail() {
                   );
                 }
 
+                const isReadOnly = f.name === 'listingCode' && !!form.listingCode;
                 return (
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
-                    <input type={f.type || 'text'} className="input" placeholder={f.placeholder || ''}
+                    <input type={f.type || 'text'}
+                      className={`input ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      placeholder={f.placeholder || ''}
+                      readOnly={isReadOnly}
                       value={form[f.name] || ''}
-                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                      onChange={(e) => !isReadOnly && setForm({ ...form, [f.name]: e.target.value })} />
+                    {isReadOnly && <p className="text-[10px] text-gray-500 mt-1">Listing code is locked after assignment.</p>}
                   </div>
                 );
               })}
