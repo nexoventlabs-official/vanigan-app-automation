@@ -325,17 +325,16 @@ textarea{resize:vertical}
 .soc-chip{
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:7px 13px;
-  border-radius:20px;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:50%;
   border:1px solid;
-  font-size:.78rem;
-  font-weight:700;
   text-decoration:none;
-  transition:opacity 0.2s;
-  margin:3px;
+  transition:transform 0.15s,opacity 0.15s;
+  margin:4px;
 }
-.soc-chip:hover{opacity:0.75}
+.soc-chip:hover{opacity:0.75;transform:scale(1.1)}
 `;
 
 function shell(title, body, backUrl='') {
@@ -469,7 +468,7 @@ router.get('/:id', async (req, res) => {
 
   const socialChips = SOCIAL_PLATFORMS
     .filter(p => biz[p.id])
-    .map(p => `<a class="soc-chip" href="${esc(biz[p.id])}" target="_blank" rel="noreferrer" style="background:${p.bg};border-color:${p.border};color:${p.color}">${p.icon} ${p.label}</a>`)
+    .map(p => `<a class="soc-chip" href="${esc(biz[p.id])}" target="_blank" rel="noreferrer" title="${p.label}" style="background:${p.bg};border-color:${p.border};color:${p.color}">${p.icon}</a>`)
     .join('');
 
   /* location section */
