@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Pencil, Trash2, Phone, Mail, Globe, MapPin,
@@ -72,14 +72,85 @@ const BLANK = {
   infoQuestion: '', infoAnswer: '', listingCode: '', ownerPhone: '',
 };
 
-function Field({ icon: Icon, label, children }) {
-  if (!children) return null;
+function CropModal({ file, aspect, onDone, onClose }) {
+  const imgRef = useRef(null);
+  const cropperRef = useRef(null);
+
+  useEffect(() => {
+    let objUrl;
+    const init = async () => {
+      objUrl = URL.createObjectURL(file);
+      if (!window.Cropper) {
+        if (!document.querySelector('link[href*="cropperjs"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css';
+          document.head.appendChild(link);
+        }
+        await new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js';
+          script.onload = resolve;
+          document.head.appendChild(script);
+        });
+      }
+      if (imgRef.current) {
+        imgRef.current.src = objUrl;
+        cropperRef.current = new window.Cropper(imgRef.current, {
+          aspectRatio: aspect,
+          viewMode: 1,
+          autoCropArea: 0.9,
+          movable: true,
+          zoomable: true,
+          rotatable: false,
+        });
+      }
+    };
+    init();
+    return () => {
+      cropperRef.current?.destroy();
+      cropperRef.current = null;
+      if (objUrl) URL.revokeObjectURL(objUrl);
+    };
+  }, [file, aspect]);
+
+  const handleCrop = () => {
+    if (!cropperRef.current) return;
+    cropperRef.current.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200 }).toBlob(
+      (blob) => { if (blob) onDone(new File([blob], file.name, { type: 'image/jpeg' })); },
+      'image/jpeg', 0.9
+    );
+  };
+
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-      <Icon size={16} className="text-brand-500 mt-0.5 flex-shrink-0" />
-      <div className="min-w-0">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-2xl p-4 w-full max-w-lg shadow-2xl">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800">Crop Image</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+        </div>
+        <div className="bg-black rounded-lg overflow-hidden" style={{ maxHeight: '60vh' }}>
+          <img ref={imgRef} alt="crop source" style={{ display: 'block', maxWidth: '100%' }} />
+        </div>
+        <div className="flex gap-3 mt-4">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button type="button" onClick={handleCrop} className="btn-primary flex-1">✓ Crop &amp; Use</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ icon: Icon, label, children }) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-gray-100 last:border-0">
+      <Icon size={15} className="text-brand-400 mt-0.5 flex-shrink-0" />
+      <div className="min-w-0 flex-1">
         {label && <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{label}</div>}
-        <div className="text-sm text-gray-700 break-words">{children}</div>
+        <div className="text-sm text-gray-700 break-words">
+          {children ?? <span className="text-gray-300 italic text-xs">—</span>}
+        </div>
       </div>
     </div>
   );
@@ -95,6 +166,20 @@ export default function BusinessDetail() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
+  const [cropTarget, setCropTarget] = useState(null); // { file, aspect, field }
+
+  const openCrop = (file, aspect, field) => { if (file) setCropTarget({ file, aspect, field }); };
+  const onCropDone = (croppedFile) => {
+    if (!cropTarget) return;
+    const { field } = cropTarget;
+    if (field === 'listing') setForm((f) => ({ ...f, imageFile: croppedFile }));
+    else if (field === 'cover') setForm((f) => ({ ...f, _coverFile: croppedFile }));
+    else if (field.startsWith('svc-')) {
+      const idx = parseInt(field.split('-')[1], 10);
+      setForm((f) => { const svcs = [...f.services]; svcs[idx] = { ...svcs[idx], _file: croppedFile }; return { ...f, services: svcs }; });
+    }
+    setCropTarget(null);
+  };
 
   useEffect(() => {
     api.get(`/businesses/${id}`)
@@ -173,8 +258,21 @@ export default function BusinessDetail() {
   );
   if (!biz) return null;
 
+  const SPLATFORMS_DETAIL = [
+    { id: 'fbLink', label: 'Facebook', icon: '📞' },
+    { id: 'twitterLink', label: 'Twitter / X', icon: '𝕏' },
+    { id: 'instaLink', label: 'Instagram', icon: '📸' },
+    { id: 'googleMap', label: 'Google Maps', icon: '🗺️' },
+    { id: 'videoUrl', label: 'YouTube', icon: '▶️' },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-5">
+      {/* Crop Modal */}
+      {cropTarget && (
+        <CropModal file={cropTarget.file} aspect={cropTarget.aspect}
+          onDone={onCropDone} onClose={() => setCropTarget(null)} />
+      )}
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <button onClick={() => navigate('/businesses')} className="btn-secondary gap-2">
@@ -193,16 +291,17 @@ export default function BusinessDetail() {
       {/* Hero card */}
       <div className="card overflow-hidden">
         {/* Cover / banner area */}
-        <div className="h-36 bg-gradient-to-r from-brand-800 to-brand-600 relative">
-          {biz.image && (
-            <img src={biz.image} alt={biz.name}
-              className="absolute inset-0 w-full h-full object-cover opacity-30" />
-          )}
-          <div className="absolute bottom-0 left-0 p-5 flex items-end gap-4">
-            <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white flex-shrink-0">
+        <div className="h-44 bg-gradient-to-r from-brand-800 to-brand-600 relative">
+          {biz.coverImage
+            ? <img src={biz.coverImage} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+            : biz.image && <img src={biz.image} alt={biz.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+          }
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 p-4 flex items-end gap-4">
+            <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white flex-shrink-0">
               {biz.image
                 ? <img src={biz.image} alt={biz.name} className="w-full h-full object-cover" />
-                : <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300"><ImageIcon size={28} /></div>
+                : <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300"><ImageIcon size={26} /></div>
               }
             </div>
             <div className="pb-1">
@@ -220,108 +319,120 @@ export default function BusinessDetail() {
 
         {/* Quick chips row */}
         <div className="px-5 pt-4 pb-3 flex flex-wrap gap-2 border-b border-gray-100">
-          {biz.category && (
-            <span className="flex items-center gap-1 pill bg-orange-50 text-orange-700 text-xs">
-              <Tag size={11} /> {biz.category}
-            </span>
-          )}
-          {biz.district && (
-            <span className="pill bg-blue-50 text-blue-700 text-xs">{biz.district}</span>
-          )}
-          {biz.assembly && (
-            <span className="pill bg-blue-50 text-blue-600 text-xs">{biz.assembly}</span>
-          )}
+          {biz.category && <span className="flex items-center gap-1 pill bg-orange-50 text-orange-700 text-xs"><Tag size={11} /> {biz.category}</span>}
+          {biz.subCategory && <span className="pill bg-orange-50 text-orange-600 text-xs">{biz.subCategory}</span>}
+          {biz.district && <span className="pill bg-blue-50 text-blue-700 text-xs">{biz.district}</span>}
+          {biz.assembly && <span className="pill bg-blue-50 text-blue-600 text-xs">{biz.assembly}</span>}
         </div>
 
-        {/* Body — two column on large screens */}
+        {/* Body — two column */}
         <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-
-          {/* Left column */}
           <div className="p-5 space-y-0">
             <Field icon={MapPin} label="Address">
-              <div>{biz.address}</div>
-              {biz.landmark && <div className="text-gray-400 text-xs mt-1">📍 {biz.landmark}</div>}
+              {biz.address ? <><div>{biz.address}</div>{biz.landmark && <div className="text-gray-400 text-xs mt-1">📍 {biz.landmark}</div>}</> : null}
             </Field>
-
-            <Field icon={Phone} label="Contact">
-              <div className="space-y-1">
-                {biz.phone && (
-                  <a href={`tel:${biz.phone}`} className="block font-medium text-brand-700 hover:underline">{biz.phone}</a>
-                )}
-                {biz.phone2 && (
-                  <a href={`tel:${biz.phone2}`} className="block text-gray-500 hover:text-brand-700">{biz.phone2}</a>
-                )}
-              </div>
+            <Field icon={MapPin} label="City / Pincode">
+              {[biz.city, biz.pincode].filter(Boolean).join(', ') || null}
             </Field>
-
+            <Field icon={MapPin} label="Service Locations">{biz.serviceLocations || null}</Field>
+            <Field icon={Phone} label="Primary Phone">
+              {biz.phone ? <a href={`tel:${biz.phone}`} className="font-medium text-brand-700 hover:underline">{biz.phone}</a> : null}
+            </Field>
+            <Field icon={Phone} label="Alternate Phone">{biz.phone2 || null}</Field>
+            <Field icon={Phone} label="WhatsApp">{biz.whatsappNo || null}</Field>
+            <Field icon={Phone} label="Landline">{biz.landline || null}</Field>
             <Field icon={Mail} label="Email">
-              {biz.email && (
-                <a href={`mailto:${biz.email}`} className="text-brand-700 hover:underline">{biz.email}</a>
-              )}
+              {biz.email ? <a href={`mailto:${biz.email}`} className="text-brand-700 hover:underline">{biz.email}</a> : null}
             </Field>
-
             <Field icon={Globe} label="Website">
-              {biz.website && (
-                <a href={biz.website} target="_blank" rel="noreferrer"
-                  className="text-brand-700 hover:underline flex items-center gap-1 truncate">
-                  {biz.website} <ExternalLink size={12} />
-                </a>
-              )}
+              {biz.website ? <a href={biz.website} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline flex items-center gap-1 truncate">{biz.website} <ExternalLink size={12} /></a> : null}
             </Field>
           </div>
-
-          {/* Right column */}
           <div className="p-5 space-y-0">
             <Field icon={Clock} label="Opening Hours">
-              {(biz.openDays || biz.openTime || biz.closeTime) && (
+              {(biz.openDays || biz.openTime || biz.closeTime) ? (
                 <div>
-                  {biz.openDays && (
-                    <div className="flex flex-wrap gap-1 mb-1.5">
-                      {biz.openDays.split(',').map(d => d.trim()).filter(Boolean).map(d => (
-                        <span key={d} className="pill bg-gray-100 text-gray-600 text-xs">{d}</span>
-                      ))}
-                    </div>
-                  )}
-                  {(biz.openTime || biz.closeTime) && (
-                    <div className="font-medium">{biz.openTime || '—'} – {biz.closeTime || '—'}</div>
-                  )}
+                  {biz.openDays && <div className="flex flex-wrap gap-1 mb-1.5">{biz.openDays.split(',').map(d=>d.trim()).filter(Boolean).map(d=><span key={d} className="pill bg-gray-100 text-gray-600 text-xs">{d}</span>)}</div>}
+                  {(biz.openTime || biz.closeTime) && <div className="font-medium">{biz.openTime||'—'} – {biz.closeTime||'—'}</div>}
                 </div>
-              )}
+              ) : null}
             </Field>
-
-            {biz.lat && biz.lng && (
-              <Field icon={MapPin} label="Location">
-                <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`}
-                  target="_blank" rel="noreferrer"
-                  className="text-brand-700 hover:underline flex items-center gap-1">
-                  View on Google Maps <ExternalLink size={12} />
-                </a>
-                <div className="text-xs text-gray-400 mt-0.5">{biz.lat}, {biz.lng}</div>
-              </Field>
-            )}
-
-            {biz.ownerPhone && (
-              <Field icon={Phone} label="Registered by (WhatsApp)">
-                <span className="text-gray-600">{biz.ownerPhone}</span>
-              </Field>
-            )}
-
-            {biz.createdAt && (
-              <Field icon={Clock} label="Registered on">
-                {new Date(biz.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </Field>
-            )}
+            <Field icon={MapPin} label="GPS Location">
+              {biz.lat && biz.lng ? <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline flex items-center gap-1">View on Google Maps <ExternalLink size={12} /></a> : null}
+            </Field>
+            <Field icon={Tag} label="Listing Code">{biz.listingCode || null}</Field>
+            <Field icon={Phone} label="Owner / WhatsApp Reg">{biz.ownerPhone || null}</Field>
+            <Field icon={Clock} label="Registered on">
+              {biz.createdAt ? new Date(biz.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : null}
+            </Field>
           </div>
         </div>
       </div>
 
-      {/* Description card */}
-      {biz.description && (
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">About</h2>
-          <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{biz.description}</p>
-        </div>
-      )}
+      {/* About */}
+      <div className="card p-5">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">About</h2>
+        <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+          {biz.description || <span className="text-gray-300 italic">—</span>}
+        </p>
+      </div>
+
+      {/* Social media */}
+      <div className="card p-5">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Social &amp; Media</h2>
+        {SPLATFORMS_DETAIL.some(p => biz[p.id]) ? (
+          <div className="flex flex-wrap gap-2">
+            {SPLATFORMS_DETAIL.filter(p => biz[p.id]).map(p => (
+              <a key={p.id} href={biz[p.id]} target="_blank" rel="noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-sm font-medium text-brand-700 hover:bg-brand-50 transition">
+                <span>{p.icon}</span> {p.label}
+              </a>
+            ))}
+          </div>
+        ) : <span className="text-gray-300 italic text-sm">—</span>}
+      </div>
+
+      {/* Gallery */}
+      <div className="card p-5">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Gallery ({(biz.galleryImages||[]).length})</h2>
+        {(biz.galleryImages||[]).length > 0 ? (
+          <div className="grid grid-cols-3 gap-2">
+            {biz.galleryImages.map((img, i) => (
+              <img key={i} src={img.url} alt="" className="w-full aspect-square object-cover rounded-xl border border-gray-100" />
+            ))}
+          </div>
+        ) : <span className="text-gray-300 italic text-sm">—</span>}
+      </div>
+
+      {/* Services */}
+      <div className="card p-5">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Services / Products ({(biz.services||[]).length})</h2>
+        {(biz.services||[]).length > 0 ? (
+          <div className="space-y-3">
+            {biz.services.map((s, i) => (
+              <div key={i} className="flex gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                {s.image && <img src={s.image} alt={s.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-gray-200" />}
+                <div className="min-w-0">
+                  <div className="font-medium text-sm">{s.name || <span className="text-gray-300">—</span>}</div>
+                  {s.price && <div className="text-xs font-semibold text-brand-700 mt-0.5">₹{s.price}</div>}
+                  {s.detail && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{s.detail}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <span className="text-gray-300 italic text-sm">—</span>}
+      </div>
+
+      {/* FAQ */}
+      <div className="card p-5">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">FAQ</h2>
+        {(biz.infoQuestion || biz.infoAnswer) ? (
+          <div>
+            {biz.infoQuestion && <div className="font-medium text-sm mb-1">{biz.infoQuestion}</div>}
+            {biz.infoAnswer && <div className="text-sm text-gray-600 whitespace-pre-line">{biz.infoAnswer}</div>}
+          </div>
+        ) : <span className="text-gray-300 italic text-sm">—</span>}
+      </div>
 
       {/* ── Edit Modal ── */}
       {showForm && (
@@ -379,45 +490,73 @@ export default function BusinessDetail() {
                   </div>
                 );
 
-                if (f.type === 'coverimage') return (
-                  <div key={f.name}>
-                    <label className="label">{f.label}</label>
-                    {form.coverImage && !form._coverFile && (
-                      <img src={form.coverImage} alt="cover" className="w-full h-24 object-cover rounded-lg mb-2" />
-                    )}
-                    <input type="file" accept="image/*" className="input"
-                      onChange={(e) => setForm({ ...form, _coverFile: e.target.files?.[0] || null })} />
-                  </div>
-                );
+                if (f.type === 'coverimage') {
+                  const coverPrev = form._coverFile ? URL.createObjectURL(form._coverFile) : form.coverImage || null;
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(banner ratio 8:3)</span></label>
+                      {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-lg mb-2 object-cover" style={{height:'80px'}} />}
+                      <input type="file" accept="image/*" className="input"
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 8/3, 'cover'); e.target.value = ''; }} />
+                    </div>
+                  );
+                }
 
-                if (f.type === 'gallery') return (
-                  <div key={f.name}>
-                    <label className="label">{f.label}</label>
-                    {(form.galleryImages || []).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {form.galleryImages.map((img, idx) => (
-                          <div key={idx} className="relative">
-                            <img src={img.url} alt="" className="w-16 h-16 object-cover rounded border" />
-                            <button type="button"
-                              onClick={() => setForm((prev) => ({
-                                ...prev,
-                                galleryImages: prev.galleryImages.filter((_, i) => i !== idx),
-                                _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean),
-                              }))}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {(form._galleryFiles || []).length > 0 && (
-                      <div className="text-xs text-green-700 mb-1">{form._galleryFiles.length} new file(s) queued</div>
-                    )}
-                    <input type="file" accept="image/*" multiple className="input"
-                      onChange={(e) => setForm((prev) => ({ ...prev, _galleryFiles: [...(prev._galleryFiles || []), ...Array.from(e.target.files || [])] }))} />
-                  </div>
-                );
+                if (f.type === 'gallery') {
+                  const GALLERY_MAX = 3;
+                  const existingCount = (form.galleryImages || []).length;
+                  const newCount = (form._galleryFiles || []).length;
+                  const totalCount = existingCount + newCount;
+                  const canAdd = totalCount < GALLERY_MAX;
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(max {GALLERY_MAX} images, {totalCount}/{GALLERY_MAX})</span></label>
+                      {existingCount > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {form.galleryImages.map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img src={img.url} alt="" className="w-16 h-16 object-cover rounded-lg border" />
+                              <button type="button"
+                                onClick={() => setForm((prev) => ({
+                                  ...prev,
+                                  galleryImages: prev.galleryImages.filter((_, i) => i !== idx),
+                                  _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean),
+                                }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {newCount > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {form._galleryFiles.map((file, idx) => (
+                            <div key={idx} className="relative">
+                              <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 object-cover rounded-lg border border-green-300" />
+                              <button type="button"
+                                onClick={() => setForm((prev) => ({ ...prev, _galleryFiles: prev._galleryFiles.filter((_, i) => i !== idx) }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {canAdd ? (
+                        <input type="file" accept="image/*" multiple className="input"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            const slots = GALLERY_MAX - totalCount;
+                            setForm((prev) => ({ ...prev, _galleryFiles: [...(prev._galleryFiles || []), ...files.slice(0, slots)] }));
+                            e.target.value = '';
+                          }} />
+                      ) : (
+                        <div className="text-xs text-amber-600 font-medium py-2">⚠️ Gallery limit reached ({GALLERY_MAX} images max). Remove one to add more.</div>
+                      )}
+                    </div>
+                  );
+                }
 
                 if (f.type === 'services') return (
                   <div key={f.name}>
@@ -439,9 +578,11 @@ export default function BusinessDetail() {
                           <textarea rows={2} className="input text-sm" placeholder="Details / Description" value={s.detail || ''}
                             onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], detail: e.target.value }; setForm({ ...form, services: svcs }); }} />
                           <div className="flex items-center gap-2">
-                            {s.image && !s._file && <img src={s.image} alt="" className="w-10 h-10 object-cover rounded" />}
-                            <input type="file" accept="image/*" className="input text-xs"
-                              onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], _file: e.target.files?.[0] || null }; setForm({ ...form, services: svcs }); }} />
+                            {(s._file ? URL.createObjectURL(s._file) : s.image) && (
+                              <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                            )}
+                            <input type="file" accept="image/*" className="input text-xs flex-1"
+                              onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
                           </div>
                         </div>
                       ))}
@@ -552,12 +693,12 @@ export default function BusinessDetail() {
               </div>
 
               <div>
-                <label className="label">Listing Image</label>
-                {form.image && !form.imageFile && (
-                  <img src={form.image} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+                <label className="label">Listing Image <span className="text-gray-400 font-normal text-xs">(1:1 square)</span></label>
+                {(form.imageFile ? URL.createObjectURL(form.imageFile) : form.image) && (
+                  <img src={form.imageFile ? URL.createObjectURL(form.imageFile) : form.image} alt="" className="w-24 h-24 object-cover rounded-xl mb-2" />
                 )}
                 <input type="file" accept="image/*" className="input"
-                  onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] || null })} />
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, 'listing'); e.target.value = ''; }} />
               </div>
 
               <label className="flex items-center gap-2 text-sm">
