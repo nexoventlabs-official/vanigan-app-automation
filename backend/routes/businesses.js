@@ -1,6 +1,7 @@
 const Business = require('../models/Business');
 const listingRouter = require('./_listingFactory');
 const businessCloudinary = require('../services/businessCloudinary');
+const generateListingCode = require('../utils/generateListingCode');
 
 module.exports = listingRouter({
   Model:            Business,
@@ -19,4 +20,9 @@ module.exports = listingRouter({
     'listingCode', 'listingMode', 'slug',
     'ownerPhone',
   ],
+  onBeforeCreate: async (doc) => {
+    if (!doc.listingCode) {
+      doc.listingCode = await generateListingCode();
+    }
+  },
 });

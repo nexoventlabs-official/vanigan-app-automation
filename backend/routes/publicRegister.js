@@ -5,6 +5,7 @@ const { uploadBuffer: bizUpload } = require('../services/businessCloudinary');
 const districts = require('../services/districts');
 const Business = require('../models/Business');
 const meta = require('../services/metaCloud');
+const generateListingCode = require('../utils/generateListingCode');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -174,41 +175,6 @@ router.post('/register', uploadFields, async (req, res) => {
   }
 });
 
-/* ── Auto-generate a unique Listing Code matching existing format ── */
-async function generateListingCode() {
-  const codes = await Business.find(
-    { listingCode: { $exists: true, $ne: '' } },
-    { listingCode: 1 }
-  ).lean().catch(() => []);
-
-  let maxNum = 0;
-  let prefix = '';
-  let padLen  = 4;
-
-  for (const b of codes) {
-    const m = (b.listingCode || '').match(/^([A-Za-z\-\/]*)([0-9]+)$/);
-    if (m) {
-      const num = parseInt(m[2], 10);
-      if (num > maxNum) {
-        maxNum  = num;
-        prefix  = m[1];
-        padLen  = Math.max(padLen, m[2].length);
-      }
-    }
-  }
-
-  /* If no codes exist at all, seed with LIST format */
-  if (maxNum === 0) { prefix = 'LIST'; maxNum = 10000; padLen = 5; }
-
-  for (let attempt = 0; attempt < 20; attempt++) {
-    maxNum++;
-    const candidate = prefix + String(maxNum).padStart(padLen, '0');
-    const clash = await Business.findOne({ listingCode: candidate }).lean().catch(() => null);
-    if (!clash) return candidate;
-  }
-  return (prefix || 'LIST') + String(Date.now()).slice(-5);
-}
-
 /* ── Helpers ── */
 function escHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -222,25 +188,188 @@ function pageShell(title, bodyContent) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(title)} — Vanigan</title>
   <style>
+    :root {
+      --bg-color: #000000;
+      --card-bg: #0A0E17;
+      --card-border: rgba(255,255,255,0.08);
+      --text-main: #ffffff;
+      --text-muted: #9ca3af;
+      --accent-color: #66ff4c;
+      --accent-hover: #52e038;
+      --accent-rgb: 102, 255, 76;
+      --topbar-bg: rgba(10, 14, 23, 0.85);
+      --topbar-border: rgba(255, 255, 255, 0.08);
+      --theme-btn-bg: rgba(255, 255, 255, 0.05);
+    }
+    [data-theme="light"] {
+      --bg-color: #f9fafb;
+      --card-bg: #ffffff;
+      --card-border: rgba(0,0,0,0.08);
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --accent-color: #16a34a;
+      --accent-hover: #15803d;
+      --accent-rgb: 22, 163, 74;
+      --topbar-bg: rgba(255, 255, 255, 0.9);
+      --topbar-border: rgba(0, 0, 0, 0.08);
+      --theme-btn-bg: rgba(0, 0, 0, 0.05);
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000000;color:#ffffff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 12px 40px rgba(0,0,0,0.5);padding:48px 40px;max-width:480px;width:100%;text-align:center}
-    .icon{margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(102,255,76,0.25))}
-    h1{font-size:1.8rem;color:#ffffff;margin-bottom:14px;font-weight:900;letter-spacing:-0.02em}
-    p{color:#9ca3af;line-height:1.65;margin-bottom:8px;font-size:0.92rem;font-weight:500}
-    p.sub{font-size:0.85rem;color:#6b7280;margin-top:16px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px}
-    strong{color:#ffffff;font-weight:700}
-    .btn{display:inline-block;margin-top:24px;padding:12px 28px;background:#66ff4c;color:#000000;text-decoration:none;border-radius:12px;font-weight:850;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;transition:all 0.2s;box-shadow:0 0 15px rgba(102,255,76,0.3)}
-    .btn:hover{background:#52e038;transform:translateY(-1px)}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background-color:var(--bg-color);
+      color:var(--text-main);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:80px 24px 24px;
+    }
+    .top-bar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      background:var(--topbar-bg);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--topbar-border);
+      padding:14px 24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      z-index:1000;
+    }
+    .theme-toggle{
+      background:none;
+      border:none;
+      color:var(--text-main);
+      cursor:pointer;
+      padding:8px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:all 0.2s;
+      width:36px;
+      height:36px;
+    }
+    .theme-toggle:hover{
+      background:var(--theme-btn-bg);
+      transform:scale(1.05);
+    }
+    .card{
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      border-radius:24px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.5);
+      padding:48px 40px;
+      max-width:480px;
+      width:100%;
+      text-align:center;
+    }
+    .icon{margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(var(--accent-rgb),0.25))}
+    h1{font-size:1.8rem;color:var(--text-main);margin-bottom:14px;font-weight:900;letter-spacing:-0.02em}
+    p{color:var(--text-muted);line-height:1.65;margin-bottom:8px;font-size:0.92rem;font-weight:500}
+    p.sub{font-size:0.85rem;color:var(--text-muted);opacity:0.8;margin-top:16px;border-top:1px solid var(--card-border);padding-top:16px}
+    strong{color:var(--text-main);font-weight:700}
+    .btn{
+      display:inline-block;
+      margin-top:24px;
+      padding:12px 28px;
+      background:var(--accent-color);
+      color:rgba(0,0,0,0.9);
+      text-decoration:none;
+      border-radius:12px;
+      font-weight:850;
+      font-size:0.85rem;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+      transition:all 0.2s;
+      box-shadow:0 0 15px rgba(var(--accent-rgb),0.3);
+    }
+    [data-theme="light"] .btn{color:#ffffff}
+    .btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
   </style>
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('vanigan-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
-<body><div class="card">${bodyContent}</div></body>
+<body>
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:28px;width:auto">
+    </div>
+    <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">
+      <!-- Sun (shows in Light theme to switch to Dark) -->
+      <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <!-- Moon (shows in Dark theme to switch to Light) -->
+      <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+  <div class="card">${bodyContent}</div>
+  <script>
+    (function() {
+      const btn = document.getElementById('themeToggleBtn');
+      if (!btn) return;
+      const sun = btn.querySelector('.sun-icon');
+      const moon = btn.querySelector('.moon-icon');
+
+      function updateIcons(theme) {
+        if (theme === 'light') {
+          sun.style.display = 'block';
+          moon.style.display = 'none';
+        } else {
+          sun.style.display = 'none';
+          moon.style.display = 'block';
+        }
+      }
+
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      updateIcons(currentTheme);
+
+      btn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const newTheme = isDark ? 'light' : 'dark';
+  (function() {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const sun = btn.querySelector('.sun-icon');
+    const moon = btn.querySelector('.moon-icon');
+
+    function updateIcons(theme) {
+      if (theme === 'light') {
+        sun.style.display = 'block';
+        moon.style.display = 'none';
+      } else {
+        sun.style.display = 'none';
+        moon.style.display = 'block';
+      }
+    }
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateIcons(currentTheme);
+
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('vanigan-theme', newTheme);
+      updateIcons(newTheme);
+    });
+  })();
+  </script>
+</body>
 </html>`;
 }
 
 function buildFormHtml(phone) {
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -248,18 +377,111 @@ function buildFormHtml(phone) {
   <title>Register Your Business — Vanigan</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <style>
+    :root {
+      --bg-color: #000000;
+      --bg-image: radial-gradient(rgba(102,255,76,0.04) 1.5px, transparent 1.5px);
+      --bg-spotlight: radial-gradient(circle at top, rgba(102,255,76,0.07) 0%, transparent 70%);
+      --card-bg: #0A0E17;
+      --card-border: rgba(255,255,255,0.08);
+      --text-main: #ffffff;
+      --text-muted: #9ca3af;
+      --input-bg: rgba(0,0,0,0.65);
+      --input-border: rgba(255,255,255,0.08);
+      --accent-color: #66ff4c;
+      --accent-hover: #52e038;
+      --accent-rgb: 102, 255, 76;
+      --topbar-bg: rgba(10, 14, 23, 0.85);
+      --topbar-border: rgba(255, 255, 255, 0.08);
+      --theme-btn-bg: rgba(255, 255, 255, 0.05);
+      --svc-card-bg: rgba(255,255,255,0.02);
+      --svc-card-border: rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] {
+      --bg-color: #f9fafb;
+      --bg-image: radial-gradient(rgba(22,163,74,0.05) 1.5px, transparent 1.5px);
+      --bg-spotlight: radial-gradient(circle at top, rgba(22,163,74,0.06) 0%, transparent 70%);
+      --card-bg: #ffffff;
+      --card-border: rgba(0,0,0,0.08);
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --input-bg: #ffffff;
+      --input-border: rgba(0,0,0,0.12);
+      --accent-color: #16a34a;
+      --accent-hover: #15803d;
+      --accent-rgb: 22, 163, 74;
+      --topbar-bg: rgba(255, 255, 255, 0.9);
+      --topbar-border: rgba(0, 0, 0, 0.08);
+      --theme-btn-bg: rgba(0, 0, 0, 0.05);
+      --svc-card-bg: rgba(0,0,0,0.02);
+      --svc-card-border: rgba(0,0,0,0.06);
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;background:#000000;color:#ffffff;min-height:100vh;padding:32px 16px}
-    .wrap{max-width:560px;margin:0 auto}
+    body{
+      font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color:var(--bg-color);
+      background-image:var(--bg-image);
+      background-size:24px 24px;
+      min-height:100vh;
+      color:var(--text-main);
+      padding:96px 16px 32px;
+      position:relative;
+      overflow-x:hidden;
+    }
+    body::before {
+      content:"";
+      position:absolute;
+      top:0;
+      left:50%;
+      transform:translateX(-50%);
+      width:100%;
+      max-width:600px;
+      height:250px;
+      background:var(--bg-spotlight);
+      pointer-events:none;
+      z-index:0;
+    }
+    .top-bar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      background:var(--topbar-bg);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--topbar-border);
+      padding:14px 24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      z-index:1000;
+    }
+    .theme-toggle{
+      background:none;
+      border:none;
+      color:var(--text-main);
+      cursor:pointer;
+      padding:8px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:all 0.2s;
+      width:36px;
+      height:36px;
+    }
+    .theme-toggle:hover{
+      background:var(--theme-btn-bg);
+      transform:scale(1.05);
+    }
+    .wrap{max-width:560px;margin:0 auto;position:relative;z-index:1}
     .header{text-align:center;margin-bottom:24px}
-    .header .icon{font-size:40px;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(102,255,76,0.2))}
-    .header h1{font-size:1.8rem;font-weight:900;color:#ffffff;letter-spacing:-0.02em}
-    .header p{font-size:.9rem;color:#9ca3af;margin-top:6px;font-weight:600}
-    .card{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.4);padding:32px 24px;margin-bottom:20px}
-    label{display:block;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+    .header h1{font-size:1.8rem;font-weight:900;color:var(--text-main);letter-spacing:-0.02em}
+    .header p{font-size:.9rem;color:var(--text-muted);margin-top:6px;font-weight:600}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.4);padding:32px 24px;margin-bottom:20px}
+    label{display:block;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
     .req{color:#ef4444}
-    input,select,textarea{width:100%;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 14px;font-size:.9rem;outline:none;background:rgba(0,0,0,0.65);color:#ffffff;transition:all .25s}
-    input:focus,select:focus,textarea:focus{border-color:#66ff4c;box-shadow:0 0 10px rgba(102,255,76,0.15)}
+    input,select,textarea{width:100%;border:1px solid var(--input-border);border-radius:12px;padding:11px 14px;font-size:.9rem;outline:none;background:var(--input-bg);color:var(--text-main);transition:all .25s}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent-color);box-shadow:0 0 10px rgba(var(--accent-rgb),0.15)}
     textarea{resize:vertical}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:480px){.row{grid-template-columns:1fr}}
@@ -273,48 +495,52 @@ function buildFormHtml(phone) {
       background-repeat: no-repeat;
       padding-right: 2.5rem;
     }
-    select option{
-      background-color: #0A0E17;
-      color: #ffffff;
+    [data-theme="light"] select {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2316a34a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
     }
-
-    /* Image crop area */
-    .img-upload-btn{width:100%;border:2px dashed rgba(255,255,255,0.15);border-radius:14px;padding:24px;text-align:center;font-size:.85rem;color:#6b7280;cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.01)}
-    .img-upload-btn:hover{border-color:#66ff4c;color:#66ff4c;background:rgba(102,255,76,0.02)}
+    select option{
+      background-color: var(--card-bg);
+      color: var(--text-main);
+    }
+    
+    .img-upload-btn{width:100%;border:2px dashed var(--input-border);border-radius:14px;padding:24px;text-align:center;font-size:.85rem;color:var(--text-muted);cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.01)}
+    .img-upload-btn:hover{border-color:var(--accent-color);color:var(--accent-color);background:rgba(var(--accent-rgb),0.02)}
     .crop-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px}
     .crop-modal.active{display:flex}
-    .crop-box{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(0,0,0,0.6)}
-    .crop-box h2{font-size:1.1rem;font-weight:900;margin-bottom:16px;color:#ffffff;letter-spacing:-0.01em}
-    .crop-img-wrap{max-height:55vh;overflow:hidden;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.08)}
+    .crop-box{background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:24px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(0,0,0,0.6)}
+    .crop-box h2{font-size:1.1rem;font-weight:900;margin-bottom:16px;color:var(--text-main);letter-spacing:-0.01em}
+    .crop-img-wrap{max-height:55vh;overflow:hidden;border-radius:12px;background:#000;border:1px solid var(--card-border)}
     .crop-img-wrap img{display:block;max-width:100%}
     .crop-actions{display:flex;gap:12px;margin-top:16px}
-    .crop-actions button{flex:1;padding:12px;border-radius:12px;font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:0.05em;border:none;cursor:pointer;transition:all 0.2s}
-    .btn-crop{background:#66ff4c;color:#000000;box-shadow:0 0 10px rgba(102,255,76,0.2)}
-    .btn-crop:hover{background:#52e038;transform:translateY(-1px)}
-    .btn-cancel{background:rgba(255,255,255,0.05);color:#ffffff;border:1px solid rgba(255,255,255,0.08)}
+    .crop-actions button{flex:1;padding:12px;border-radius:12px;font-weight:850;font-size:.85rem;text-transform:uppercase;letter-spacing:0.05em;border:none;cursor:pointer;transition:all 0.2s}
+    .btn-crop{background:var(--accent-color);color:rgba(0,0,0,0.9);box-shadow:0 0 10px rgba(var(--accent-rgb),0.2)}
+    [data-theme="light"] .btn-crop{color:#ffffff}
+    .btn-crop:hover{background:var(--accent-hover);transform:translateY(-1px)}
+    .btn-cancel{background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--card-border)}
     .btn-cancel:hover{background:rgba(255,255,255,0.08)}
     .preview-wrap{display:none;margin-bottom:10px}
-    .preview-wrap img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px}
+    .preview-wrap img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;border:1px solid var(--card-border);margin-bottom:12px}
 
-    .submit-btn{width:100%;background:#66ff4c;color:#000000;font-weight:850;padding:14px;border-radius:14px;border:none;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all .2s;box-shadow:0 0 15px rgba(102,255,76,0.25)}
-    .submit-btn:hover{background:#52e038;transform:translateY(-1px);box-shadow:0 0 20px rgba(102,255,76,0.35)}
+    .submit-btn{width:100%;background:var(--accent-color);color:rgba(0,0,0,0.9);font-weight:850;padding:14px;border-radius:14px;border:none;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all .2s;box-shadow:0 0 15px rgba(var(--accent-rgb),0.25)}
+    [data-theme="light"] .submit-btn{color:#ffffff}
+    .submit-btn:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 0 20px rgba(var(--accent-rgb),0.35)}
     .submit-btn:disabled{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.05);cursor:not-allowed;box-shadow:none}
-    .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:16px}
-    .sec-title{font-size:10px;font-weight:900;color:#66ff4c;text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(102,255,76,0.15)}
-    .svc-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin-bottom:16px;transition:all .2s}
-    .svc-card:hover{border-color:rgba(102,255,76,0.15)}
-    .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08)}
+    .note{text-align:center;font-size:.75rem;color:var(--text-muted);margin-top:16px}
+    .sec-title{font-size:10px;font-weight:900;color:var(--accent-color);text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(var(--accent-rgb),0.15)}
+    .svc-card{background:var(--svc-card-bg);border:1px solid var(--svc-card-border);border-radius:14px;padding:16px;margin-bottom:16px;transition:all .2s}
+    .svc-card:hover{border-color:rgba(var(--accent-rgb),0.15)}
+    .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border)}
     .gallery-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-    .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08)}
+    .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border)}
     
-    .add-dyn-btn{width:100%;padding:12px;background:rgba(102,255,76,0.02);color:#66ff4c;border:1px dashed rgba(102,255,76,0.3);border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;margin:0 0 20px;text-align:center;display:block;transition:all .2s}
-    .add-dyn-btn:hover{background:rgba(102,255,76,0.05);border-color:#66ff4c}
+    .add-dyn-btn{width:100%;padding:12px;background:rgba(var(--accent-rgb),0.02);color:var(--accent-color);border:1px dashed rgba(var(--accent-rgb),0.3);border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;margin:0 0 20px;text-align:center;display:block;transition:all .2s}
+    .add-dyn-btn:hover{background:rgba(var(--accent-rgb),0.05);border-color:var(--accent-color)}
     .social-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .social-item .s-label{font-size:10px;font-weight:800;color:#9ca3af;width:110px;min-width:110px;text-transform:uppercase;letter-spacing:0.05em}
+    .social-item .s-label{font-size:10px;font-weight:800;color:var(--text-muted);width:110px;min-width:110px;text-transform:uppercase;letter-spacing:0.05em}
     .social-item input{flex:1;margin:0}
     .social-item .rm-btn{background:none;border:none;color:#ef4444;font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0;transition:transform .2s}
     .social-item .rm-btn:hover{transform:scale(1.15)}
-    .svc-num{font-size:10px;font-weight:900;color:#66ff4c;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+    .svc-num{font-size:10px;font-weight:900;color:var(--accent-color);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
     .svc-rm{background:none;border:none;color:#ef4444;font-size:10px;font-weight:850;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:0.05em}
     
     #daysWrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
@@ -329,28 +555,45 @@ function buildFormHtml(phone) {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
-      color: #d1d5db !important;
+      color: var(--text-muted) !important;
       transition: all 0.2s;
       margin: 2px;
       text-transform: none !important;
       letter-spacing: 0 !important;
     }
     #daysWrap label:has(input:checked) {
-      background: rgba(102, 255, 76, 0.1) !important;
-      border-color: #66ff4c !important;
-      color: #66ff4c !important;
-      box-shadow: 0 0 8px rgba(102, 255, 76, 0.15);
+      background: rgba(var(--accent-rgb), 0.1) !important;
+      border-color: var(--accent-color) !important;
+      color: var(--accent-color) !important;
+      box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.15);
     }
     #daysWrap input[type=checkbox] {
       width: 13px !important;
       height: 13px !important;
-      accent-color: #66ff4c !important;
+      accent-color: var(--accent-color) !important;
       cursor: pointer;
     }
   </style>
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('vanigan-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
 <body>
-<div class="wrap">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:28px;width:auto">
+    </div>
+    <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">
+      <!-- Sun (shows in Light theme to switch to Dark) -->
+      <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <!-- Moon (shows in Dark theme to switch to Light) -->
+      <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+  <div class="wrap">
   <div class="header">
     <div class="icon"><img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:48px;width:auto"></div>
     <h1>Vanigan</h1>
@@ -881,6 +1124,35 @@ function buildFormHtml(phone) {
     btn.textContent = 'Submitting…';
     btn.disabled = true;
   });
+
+  /* ── Client theme toggle event listener ── */
+  (function() {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const sun = btn.querySelector('.sun-icon');
+    const moon = btn.querySelector('.moon-icon');
+
+    function updateIcons(theme) {
+      if (theme === 'light') {
+        sun.style.display = 'block';
+        moon.style.display = 'none';
+      } else {
+        sun.style.display = 'none';
+        moon.style.display = 'block';
+      }
+    }
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateIcons(currentTheme);
+
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('vanigan-theme', newTheme);
+      updateIcons(newTheme);
+    });
+  })();
 </script>
 </body>
 </html>`;

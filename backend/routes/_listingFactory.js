@@ -22,7 +22,7 @@ const MULTI_FIELDS = [
  *   multiImage       if true, enable cover/gallery/services image uploads
  *   cloudinaryService override Cloudinary service (uploadBuffer, destroy, ROOT)
  */
-function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService, perItemFolder = false }) {
+function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService, perItemFolder = false, onBeforeCreate }) {
   const { uploadBuffer, destroy, ROOT, deleteByPrefix } = cloudinaryService || defaultCloud;
   const router = express.Router();
   const uploader = multiImage ? upload.fields(MULTI_FIELDS) : upload.single('image');
@@ -120,6 +120,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       applySimpleFields(doc, req.body, extraFields);
 
       const imgFile = getFile(req, 'image');
+      if (onBeforeCreate) await onBeforeCreate(doc, req);
       if (perItemFolder) {
         const created = await Model.create(doc);
         if (imgFile) {
@@ -133,7 +134,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
         const r = await uploadBuffer(imgFile.buffer, { folder: `${ROOT}/${folder}` });
         doc.image = r.secure_url; doc.imagePublicId = r.public_id;
       }
-      const created = await Model.create(doc);
+      const created = await Model.create(doc); // onBeforeCreate already called above for non-perItemFolder path
       if (multiImage) {
         const coverFile = getFile(req, 'coverImageFile');
         if (coverFile) {
