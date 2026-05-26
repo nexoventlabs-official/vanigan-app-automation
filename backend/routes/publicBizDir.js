@@ -358,7 +358,7 @@ textarea{resize:vertical}
 .soc-chip:hover{border-color:rgba(102,255,76,0.5);background:rgba(255,255,255,0.02)}
 `;
 
-function shell(title, body, backUrl='') {
+function shell(title, body, backUrl='', showSubtitle=true) {
   const back = backUrl ? `<a href="${esc(backUrl)}">← Back</a>` : '';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -373,7 +373,7 @@ function shell(title, body, backUrl='') {
   ${back}
   <div>
     <h1><img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:28px;width:auto;vertical-align:middle;display:inline-block"></h1>
-    ${title !== 'Vanigan' ? `<p>${esc(title)}</p>` : ''}
+    ${(showSubtitle && title !== 'Vanigan') ? `<p>${esc(title)}</p>` : ''}
   </div>
 </div>
 ${body}
@@ -466,7 +466,7 @@ router.get('/:id', async (req, res) => {
   try { biz = await Business.findById(req.params.id).lean(); } catch { biz = null; }
   if (!biz) {
     return res.status(404).setHeader('Content-Type','text/html').send(
-      shell('Not Found', `<div class="wrap"><div class="empty"><div class="icon">❌</div><p>Business not found.</p></div></div>`, backUrl)
+      shell('Not Found', `<div class="wrap"><div class="empty"><div class="icon">❌</div><p>Business not found.</p></div></div>`, backUrl, false)
     );
   }
 
@@ -669,7 +669,7 @@ router.get('/:id', async (req, res) => {
 </div>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(shell(biz.name, body, backUrl));
+  res.send(shell(biz.name, body, backUrl, false));
 });
 
 /* ── POST /public/dir/:id/review ── */
