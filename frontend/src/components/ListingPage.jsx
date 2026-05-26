@@ -466,10 +466,10 @@ export default function ListingPage({ title, resource, extraFields = [], default
                   const coverPrev = form._coverFile ? URL.createObjectURL(form._coverFile) : form.coverImage || null;
                   return (
                     <div key={f.name}>
-                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(banner 8:3)</span></label>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(banner ~5:1)</span></label>
                       {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-lg mb-2 object-cover" style={{ height: '80px' }} />}
                       <input type="file" accept="image/*" className="input"
-                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 8 / 3, 'cover'); e.target.value = ''; }} />
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 896 / 176, 'cover'); e.target.value = ''; }} />
                     </div>
                   );
                 }

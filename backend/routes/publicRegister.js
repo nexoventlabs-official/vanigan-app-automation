@@ -418,11 +418,15 @@ function buildFormHtml(phone) {
       <div class="sec-title" style="margin-top:4px">Cover / Banner Image <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional)</span></div>
 
       <div class="field">
-        <label>Cover / Banner Photo <span style="color:#888;font-weight:400">(wide banner image)</span></label>
-        <input type="file" name="coverImage" id="coverImageInput" accept="image/*">
-        <div id="coverPreview" style="display:none;margin-top:8px">
+        <label>Cover / Banner Photo <span style="color:#888;font-weight:400">(banner ratio — crops to fit)</span></label>
+        <input type="file" name="coverImage" id="coverImageInput" accept="image/*" style="display:none">
+        <div id="coverPreview" style="display:none;margin-bottom:10px">
           <img id="coverPreviewImg" style="width:100%;height:110px;object-fit:cover;border-radius:10px;border:1.5px solid #e5e7eb">
         </div>
+        <button type="button" class="img-upload-btn" onclick="document.getElementById('coverImageInput').click()">
+          🖼️ Tap to upload cover / banner photo
+        </button>
+        <p style="font-size:.75rem;color:#9ca3af;margin-top:5px">Banner width × 5:1 ratio • JPG, PNG, WebP • max 5 MB</p>
       </div>
 
       <div class="sec-title" style="margin-top:4px">Gallery Images <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional — up to 10)</span></div>
@@ -459,14 +463,26 @@ function buildFormHtml(phone) {
   <p class="note">Your listing will be reviewed before going live.<br>You'll receive a WhatsApp confirmation once approved. 🙏</p>
 </div>
 
-<!-- Crop Modal -->
+<!-- Profile Crop Modal -->
 <div class="crop-modal" id="cropModal">
   <div class="crop-box">
-    <h2>✂️ Crop to Square</h2>
+    <h2>✂️ Crop to Square (1:1)</h2>
     <div class="crop-img-wrap"><img id="cropImg" src="" alt="crop"></div>
     <div class="crop-actions">
       <button type="button" class="btn-cancel" onclick="closeCrop()">Cancel</button>
       <button type="button" class="btn-crop" onclick="applyCrop()">Use This Crop</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cover / Banner Crop Modal -->
+<div class="crop-modal" id="coverCropModal">
+  <div class="crop-box">
+    <h2>✂️ Crop Banner Image</h2>
+    <div class="crop-img-wrap"><img id="coverCropImg" src="" alt="crop"></div>
+    <div class="crop-actions">
+      <button type="button" class="btn-cancel" onclick="closeCoverCrop()">Cancel</button>
+      <button type="button" class="btn-crop" onclick="applyCoverCrop()">Use This Crop</button>
     </div>
   </div>
 </div>
@@ -702,16 +718,49 @@ function buildFormHtml(phone) {
     reader.readAsDataURL(input.files[0]);
   }
 
-  /* ── Cover image preview ── */
+  /* ── Cover image banner crop (ratio matches h-44 / max-w-4xl = 896/176 ≈ 5.09) ── */
+  const BANNER_RATIO = 896 / 176;
+  let coverCropper = null;
+
   document.getElementById('coverImageInput').addEventListener('change', function () {
     if (!this.files?.[0]) return;
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById('coverPreviewImg').src = e.target.result;
-      document.getElementById('coverPreview').style.display = 'block';
+      const img = document.getElementById('coverCropImg');
+      img.src = e.target.result;
+      document.getElementById('coverCropModal').classList.add('active');
+      if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
+      coverCropper = new Cropper(img, {
+        aspectRatio: BANNER_RATIO,
+        viewMode: 1,
+        autoCropArea: 1,
+        dragMode: 'move',
+      });
     };
     reader.readAsDataURL(this.files[0]);
+    this.value = '';
   });
+
+  function closeCoverCrop() {
+    document.getElementById('coverCropModal').classList.remove('active');
+    if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
+  }
+
+  function applyCoverCrop() {
+    if (!coverCropper) return;
+    coverCropper.getCroppedCanvas({ maxWidth: 1600, imageSmoothingQuality: 'high' }).toBlob(function (blob) {
+      /* Use DataTransfer to set the cropped file on the actual file input */
+      const croppedFile = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+      const dt = new DataTransfer();
+      dt.items.add(croppedFile);
+      document.getElementById('coverImageInput').files = dt.files;
+      /* Show preview */
+      const url = URL.createObjectURL(blob);
+      document.getElementById('coverPreviewImg').src = url;
+      document.getElementById('coverPreview').style.display = 'block';
+      closeCoverCrop();
+    }, 'image/jpeg', 0.88);
+  }
 
   /* ── Gallery preview ── */
   document.getElementById('galleryInput').addEventListener('change', function () {
