@@ -36,8 +36,8 @@ const IC = {
 
 const SOCIAL_PLATFORMS = [
   { id:'fbLink',      label:'Facebook',     bg:'#e7f0fd', border:'#1877F244', color:'#1877F2', icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
-  { id:'twitterLink', label:'Twitter / X',  bg:'#f0f0f0', border:'#00000022', color:'#000000', needsBg:true, icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="#000"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
-  { id:'instaLink',   label:'Instagram',    bg:'#fce4f1', border:'#C1358444', color:'#C13584', needsBg:true, icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="#C13584"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>' },
+  { id:'twitterLink', label:'Twitter / X',  bg:'#f0f0f0', border:'#00000022', color:'#000000', icon:'<svg width="16" height="16" viewBox="0 0 24 24" style="background:#000;border-radius:4px;padding:2.5px;box-sizing:border-box;display:block"><path fill="#fff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+  { id:'instaLink',   label:'Instagram',    bg:'#fce4f1', border:'#C1358444', color:'#C13584', icon:'<svg width="16" height="16" viewBox="0 0 24 24" style="background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);border-radius:4px;padding:2.2px;box-sizing:border-box;display:block"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg>' },
   { id:'googleMap',   label:'Google Maps',  bg:'#e8f0fe', border:'#1A73E844', color:'#1A73E8', icon:'<svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 1.7.52 3.28 1.41 4.58L12 22l5.59-8.42A6.96 6.96 0 0 0 19 9c0-3.87-3.13-7-7-7z"/><path fill="#34A853" d="M12 22l5.59-8.42A6.96 6.96 0 0 1 12 9v13z"/><path fill="#FBBC04" d="M5 9c0 1.7.52 3.28 1.41 4.58L12 22V9H5z"/><circle fill="white" cx="12" cy="9" r="2.8"/></svg>' },
   { id:'videoUrl',    label:'YouTube',      bg:'#ffe8e8', border:'#FF000044', color:'#FF0000', icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>' },
 ];
@@ -170,24 +170,7 @@ body::before {
 .biz-desc{font-size:.78rem;color:#9ca3af;margin-bottom:8px;line-height:1.45}
 .biz-phone{font-size:.8rem;color:#d1d5db}
 .biz-phone a{color:#66ff4c;text-decoration:none;font-weight:750;font-size:0.82rem;display:inline-flex;align-items:center;gap:4px}
-.view-btn{
-  display:block;
-  text-align:center;
-  background:rgba(102,255,76,0.02);
-  color:#66ff4c;
-  border-top:1px solid rgba(255,255,255,0.05);
-  padding:12px;
-  font-size:.82rem;
-  font-weight:800;
-  text-decoration:none;
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-  transition:all 0.25s;
-}
-.view-btn:hover{
-  background:rgba(102,255,76,0.06);
-  text-shadow:0 0 8px rgba(102,255,76,0.4);
-}
+
 .empty{text-align:center;padding:48px 16px;color:#6b7280}
 .empty .icon{font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 8px rgba(102,255,76,0.15))}
 /* detail */
@@ -325,14 +308,21 @@ textarea{resize:vertical}
 .soc-chip{
   display:inline-flex;
   align-items:center;
-  justify-content:center;
-  width:32px;
-  height:32px;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#06080D;
+  color:#e5e7eb;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
   text-decoration:none;
-  transition:transform 0.15s,opacity 0.15s;
-  margin:4px;
+  transition:all 0.2s;
+  margin:4px 4px 4px 0;
 }
-.soc-chip:hover{opacity:0.7;transform:scale(1.15)}
+.soc-chip:hover{border-color:rgba(102,255,76,0.5);background:rgba(255,255,255,0.02)}
 `;
 
 function shell(title, body, backUrl='') {
@@ -399,7 +389,7 @@ router.get('/', async (req, res) => {
       const activeBadge = b.active
         ? `<svg viewBox="0 0 24 24" width="16" height="16" style="display:inline-block;vertical-align:middle;margin-left:4px;flex-shrink:0" fill="currentColor" title="Verified active business"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/><path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/></svg>`
         : '';
-      return `<div class="biz-card">
+      return `<a class="biz-card" href="/public/dir/${esc(b._id.toString())}${listQ}" style="text-decoration:none;display:flex;flex-direction:column">
   <div style="display:flex;align-items:stretch;width:100%">
     ${imgTag}
     <div class="biz-card-body">
@@ -409,8 +399,7 @@ router.get('/', async (req, res) => {
       ${phoneHtml}
     </div>
   </div>
-  <a class="view-btn" href="/public/dir/${esc(b._id.toString())}${listQ}">View Details →</a>
-</div>`;
+</a>`;
     }).join('');
   }
 
@@ -466,7 +455,7 @@ router.get('/:id', async (req, res) => {
 
   const socialChips = SOCIAL_PLATFORMS
     .filter(p => biz[p.id])
-    .map(p => `<a class="soc-chip" href="${esc(biz[p.id])}" target="_blank" rel="noreferrer" title="${p.label}" style="${p.needsBg ? `background:${p.bg};border:1px solid ${p.border};border-radius:50%;width:38px;height:38px;` : ''}">${p.icon}</a>`)
+    .map(p => `<a class="soc-chip" href="${esc(biz[p.id])}" target="_blank" rel="noreferrer">${p.icon} ${p.label}</a>`)
     .join('');
 
   /* location section */
