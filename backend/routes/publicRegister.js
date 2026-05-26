@@ -186,13 +186,15 @@ function pageShell(title, bodyContent) {
   <title>${escHtml(title)} — Vanigan</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fef7ee;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:48px 40px;max-width:480px;width:100%;text-align:center}
-    .icon{font-size:56px;margin-bottom:16px}
-    h1{font-size:1.6rem;color:#1a1a1a;margin-bottom:12px}
-    p{color:#555;line-height:1.6;margin-bottom:8px}
-    p.sub{font-size:.9rem;color:#888;margin-top:12px}
-    .btn{display:inline-block;margin-top:24px;padding:12px 28px;background:#c2410c;color:#fff;text-decoration:none;border-radius:10px;font-weight:600}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000000;color:#ffffff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 12px 40px rgba(0,0,0,0.5);padding:48px 40px;max-width:480px;width:100%;text-align:center}
+    .icon{font-size:56px;margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(102,255,76,0.25))}
+    h1{font-size:1.8rem;color:#ffffff;margin-bottom:14px;font-weight:900;letter-spacing:-0.02em}
+    p{color:#9ca3af;line-height:1.65;margin-bottom:8px;font-size:0.92rem;font-weight:500}
+    p.sub{font-size:0.85rem;color:#6b7280;margin-top:16px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px}
+    strong{color:#ffffff;font-weight:700}
+    .btn{display:inline-block;margin-top:24px;padding:12px 28px;background:#66ff4c;color:#000000;text-decoration:none;border-radius:12px;font-weight:850;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;transition:all 0.2s;box-shadow:0 0 15px rgba(102,255,76,0.3)}
+    .btn:hover{background:#52e038;transform:translateY(-1px)}
   </style>
 </head>
 <body><div class="card">${bodyContent}</div></body>
@@ -210,55 +212,104 @@ function buildFormHtml(phone) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff7ed;min-height:100vh;padding:24px 16px}
+    body{font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;background:#000000;color:#ffffff;min-height:100vh;padding:32px 16px}
     .wrap{max-width:560px;margin:0 auto}
     .header{text-align:center;margin-bottom:24px}
-    .header .icon{font-size:40px;margin-bottom:6px}
-    .header h1{font-size:1.5rem;font-weight:700;color:#7c2d12}
-    .header p{font-size:.85rem;color:#888;margin-top:4px}
-    .card{background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.07);padding:24px;margin-bottom:16px}
-    label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:5px}
+    .header .icon{font-size:40px;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(102,255,76,0.2))}
+    .header h1{font-size:1.8rem;font-weight:900;color:#ffffff;letter-spacing:-0.02em}
+    .header p{font-size:.9rem;color:#9ca3af;margin-top:6px;font-weight:600}
+    .card{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.4);padding:32px 24px;margin-bottom:20px}
+    label{display:block;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
     .req{color:#ef4444}
-    input,select,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:12px;padding:10px 14px;font-size:.9rem;outline:none;background:#fff;transition:border-color .2s}
-    input:focus,select:focus,textarea:focus{border-color:#c2410c}
+    input,select,textarea{width:100%;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 14px;font-size:.9rem;outline:none;background:rgba(0,0,0,0.65);color:#ffffff;transition:all .25s}
+    input:focus,select:focus,textarea:focus{border-color:#66ff4c;box-shadow:0 0 10px rgba(102,255,76,0.15)}
     textarea{resize:vertical}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:480px){.row{grid-template-columns:1fr}}
     .field{margin-bottom:16px}
+    
+    select{
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2366ff4c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+      background-position: right 0.75rem center;
+      background-size: 1.25rem;
+      background-repeat: no-repeat;
+      padding-right: 2.5rem;
+    }
+    select option{
+      background-color: #0A0E17;
+      color: #ffffff;
+    }
 
     /* Image crop area */
-    .img-upload-btn{width:100%;border:2px dashed #d1d5db;border-radius:14px;padding:20px;text-align:center;font-size:.85rem;color:#9ca3af;cursor:pointer;transition:border-color .2s,color .2s;background:none}
-    .img-upload-btn:hover{border-color:#c2410c;color:#c2410c}
-    .crop-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+    .img-upload-btn{width:100%;border:2px dashed rgba(255,255,255,0.15);border-radius:14px;padding:24px;text-align:center;font-size:.85rem;color:#6b7280;cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.01)}
+    .img-upload-btn:hover{border-color:#66ff4c;color:#66ff4c;background:rgba(102,255,76,0.02)}
+    .crop-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px}
     .crop-modal.active{display:flex}
-    .crop-box{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:480px}
-    .crop-box h2{font-size:1rem;font-weight:600;margin-bottom:12px;color:#1a1a1a}
-    .crop-img-wrap{max-height:55vh;overflow:hidden;border-radius:8px;background:#000}
+    .crop-box{background:#0A0E17;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(0,0,0,0.6)}
+    .crop-box h2{font-size:1.1rem;font-weight:900;margin-bottom:16px;color:#ffffff;letter-spacing:-0.01em}
+    .crop-img-wrap{max-height:55vh;overflow:hidden;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.08)}
     .crop-img-wrap img{display:block;max-width:100%}
-    .crop-actions{display:flex;gap:10px;margin-top:14px}
-    .crop-actions button{flex:1;padding:11px;border-radius:10px;font-weight:600;font-size:.9rem;border:none;cursor:pointer}
-    .btn-crop{background:#c2410c;color:#fff}
-    .btn-cancel{background:#f3f4f6;color:#374151}
+    .crop-actions{display:flex;gap:12px;margin-top:16px}
+    .crop-actions button{flex:1;padding:12px;border-radius:12px;font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:0.05em;border:none;cursor:pointer;transition:all 0.2s}
+    .btn-crop{background:#66ff4c;color:#000000;box-shadow:0 0 10px rgba(102,255,76,0.2)}
+    .btn-crop:hover{background:#52e038;transform:translateY(-1px)}
+    .btn-cancel{background:rgba(255,255,255,0.05);color:#ffffff;border:1px solid rgba(255,255,255,0.08)}
+    .btn-cancel:hover{background:rgba(255,255,255,0.08)}
     .preview-wrap{display:none;margin-bottom:10px}
-    .preview-wrap img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:2px solid #e5e7eb}
+    .preview-wrap img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px}
 
-    .submit-btn{width:100%;background:#c2410c;color:#fff;font-weight:600;padding:14px;border-radius:14px;border:none;font-size:1rem;cursor:pointer;transition:background .2s}
-    .submit-btn:hover{background:#9a3412}
-    .submit-btn:disabled{background:#9ca3af;cursor:not-allowed}
-    .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:12px}
-    .sec-title{font-size:.75rem;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;padding-bottom:6px;border-bottom:1.5px solid #fde8d8}
-    .svc-card{background:#fafafa;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px}
-    .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
+    .submit-btn{width:100%;background:#66ff4c;color:#000000;font-weight:850;padding:14px;border-radius:14px;border:none;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all .2s;box-shadow:0 0 15px rgba(102,255,76,0.25)}
+    .submit-btn:hover{background:#52e038;transform:translateY(-1px);box-shadow:0 0 20px rgba(102,255,76,0.35)}
+    .submit-btn:disabled{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.05);cursor:not-allowed;box-shadow:none}
+    .note{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:16px}
+    .sec-title{font-size:10px;font-weight:900;color:#66ff4c;text-transform:uppercase;letter-spacing:.08em;margin-top:20px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(102,255,76,0.15)}
+    .svc-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin-bottom:16px;transition:all .2s}
+    .svc-card:hover{border-color:rgba(102,255,76,0.15)}
+    .img-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08)}
     .gallery-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-    .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
-    .add-dyn-btn{width:100%;padding:11px;background:#fff7ed;color:#c2410c;border:1.5px dashed #fdba74;border-radius:12px;font-size:.85rem;font-weight:600;cursor:pointer;margin:0 0 16px;text-align:center;display:block}
-    .add-dyn-btn:active{background:#fde8d8}
+    .gallery-preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08)}
+    
+    .add-dyn-btn{width:100%;padding:12px;background:rgba(102,255,76,0.02);color:#66ff4c;border:1px dashed rgba(102,255,76,0.3);border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;margin:0 0 20px;text-align:center;display:block;transition:all .2s}
+    .add-dyn-btn:hover{background:rgba(102,255,76,0.05);border-color:#66ff4c}
     .social-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .social-item .s-label{font-size:.8rem;font-weight:600;color:#374151;width:110px;min-width:110px}
+    .social-item .s-label{font-size:10px;font-weight:800;color:#9ca3af;width:110px;min-width:110px;text-transform:uppercase;letter-spacing:0.05em}
     .social-item input{flex:1;margin:0}
-    .social-item .rm-btn{background:none;border:none;color:#ef4444;font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
-    .svc-num{font-size:.7rem;font-weight:700;color:#c2410c;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
-    .svc-rm{background:none;border:none;color:#ef4444;font-size:.75rem;font-weight:700;cursor:pointer;padding:0;text-transform:none;letter-spacing:0}
+    .social-item .rm-btn{background:none;border:none;color:#ef4444;font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0;transition:transform .2s}
+    .social-item .rm-btn:hover{transform:scale(1.15)}
+    .svc-num{font-size:10px;font-weight:900;color:#66ff4c;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+    .svc-rm{background:none;border:none;color:#ef4444;font-size:10px;font-weight:850;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:0.05em}
+    
+    #daysWrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+    #daysWrap label {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600 !important;
+      font-size: .8rem !important;
+      cursor: pointer;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      color: #d1d5db !important;
+      transition: all 0.2s;
+      margin: 2px;
+      text-transform: none !important;
+      letter-spacing: 0 !important;
+    }
+    #daysWrap label:has(input:checked) {
+      background: rgba(102, 255, 76, 0.1) !important;
+      border-color: #66ff4c !important;
+      color: #66ff4c !important;
+      box-shadow: 0 0 8px rgba(102, 255, 76, 0.15);
+    }
+    #daysWrap input[type=checkbox] {
+      width: 13px !important;
+      height: 13px !important;
+      accent-color: #66ff4c !important;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -315,7 +366,7 @@ function buildFormHtml(phone) {
       <div class="field">
         <label style="display:flex;justify-content:space-between;align-items:center">
           <span>Address <span class="req">*</span></span>
-          <button type="button" id="locBtn" onclick="useMyLocation()" style="background:none;border:none;color:#c2410c;font-size:.8rem;font-weight:600;cursor:pointer;padding:0">📍 Use Current Location</button>
+          <button type="button" id="locBtn" onclick="useMyLocation()" style="background:none;border:none;color:#66ff4c;font-size:.8rem;font-weight:700;cursor:pointer;padding:0;transition:all 0.2s">📍 Use Current Location</button>
         </label>
         <textarea name="address" id="addressField" rows="2" required placeholder="Full address of your business"></textarea>
         <input type="hidden" name="lat" id="latField">
@@ -638,7 +689,9 @@ function buildFormHtml(phone) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = p.label;
-      btn.style.cssText = 'padding:6px 14px;border:1.5px solid #c2410c;color:#c2410c;background:#fff7ed;border-radius:20px;font-size:.8rem;font-weight:600;cursor:pointer';
+      btn.style.cssText = 'padding:6px 14px;border:1px solid rgba(102,255,76,0.3);color:#66ff4c;background:rgba(102,255,76,0.02);border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all 0.2s';
+      btn.onmouseenter = () => btn.style.background = 'rgba(102,255,76,0.08)';
+      btn.onmouseleave = () => btn.style.background = 'rgba(102,255,76,0.02)';
       btn.onclick = () => { picker.remove(); _addSocialPlatform(p); };
       picker.appendChild(btn);
     });
