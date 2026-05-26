@@ -499,10 +499,11 @@ router.get('/:id', async (req, res) => {
 
   const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
-  /* check if this phone already left a review */
-  const alreadyReviewed = userPhone
-    ? !!(await Review.findOne({ targetKind: 'business', targetId: req.params.id, phone: userPhone }).lean())
-    : false;
+  /* find this user's existing review — phone match first, then name fallback */
+  const myReview = reviews.find(r =>
+    (userPhone && r.phone && r.phone === userPhone) ||
+    (userName && r.reviewerName && r.reviewerName.trim().toLowerCase() === userName.trim().toLowerCase())
+  ) || null;
 
   const activeBadge = biz.active
     ? `<svg viewBox="0 0 24 24" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-left:6px;flex-shrink:0" fill="currentColor" title="Verified active business"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/><path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/></svg>`
@@ -593,10 +594,17 @@ router.get('/:id', async (req, res) => {
 
   <div class="section">
     <div class="sec-head">Add Your Review</div>
-    ${alreadyReviewed
-      ? `<div style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(102,255,76,0.06);border:1px solid rgba(102,255,76,0.2);border-radius:12px;font-size:.85rem;color:#66ff4c;font-weight:700">
-           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#66ff4c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-           You have already submitted a review for this business.
+    ${myReview
+      ? `<div style="background:rgba(102,255,76,0.04);border:1px solid rgba(102,255,76,0.18);border-radius:14px;padding:16px">
+           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#66ff4c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+             <span style="font-size:.72rem;font-weight:900;color:#66ff4c;text-transform:uppercase;letter-spacing:.08em">Your Review</span>
+           </div>
+           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+             <span style="font-size:1rem;letter-spacing:1px">${stars(myReview.rating)}</span>
+             <span style="font-size:.82rem;font-weight:800;color:#ffffff">${esc(myReview.reviewerName || userName)}</span>
+           </div>
+           ${myReview.text ? `<div style="font-size:.83rem;color:#d1d5db;line-height:1.55;margin-top:6px">${esc(myReview.text)}</div>` : ''}
          </div>`
       : `<form method="POST" action="/public/dir/${esc(req.params.id)}/review${listQ}">
            <label>Your Name *</label>
