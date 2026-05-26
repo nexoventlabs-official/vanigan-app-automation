@@ -13,6 +13,58 @@ import DistrictAssemblySelect from './DistrictAssemblySelect.jsx';
  *   extraFields   array of { name, label, type, placeholder } for type-specific fields
  *   defaultDescription  short helper line shown under the title
  */
+function CropModal({ file, aspect, onDone, onClose }) {
+  const imgRef = useRef(null);
+  const cropperRef = useRef(null);
+  useEffect(() => {
+    let objUrl;
+    const init = async () => {
+      objUrl = URL.createObjectURL(file);
+      if (!window.Cropper) {
+        if (!document.querySelector('link[href*="cropperjs"]')) {
+          const link = document.createElement('link'); link.rel = 'stylesheet';
+          link.href = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css';
+          document.head.appendChild(link);
+        }
+        await new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js';
+          script.onload = resolve; document.head.appendChild(script);
+        });
+      }
+      if (imgRef.current) {
+        imgRef.current.src = objUrl;
+        cropperRef.current = new window.Cropper(imgRef.current, { aspectRatio: aspect, viewMode: 1, autoCropArea: 0.9 });
+      }
+    };
+    init();
+    return () => { cropperRef.current?.destroy(); cropperRef.current = null; if (objUrl) URL.revokeObjectURL(objUrl); };
+  }, [file, aspect]);
+  const handleCrop = () => {
+    if (!cropperRef.current) return;
+    cropperRef.current.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200 }).toBlob(
+      (blob) => { if (blob) onDone(new File([blob], file.name, { type: 'image/jpeg' })); }, 'image/jpeg', 0.9
+    );
+  };
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-2xl p-4 w-full max-w-lg shadow-2xl">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800">Crop Image</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+        </div>
+        <div className="bg-black rounded-lg overflow-hidden" style={{ maxHeight: '60vh' }}>
+          <img ref={imgRef} alt="crop" style={{ display: 'block', maxWidth: '100%' }} />
+        </div>
+        <div className="flex gap-3 mt-4">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button type="button" onClick={handleCrop} className="btn-primary flex-1">✓ Crop &amp; Use</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ListingPage({ title, resource, extraFields = [], defaultDescription, detailPath }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,6 +108,22 @@ export default function ListingPage({ title, resource, extraFields = [], default
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cropTarget, setCropTarget] = useState(null);
+
+  const openCrop = useCallback((file, aspect, field) => { if (file) setCropTarget({ file, aspect, field }); }, []);
+  const onCropDone = useCallback((croppedFile) => {
+    setCropTarget((prev) => {
+      if (!prev) return null;
+      const { field } = prev;
+      if (field === 'listing') setForm((f) => ({ ...f, imageFile: croppedFile }));
+      else if (field === 'cover') setForm((f) => ({ ...f, _coverFile: croppedFile }));
+      else if (field.startsWith('svc-')) {
+        const idx = parseInt(field.split('-')[1], 10);
+        setForm((f) => { const svcs = [...f.services]; svcs[idx] = { ...svcs[idx], _file: croppedFile }; return { ...f, services: svcs }; });
+      }
+      return null;
+    });
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -323,6 +391,12 @@ export default function ListingPage({ title, resource, extraFields = [], default
         </div>
       )}
 
+      {/* Crop Modal */}
+      {cropTarget && (
+        <CropModal file={cropTarget.file} aspect={cropTarget.aspect}
+          onDone={onCropDone} onClose={() => setCropTarget(null)} />
+      )}
+
       {/* Form modal */}
       {showForm && (
         <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4">
@@ -388,45 +462,64 @@ export default function ListingPage({ title, resource, extraFields = [], default
                   </div>
                 );
 
-                if (f.type === 'coverimage') return (
-                  <div key={f.name}>
-                    <label className="label">{f.label}</label>
-                    {form.coverImage && !form._coverFile && (
-                      <img src={form.coverImage} alt="cover" className="w-full h-24 object-cover rounded-lg mb-2" />
-                    )}
-                    <input type="file" accept="image/*" className="input"
-                      onChange={(e) => setForm({ ...form, _coverFile: e.target.files?.[0] || null })} />
-                  </div>
-                );
+                if (f.type === 'coverimage') {
+                  const coverPrev = form._coverFile ? URL.createObjectURL(form._coverFile) : form.coverImage || null;
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">(banner 8:3)</span></label>
+                      {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-lg mb-2 object-cover" style={{ height: '80px' }} />}
+                      <input type="file" accept="image/*" className="input"
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 8 / 3, 'cover'); e.target.value = ''; }} />
+                    </div>
+                  );
+                }
 
-                if (f.type === 'gallery') return (
-                  <div key={f.name}>
-                    <label className="label">{f.label}</label>
-                    {(form.galleryImages || []).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {form.galleryImages.map((img, idx) => (
-                          <div key={idx} className="relative">
-                            <img src={img.url} alt="" className="w-16 h-16 object-cover rounded border" />
-                            <button type="button"
-                              onClick={() => setForm((prev) => ({
-                                ...prev,
-                                galleryImages: prev.galleryImages.filter((_, i) => i !== idx),
-                                _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean),
-                              }))}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {(form._galleryFiles || []).length > 0 && (
-                      <div className="text-xs text-green-700 mb-1">{form._galleryFiles.length} new file(s) queued to upload</div>
-                    )}
-                    <input type="file" accept="image/*" multiple className="input"
-                      onChange={(e) => setForm((prev) => ({ ...prev, _galleryFiles: [...(prev._galleryFiles || []), ...Array.from(e.target.files || [])] }))} />
-                  </div>
-                );
+                if (f.type === 'gallery') {
+                  const GALLERY_MAX = 3;
+                  const existingCount = (form.galleryImages || []).length;
+                  const newCount = (form._galleryFiles || []).length;
+                  const totalCount = existingCount + newCount;
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal text-xs">({totalCount}/{GALLERY_MAX} max)</span></label>
+                      {existingCount > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {form.galleryImages.map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img src={img.url} alt="" className="w-16 h-16 object-cover rounded-lg border" />
+                              <button type="button"
+                                onClick={() => setForm((prev) => ({ ...prev, galleryImages: prev.galleryImages.filter((_, i) => i !== idx), _galleryToRemove: [...(prev._galleryToRemove || []), img.publicId].filter(Boolean) }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {newCount > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {form._galleryFiles.map((file, idx) => (
+                            <div key={idx} className="relative">
+                              <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 object-cover rounded-lg border border-green-300" />
+                              <button type="button"
+                                onClick={() => setForm((prev) => ({ ...prev, _galleryFiles: prev._galleryFiles.filter((_, i) => i !== idx) }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {totalCount < GALLERY_MAX ? (
+                        <input type="file" accept="image/*" multiple className="input"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            const slots = GALLERY_MAX - totalCount;
+                            setForm((prev) => ({ ...prev, _galleryFiles: [...(prev._galleryFiles || []), ...files.slice(0, slots)] }));
+                            e.target.value = '';
+                          }} />
+                      ) : (
+                        <div className="text-xs text-amber-600 font-medium py-2">⚠️ Limit reached ({GALLERY_MAX} max). Remove one to add more.</div>
+                      )}
+                    </div>
+                  );
+                }
 
                 if (f.type === 'social') {
                   const SPLATFORMS = [
@@ -492,9 +585,11 @@ export default function ListingPage({ title, resource, extraFields = [], default
                           <textarea rows={2} className="input text-sm" placeholder="Details / Description" value={s.detail || ''}
                             onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], detail: e.target.value }; setForm({ ...form, services: svcs }); }} />
                           <div className="flex items-center gap-2">
-                            {s.image && !s._file && <img src={s.image} alt="" className="w-10 h-10 object-cover rounded" />}
-                            <input type="file" accept="image/*" className="input text-xs"
-                              onChange={(e) => { const svcs = [...form.services]; svcs[i] = { ...svcs[i], _file: e.target.files?.[0] || null }; setForm({ ...form, services: svcs }); }} />
+                            {(s._file ? URL.createObjectURL(s._file) : s.image) && (
+                              <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                            )}
+                            <input type="file" accept="image/*" className="input text-xs flex-1"
+                              onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
                           </div>
                         </div>
                       ))}
@@ -567,19 +662,12 @@ export default function ListingPage({ title, resource, extraFields = [], default
               </div>
 
               <div>
-                <label className="label">Listing Image</label>
-                {form.image && !form.imageFile && (
-                  <img src={form.image} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />
+                <label className="label">Listing Image <span className="text-gray-400 font-normal text-xs">(1:1 square)</span></label>
+                {(form.imageFile ? URL.createObjectURL(form.imageFile) : form.image) && (
+                  <img src={form.imageFile ? URL.createObjectURL(form.imageFile) : form.image} alt="" className="w-24 h-24 object-cover rounded-xl mb-2" />
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="input"
-                  onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] || null })}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Square or landscape; shown as the radio-item icon in the WhatsApp flow.
-                </p>
+                <input type="file" accept="image/*" className="input"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, 'listing'); e.target.value = ''; }} />
               </div>
 
               <label className="flex items-center gap-2 text-sm">

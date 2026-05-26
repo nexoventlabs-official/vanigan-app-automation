@@ -353,8 +353,8 @@ function buildFormHtml(phone) {
 
       <div class="row field">
         <div>
-          <label>WhatsApp No <span style="color:#888;font-weight:400">(if different)</span></label>
-          <input type="tel" name="whatsappNo" placeholder="WhatsApp number">
+          <label>WhatsApp No</label>
+          <input type="tel" name="whatsappNo" value="${escHtml(phone)}" placeholder="WhatsApp number">
         </div>
         <div>
           <label>Landline</label>
