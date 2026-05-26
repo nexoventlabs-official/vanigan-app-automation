@@ -170,6 +170,39 @@ body::before {
 .biz-desc{font-size:.78rem;color:#9ca3af;margin-bottom:8px;line-height:1.45}
 .biz-phone{font-size:.8rem;color:#d1d5db}
 .biz-phone a{color:#66ff4c;text-decoration:none;font-weight:750;font-size:0.82rem;display:inline-flex;align-items:center;gap:4px}
+.biz-call-btn-container{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-right:16px;
+  flex-shrink:0;
+}
+.biz-call-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:rgba(102,255,76,0.08);
+  border:1px solid rgba(102,255,76,0.25);
+  color:#66ff4c;
+  transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:0 0 10px rgba(102,255,76,0.05);
+}
+.biz-call-btn:hover{
+  background:#66ff4c;
+  color:#000000;
+  transform:scale(1.08);
+  box-shadow:0 0 15px rgba(102,255,76,0.4);
+}
+.biz-name-link{
+  text-decoration:none;
+  color:inherit;
+}
+.biz-name-link:hover .biz-name{
+  color:#66ff4c;
+}
 
 .empty{text-align:center;padding:48px 16px;color:#6b7280}
 .empty .icon{font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 8px rgba(102,255,76,0.15))}
@@ -384,22 +417,34 @@ router.get('/', async (req, res) => {
         ? `<img class="biz-card-img" src="${esc(b.image)}" alt="${esc(b.name)}" loading="lazy">`
         : `<div class="biz-card-no-img">${IC.store}</div>`;
       const phone = b.phone || b.whatsappNo || '';
-      const phoneHtml = phone ? `<span class="biz-phone"><a href="tel:${esc(phone)}">${esc(phone)}</a></span>` : '';
+      const phoneHtml = phone ? `<div class="biz-phone" style="margin-top:6px;font-size:0.82rem"><a href="tel:${esc(phone)}" style="color:#66ff4c;text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:6px">${IC.phone} ${esc(phone)}</a></div>` : '';
       const desc = (b.description || b.address || '').substring(0, 80);
       const activeBadge = b.active
         ? `<svg viewBox="0 0 24 24" width="16" height="16" style="display:inline-block;vertical-align:middle;margin-left:4px;flex-shrink:0" fill="currentColor" title="Verified active business"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/><path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/></svg>`
         : '';
-      return `<a class="biz-card" href="/public/dir/${esc(b._id.toString())}${listQ}" style="text-decoration:none;display:flex;flex-direction:column">
+      const detailUrl = `/public/dir/${esc(b._id.toString())}${listQ}`;
+      return `<div class="biz-card">
   <div style="display:flex;align-items:stretch;width:100%">
-    ${imgTag}
+    <a href="${detailUrl}" style="display:flex;align-items:center;text-decoration:none;flex-shrink:0">
+      ${imgTag}
+    </a>
     <div class="biz-card-body">
-      <div class="biz-name">${esc(b.name)}${activeBadge}</div>
+      <a class="biz-name-link" href="${detailUrl}">
+        <div class="biz-name">${esc(b.name)}${activeBadge}</div>
+      </a>
       ${b.category ? `<div class="biz-cat">${esc(b.category)}</div>` : ''}
       ${desc ? `<div class="biz-desc">${esc(desc)}</div>` : ''}
       ${phoneHtml}
     </div>
+    ${phone ? `
+    <div class="biz-call-btn-container">
+      <a href="tel:${esc(phone)}" class="biz-call-btn" title="Call Business">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display:block"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.57a1 1 0 0 0-1.01.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+      </a>
+    </div>` : ''}
   </div>
-</a>`;
+  <a class="view-btn" href="${detailUrl}">View Details &amp; Reviews →</a>
+</div>`;
     }).join('');
   }
 
