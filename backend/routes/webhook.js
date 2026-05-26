@@ -103,6 +103,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
       const params = new URLSearchParams({ district, assembly });
       if (category && category !== 'All') params.set('category', category);
+      if (profileName) params.set('name', profileName);
       const dirUrl = `${backend}/public/dir?${params.toString()}`;
       const catLabel = (category && category !== 'All') ? category : 'All Categories';
       const bannerUrl = await flowImages.getUrl('banner_business');
