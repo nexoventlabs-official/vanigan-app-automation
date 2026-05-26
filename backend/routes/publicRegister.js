@@ -197,8 +197,8 @@ async function generateListingCode() {
     }
   }
 
-  /* If no codes exist at all, start from 1001 */
-  if (maxNum === 0) { maxNum = 1000; padLen = 4; }
+  /* If no codes exist at all, seed with LIST format */
+  if (maxNum === 0) { prefix = 'LIST'; maxNum = 10000; padLen = 5; }
 
   for (let attempt = 0; attempt < 20; attempt++) {
     maxNum++;
@@ -206,7 +206,7 @@ async function generateListingCode() {
     const clash = await Business.findOne({ listingCode: candidate }).lean().catch(() => null);
     if (!clash) return candidate;
   }
-  return (prefix || 'VNG') + String(Date.now()).slice(-6);
+  return (prefix || 'LIST') + String(Date.now()).slice(-5);
 }
 
 /* ── Helpers ── */
