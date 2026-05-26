@@ -147,12 +147,13 @@ router.post('/register', uploadFields, async (req, res) => {
     }
     if (services.length) doc.services = services;
 
+    doc.listingCode = await generateListingCode();
     await Business.create(doc);
 
     if (doc.ownerPhone) {
       meta.sendText(
         doc.ownerPhone,
-        `✅ *${doc.name}* has been submitted for listing on Vanigan!\n\nOur team will review and activate your business shortly.\n\nThank you 🙏`
+        `✅ *${doc.name}* has been submitted for listing on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nOur team will review and activate your business shortly.\n\nThank you 🙏`
       ).catch(() => {});
     }
 
@@ -161,6 +162,7 @@ router.post('/register', uploadFields, async (req, res) => {
         <div class="icon">✅</div>
         <h1>Registration Submitted!</h1>
         <p><strong>${escHtml(doc.name)}</strong> has been submitted for listing on Vanigan.</p>
+        <p style="margin-top:14px">Your Listing Code: <strong>${escHtml(doc.listingCode)}</strong></p>
         <p class="sub">Our team will review and activate your listing shortly.<br>You'll receive a WhatsApp confirmation. 🙏</p>
       `)
     );
@@ -171,6 +173,41 @@ router.post('/register', uploadFields, async (req, res) => {
     );
   }
 });
+
+/* ── Auto-generate a unique Listing Code matching existing format ── */
+async function generateListingCode() {
+  const codes = await Business.find(
+    { listingCode: { $exists: true, $ne: '' } },
+    { listingCode: 1 }
+  ).lean().catch(() => []);
+
+  let maxNum = 0;
+  let prefix = '';
+  let padLen  = 4;
+
+  for (const b of codes) {
+    const m = (b.listingCode || '').match(/^([A-Za-z\-\/]*)([0-9]+)$/);
+    if (m) {
+      const num = parseInt(m[2], 10);
+      if (num > maxNum) {
+        maxNum  = num;
+        prefix  = m[1];
+        padLen  = Math.max(padLen, m[2].length);
+      }
+    }
+  }
+
+  /* If no codes exist at all, start from 1001 */
+  if (maxNum === 0) { maxNum = 1000; padLen = 4; }
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    maxNum++;
+    const candidate = prefix + String(maxNum).padStart(padLen, '0');
+    const clash = await Business.findOne({ listingCode: candidate }).lean().catch(() => null);
+    if (!clash) return candidate;
+  }
+  return (prefix || 'VNG') + String(Date.now()).slice(-6);
+}
 
 /* ── Helpers ── */
 function escHtml(str) {

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Pencil, Trash2, Phone, Mail, Globe, MapPin,
-  Clock, Tag, ExternalLink, Image as ImageIcon, CheckCircle, XCircle, X,
+  Clock, Tag, ExternalLink, Image as ImageIcon, CheckCircle, XCircle, X, Star,
 } from 'lucide-react';
 import api from '../api';
 import DistrictAssemblySelect from '../components/DistrictAssemblySelect.jsx';
@@ -162,6 +162,7 @@ export default function BusinessDetail() {
   const [biz, setBiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(BLANK);
@@ -182,8 +183,15 @@ export default function BusinessDetail() {
   };
 
   useEffect(() => {
-    api.get(`/businesses/${id}`)
-      .then(({ data }) => setBiz(data.item))
+    setLoading(true);
+    Promise.all([
+      api.get(`/businesses/${id}`),
+      api.get('/reviews', { params: { kind: 'business', targetId: id } }).catch(() => ({ data: { reviews: [] } }))
+    ])
+      .then(([bizRes, revRes]) => {
+        setBiz(bizRes.data.item);
+        setReviews(revRes.data.reviews || []);
+      })
       .catch(() => navigate('/businesses', { replace: true }))
       .finally(() => setLoading(false));
   }, [id]);
@@ -257,6 +265,11 @@ export default function BusinessDetail() {
     await api.delete(`/businesses/${id}`).catch(() => {});
     navigate('/businesses', { replace: true });
   };
+
+  const totalReviews = reviews.length;
+  const avgRating = totalReviews > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+    : 0;
 
   if (loading) return (
     <div className="flex items-center justify-center py-24 text-brand-700 animate-pulse">Loading…</div>
@@ -379,6 +392,16 @@ export default function BusinessDetail() {
                     <a href={biz.website} target="_blank" rel="noreferrer" className="text-xs font-bold text-gray-400 hover:text-[#66ff4c] transition-all flex items-center gap-1">
                       {biz.website.replace(/^https?:\/\//, '')} <ExternalLink size={10} />
                     </a>
+                  </>
+                )}
+                {avgRating > 0 && (
+                  <>
+                    <span className="text-gray-600">•</span>
+                    <div className="flex items-center gap-1 text-xs font-bold text-amber-400">
+                      <Star size={11} className="fill-amber-400 stroke-amber-400" />
+                      <span>{avgRating.toFixed(1)}</span>
+                      <span className="text-gray-500 font-normal">({totalReviews})</span>
+                    </div>
                   </>
                 )}
               </div>
@@ -568,6 +591,62 @@ export default function BusinessDetail() {
                   {biz.infoAnswer && <div className="text-sm text-gray-400 whitespace-pre-line leading-relaxed">{biz.infoAnswer}</div>}
                 </div>
               ) : <span className="text-gray-600 italic text-sm">— No FAQs configured —</span>}
+            </div>
+          </div>
+
+          {/* Row 8: Ratings & Reviews */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+            <div className="lg:col-span-1">
+              <h2 className="font-bold text-sm text-white uppercase tracking-wider">Ratings &amp; Reviews</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1.5">
+                Feedbacks and star ratings submitted by WhatsApp chatbot users.
+              </p>
+              {totalReviews > 0 && (
+                <div className="mt-4 p-4 bg-amber-400/5 border border-amber-400/10 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <div className="text-3xl font-black text-white">{avgRating.toFixed(1)}</div>
+                  <div className="flex items-center gap-0.5 mt-1.5">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const isFilled = i < Math.round(avgRating);
+                      return (
+                        <Star key={i} size={15} className={isFilled ? "fill-amber-400 stroke-amber-400" : "text-gray-600"} />
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-2">
+                    {totalReviews} Rating{totalReviews !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              {totalReviews > 0 ? (
+                <div className="space-y-3.5">
+                  {reviews.map((r) => (
+                    <div key={r._id} className="p-4 bg-[#000000]/40 border border-white/[0.08] rounded-xl flex gap-3.5 items-start">
+                      <div className="w-9 h-9 rounded-full bg-[#66ff4c]/10 text-[#66ff4c] flex items-center justify-center text-xs font-black uppercase border border-[#66ff4c]/20 flex-shrink-0">
+                        {r.reviewerName ? r.reviewerName.charAt(0) : 'U'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="font-bold text-sm text-gray-200">{r.reviewerName || 'Anonymous'}</div>
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} size={12} className={i < r.rating ? "fill-amber-400 stroke-amber-400" : "text-gray-700"} />
+                            ))}
+                          </div>
+                        </div>
+                        {r.phone && <div className="text-[10px] font-mono text-gray-500 mt-0.5">{r.phone}</div>}
+                        {r.text && <div className="text-xs text-gray-300 mt-2 leading-relaxed whitespace-pre-line">{r.text}</div>}
+                        {r.createdAt && (
+                          <div className="text-[9px] text-gray-500 font-medium mt-2.5">
+                            {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <span className="text-gray-600 italic text-sm">— No reviews or ratings yet —</span>}
             </div>
           </div>
 

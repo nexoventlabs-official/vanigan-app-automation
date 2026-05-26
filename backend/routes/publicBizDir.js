@@ -587,7 +587,7 @@ router.get('/', async (req, res) => {
   ${cards}
 </div>`;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(shell(pageTitle, body));
+  res.send(shell(pageTitle, body, '', false));
 });
 
 /* ── GET /public/dir/:id — business detail ── */
