@@ -634,7 +634,7 @@ function buildFormHtml(phone) {
     const row = document.createElement('div');
     row.className = 'social-item';
     row.id = 'srow_' + p.id;
-    row.innerHTML = `<span class="s-label">${p.label}</span><input type="url" name="${p.id}" placeholder="${p.placeholder}"><button type="button" class="rm-btn" onclick="removeSocialRow('${p.id}')">\u00d7</button>`;
+    row.innerHTML = '<span class="s-label">' + p.label + '</span><input type="url" name="' + p.id + '" placeholder="' + p.placeholder + '"><button type="button" class="rm-btn" onclick="removeSocialRow(\\'' + p.id + '\\')">×</button>';
     document.getElementById('socialRows').appendChild(row);
     if (!getSocialAvailable().length) document.getElementById('addSocialBtn').style.display = 'none';
     else document.getElementById('addSocialBtn').style.display = '';
@@ -659,17 +659,17 @@ function buildFormHtml(phone) {
     const card = document.createElement('div');
     card.className = 'svc-card';
     card.dataset.svcn = n;
-    card.innerHTML = `
-      <div class="svc-num"><span class="svc-title">Service ${n}</span><button type="button" class="svc-rm" onclick="removeSvc(this)">✕ Remove</button></div>
-      <div class="row" style="margin-bottom:10px">
-        <div><label>Name</label><input type="text" name="service${n}Name" placeholder="Service / product name"></div>
-        <div><label>Price (\u20b9)</label><input type="text" name="service${n}Price" placeholder="e.g. 500" inputmode="decimal"></div>
-      </div>
-      <div style="margin-bottom:10px"><label>Details</label><textarea name="service${n}Detail" rows="2" placeholder="Brief description"></textarea></div>
-      <div><label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>
-        <input type="file" name="service${n}Image" accept="image/*" onchange="_previewSvc(this)">
-        <div style="display:none;margin-top:6px" class="svc-prev-wrap"><img style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb" class="svc-prev-img"></div>
-      </div>`;
+    card.innerHTML =
+      '<div class="svc-num"><span class="svc-title">Service ' + n + '</span><button type="button" class="svc-rm" onclick="removeSvc(this)">✕ Remove</button></div>' +
+      '<div class="row" style="margin-bottom:10px">' +
+        '<div><label>Name</label><input type="text" name="service' + n + 'Name" placeholder="Service / product name"></div>' +
+        '<div><label>Price (₹)</label><input type="text" name="service' + n + 'Price" placeholder="e.g. 500" inputmode="decimal"></div>' +
+      '</div>' +
+      '<div style="margin-bottom:10px"><label>Details</label><textarea name="service' + n + 'Detail" rows="2" placeholder="Brief description"></textarea></div>' +
+      '<div><label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>' +
+        '<input type="file" name="service' + n + 'Image" accept="image/*" onchange="_previewSvc(this)">' +
+        '<div style="display:none;margin-top:6px" class="svc-prev-wrap"><img style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb" class="svc-prev-img"></div>' +
+      '</div>';
     document.getElementById('svcContainer').appendChild(card);
     if (svcCount >= 6) document.getElementById('addSvcBtn').style.display = 'none';
   }
