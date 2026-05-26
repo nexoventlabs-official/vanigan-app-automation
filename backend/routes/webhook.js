@@ -114,7 +114,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
           `\uD83C\uDFEA *Businesses in ${assembly}, ${district}*\n` +
           `Category: *${catLabel}*\n\n` +
           `Tap the button below to browse the full listing with details and reviews.`,
-        footerText: 'Powered by Vanigan \uD83E\uDD54',
+        footerText: 'Powered by Vanigan',
         buttonText: '\uD83C\uDFEA View Businesses',
         url: dirUrl,
       });
