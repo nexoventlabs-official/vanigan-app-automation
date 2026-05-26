@@ -183,6 +183,11 @@ export default function ListingPage({ title, resource, extraFields = [], default
       alert('Name is required.');
       return;
     }
+    const missingImg = (form.services || []).findIndex((s) => (s.name || s.price || s.detail) && !s.image && !s._file);
+    if (missingImg !== -1) {
+      alert(`Service ${missingImg + 1} is missing an image. Each service must have a photo.`);
+      return;
+    }
     setSaving(true);
     try {
       const fd = new FormData();
@@ -588,6 +593,7 @@ export default function ListingPage({ title, resource, extraFields = [], default
                             {(s._file ? URL.createObjectURL(s._file) : s.image) && (
                               <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
                             )}
+                            <label className="text-xs font-semibold text-gray-600">Photo <span className="text-red-500">*</span></label>
                             <input type="file" accept="image/*" className="input text-xs flex-1"
                               onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
                           </div>

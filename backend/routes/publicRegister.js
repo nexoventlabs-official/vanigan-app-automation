@@ -682,8 +682,8 @@ function buildFormHtml(phone) {
         '<div><label>Price (₹)</label><input type="text" name="service' + n + 'Price" placeholder="e.g. 500" inputmode="decimal"></div>' +
       '</div>' +
       '<div style="margin-bottom:10px"><label>Details</label><textarea name="service' + n + 'Detail" rows="2" placeholder="Brief description"></textarea></div>' +
-      '<div><label>Service Photo <span style="color:#888;font-weight:400">(optional)</span></label>' +
-        '<input type="file" name="service' + n + 'Image" accept="image/*" onchange="_previewSvc(this)">' +
+      '<div><label>Service Photo <span style="color:#ef4444;font-weight:600">*</span></label>' +
+        '<input type="file" name="service' + n + 'Image" accept="image/*" required onchange="_previewSvc(this)">' +
         '<div style="display:none;margin-top:6px" class="svc-prev-wrap"><img style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb" class="svc-prev-img"></div>' +
       '</div>';
     document.getElementById('svcContainer').appendChild(card);

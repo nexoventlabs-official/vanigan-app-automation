@@ -212,6 +212,11 @@ export default function BusinessDetail() {
   const submitEdit = async (e) => {
     e.preventDefault();
     if (!form.name) { alert('Name is required.'); return; }
+    const missingImg = (form.services || []).findIndex((s) => (s.name || s.price || s.detail) && !s.image && !s._file);
+    if (missingImg !== -1) {
+      alert(`Service ${missingImg + 1} is missing an image. Each service must have a photo.`);
+      return;
+    }
     setSaving(true);
     try {
       const fd = new FormData();
@@ -581,8 +586,11 @@ export default function BusinessDetail() {
                             {(s._file ? URL.createObjectURL(s._file) : s.image) && (
                               <img src={s._file ? URL.createObjectURL(s._file) : s.image} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
                             )}
-                            <input type="file" accept="image/*" className="input text-xs flex-1"
-                              onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
+                            <div className="flex-1">
+                              <label className="text-xs font-semibold text-gray-600 mb-1 block">Photo <span className="text-red-500">*</span></label>
+                              <input type="file" accept="image/*" className="input text-xs w-full"
+                                onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 1, `svc-${i}`); e.target.value = ''; }} />
+                            </div>
                           </div>
                         </div>
                       ))}
