@@ -24,7 +24,8 @@ function buildFlowJSON() {
       SERVICE_SELECT: ['SELECT_DISTRICT', 'MY_BUSINESS_LIST', 'ADD_BUSINESS', 'INFO'],
       SELECT_DISTRICT: ['SELECT_ASSEMBLY', 'INFO'],
       SELECT_ASSEMBLY: ['SELECT_CATEGORY', 'ITEM_LIST', 'INFO'],
-      SELECT_CATEGORY: [],
+      SELECT_CATEGORY: ['SELECT_SUBCATEGORY', 'INFO'],
+      SELECT_SUBCATEGORY: [],
       ITEM_LIST: ['ITEM_DETAILS', 'INFO'],
       MY_BUSINESS_LIST: ['ITEM_DETAILS', 'INFO'],
       ITEM_DETAILS: ['REVIEW', 'INFO'],
@@ -212,8 +213,6 @@ function buildFlowJSON() {
       {
         id: 'SELECT_CATEGORY',
         title: 'Select Category',
-        terminal: true,
-        success: true,
         data: {
           screen_banner: { type: 'string', __example__: 'iVBORw0KGgo' },
           has_screen_banner: { type: 'boolean', __example__: false },
@@ -259,14 +258,81 @@ function buildFlowJSON() {
             },
             {
               type: 'Footer',
-              label: '\uD83C\uDFEA View Businesses',
+              label: 'Next ›',
               'on-click-action': {
-                name: 'complete',
+                name: 'data_exchange',
                 payload: {
                   kind: '${data.kind}',
                   district: '${data.district}',
                   assembly: '${data.assembly}',
                   selected_category: '${form.selected_category}',
+                },
+              },
+            },
+          ],
+        },
+      },
+
+      // ─── SELECT_SUBCATEGORY ───
+      {
+        id: 'SELECT_SUBCATEGORY',
+        title: 'Select Sub-Category',
+        terminal: true,
+        success: true,
+        data: {
+          screen_banner:     { type: 'string',  __example__: 'iVBORw0KGgo' },
+          has_screen_banner: { type: 'boolean', __example__: false },
+          screen_heading:    { type: 'string',  __example__: 'Hospitals & Clinics — Sub-Category' },
+          kind:              { type: 'string',  __example__: 'business' },
+          district:          { type: 'string',  __example__: 'Chennai' },
+          assembly:          { type: 'string',  __example__: 'Mylapore' },
+          category:          { type: 'string',  __example__: 'Hospitals & Clinics' },
+          subcategories: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id:    { type: 'string' },
+                title: { type: 'string' },
+              },
+            },
+            __example__: [
+              { id: 'All', title: '\uD83D\uDD0D All Sub-Categories' },
+              { id: 'Dental Clinics', title: 'Dental Clinics' },
+            ],
+          },
+        },
+        layout: {
+          type: 'SingleColumnLayout',
+          children: [
+            {
+              type: 'Image',
+              src: '${data.screen_banner}',
+              width: 1000,
+              height: 125,
+              'scale-type': 'cover',
+              'alt-text': 'Sub-category',
+              visible: '${data.has_screen_banner}',
+            },
+            { type: 'TextHeading', text: '${data.screen_heading}' },
+            {
+              type: 'Dropdown',
+              name: 'selected_subcategory',
+              label: 'Sub-Category',
+              required: true,
+              'data-source': '${data.subcategories}',
+            },
+            {
+              type: 'Footer',
+              label: '\uD83C\uDFEA View Businesses',
+              'on-click-action': {
+                name: 'complete',
+                payload: {
+                  kind:                  '${data.kind}',
+                  district:              '${data.district}',
+                  assembly:              '${data.assembly}',
+                  selected_category:     '${data.category}',
+                  selected_subcategory:  '${form.selected_subcategory}',
                 },
               },
             },

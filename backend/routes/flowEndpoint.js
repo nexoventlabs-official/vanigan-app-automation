@@ -22,7 +22,8 @@ const Organizer = require('../models/Organizer');
 const Member = require('../models/Member');
 const Plan = require('../models/Plan');
 const Review = require('../models/Review');
-const CategoryImage = require('../models/CategoryImage');
+const CategoryImage   = require('../models/CategoryImage');
+const SUB_CATEGORIES  = require('../utils/subCategories');
 
 const router = express.Router();
 
@@ -582,6 +583,39 @@ async function handleDataExchange({ screen, data, flow_token }) {
         district,
         assembly,
         items,
+      },
+    };
+  }
+
+  // ─── SELECT_CATEGORY → SELECT_SUBCATEGORY ───
+  if (screen === 'SELECT_CATEGORY') {
+    const kind     = data?.kind     || 'business';
+    const district = data?.district || '';
+    const assembly = data?.assembly || '';
+    const category = data?.selected_category || '';
+    const bannerKey = kindBannerKey(kind);
+
+    if (!category) {
+      return { screen: 'INFO', data: { info_title: 'No category selected', info_body: 'Please go back and select a category.' } };
+    }
+
+    const subCats   = SUB_CATEGORIES[category] || [];
+    const subOptions = [
+      { id: 'All', title: '\uD83D\uDD0D All Sub-Categories' },
+      ...subCats.map((s) => ({ id: s, title: s })),
+    ];
+
+    return {
+      screen: 'SELECT_SUBCATEGORY',
+      data: {
+        screen_banner:     images[bannerKey] || '',
+        has_screen_banner: !!images[bannerKey],
+        screen_heading:    `${category} \u2014 Sub-Category`,
+        kind,
+        district,
+        assembly,
+        category,
+        subcategories: subOptions,
       },
     };
   }

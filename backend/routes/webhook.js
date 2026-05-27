@@ -97,22 +97,28 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
   try {
     await chatbot.trackInbound({ phone, profileName, text: '[flow_complete]' });
 
-    // Business directory CTA — flow closed from SELECT_CATEGORY screen (complete action)
+    // Business directory CTA — flow closed from SELECT_SUBCATEGORY screen (complete action)
     if (flowPayload.selected_category !== undefined) {
-      const { district = '', assembly = '', selected_category: category = 'All' } = flowPayload;
+      const {
+        district = '', assembly = '',
+        selected_category: category = '',
+        selected_subcategory: subcategory = '',
+      } = flowPayload;
       const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
       const params = new URLSearchParams({ district, assembly });
-      if (category && category !== 'All') params.set('category', category);
+      if (category) params.set('category', category);
+      if (subcategory && subcategory !== 'All') params.set('subcategory', subcategory);
       if (profileName) params.set('name', profileName);
       if (phone) params.set('phone', phone);
       const dirUrl = `${backend}/public/dir?${params.toString()}`;
-      const catLabel = (category && category !== 'All') ? category : 'All Categories';
+      const catLabel = category || 'All Categories';
+      const subLabel = (subcategory && subcategory !== 'All') ? ` \u2192 ${subcategory}` : '';
       const bannerUrl = await flowImages.getUrl('banner_business');
       await meta.sendCtaUrlMessage(phone, {
         headerImageUrl: bannerUrl || undefined,
         bodyText:
           `\uD83C\uDFEA *Businesses in ${assembly}, ${district}*\n` +
-          `Category: *${catLabel}*\n\n` +
+          `Category: *${catLabel}${subLabel}*\n\n` +
           `Tap the button below to browse the full listing with details and reviews.`,
         footerText: 'Powered by Vanigan',
         buttonText: '\uD83C\uDFEA View Businesses',

@@ -526,20 +526,21 @@ function stars(n) {
 
 /* ── GET /public/dir — business list ── */
 router.get('/', async (req, res) => {
-  const { district = '', assembly = '', category = '' } = req.query;
+  const { district = '', assembly = '', category = '', subcategory = '', name: userName = '', phone: userPhone = '' } = req.query;
   const filter = { active: true };
   if (district) filter.district = district;
   if (assembly) filter.assembly = assembly;
-  if (category && category !== 'All') filter.category = category;
+  if (category) filter.category = category;
+  if (subcategory && subcategory !== 'All') filter.subCategory = subcategory;
 
   const businesses = await Business.find(filter).sort({ name: 1 }).limit(100).lean().catch(() => []);
 
   const locLabel = [assembly, district].filter(Boolean).join(', ') || 'All Areas';
-  const catLabel = (category && category !== 'All') ? category : 'All Categories';
+  const subLabel = (subcategory && subcategory !== 'All') ? ` → ${subcategory}` : '';
+  const catLabel = category ? `${category}${subLabel}` : 'All Categories';
   const pageTitle = `Businesses – ${locLabel}`;
 
-  const { name: userName = '', phone: userPhone = '' } = req.query;
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
   let cards = '';
   if (!businesses.length) {
@@ -592,8 +593,8 @@ router.get('/', async (req, res) => {
 
 /* ── GET /public/dir/:id — business detail ── */
 router.get('/:id', async (req, res) => {
-  const { district = '', assembly = '', category = '', name: userName = '', phone: userPhone = '' } = req.query;
-  const backUrl = `/public/dir?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
+  const { district = '', assembly = '', category = '', subcategory = '', name: userName = '', phone: userPhone = '' } = req.query;
+  const backUrl = `/public/dir?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
   let biz;
   try { biz = await Business.findById(req.params.id).lean(); } catch { biz = null; }
@@ -672,7 +673,7 @@ router.get('/:id', async (req, res) => {
     ${r.text ? `<div class="rev-text">${esc(r.text)}</div>` : ''}
   </div>`).join('');
 
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
 
   /* find this user's existing review — phone match first, then name fallback */
   const myReview = reviews.find(r =>
@@ -807,8 +808,8 @@ router.get('/:id', async (req, res) => {
 
 /* ── POST /public/dir/:id/review ── */
 router.post('/:id/review', async (req, res) => {
-  const { district = '', assembly = '', category = '', name: userName = '', phone: userPhone = '' } = req.query;
-  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
+  const { district = '', assembly = '', category = '', subcategory = '', name: userName = '', phone: userPhone = '' } = req.query;
+  const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
   const { reviewerName, rating, text } = req.body;
   const ratingNum = parseInt(rating, 10);
   if (reviewerName && ratingNum >= 1 && ratingNum <= 5) {
