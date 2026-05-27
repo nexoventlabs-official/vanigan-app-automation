@@ -27,7 +27,7 @@ export default function Businesses() {
       extraFields={[
         /* ── Identity ── */
         { name: 'category', label: 'Category', type: 'select', options: CATEGORIES },
-        { name: 'subCategory',      label: 'Sub-Category',               placeholder: 'e.g. Fast Food, Wholesale' },
+        { name: 'subCategory',      label: 'Sub-Category',               type: 'subcat' },
 
         /* ── Location ── */
         { name: 'address',          label: 'Address',                    type: 'textarea' },
@@ -66,7 +66,6 @@ export default function Businesses() {
         { name: 'infoAnswer',       label: 'FAQ Answer',                 type: 'textarea' },
 
         /* ── Meta ── */
-        { name: 'listingCode',      label: 'Listing Code',               placeholder: 'Legacy code (optional)' },
         { name: 'ownerPhone',       label: 'Owner Phone (internal)',      placeholder: 'For WhatsApp auto-register flow' },
       ]}
       defaultDescription="Local businesses shown when WhatsApp users pick *Business List*."

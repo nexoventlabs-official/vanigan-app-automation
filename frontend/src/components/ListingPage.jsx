@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Image as ImageIcon, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../api';
 import DistrictAssemblySelect from './DistrictAssemblySelect.jsx';
+import SUB_CATEGORIES from '../data/subCategories.js';
 
 /**
  * Reusable CRUD UI for Business / Organizer / Member listings.
@@ -716,7 +717,11 @@ export default function ListingPage({ title, resource, extraFields = [], default
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
                     <select className="input" value={form[f.name] || ''}
-                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                      onChange={(e) => {
+                        const next = { ...form, [f.name]: e.target.value };
+                        if (f.name === 'category') next.subCategory = '';
+                        setForm(next);
+                      }}>
                       <option value="">— Select —</option>
                       {(f.options || []).map((o) => (
                         <option key={o} value={o}>{o}</option>
@@ -724,6 +729,28 @@ export default function ListingPage({ title, resource, extraFields = [], default
                     </select>
                   </div>
                 );
+
+                if (f.type === 'subcat') {
+                  const opts = SUB_CATEGORIES[form.category] || [];
+                  if (!opts.length) return (
+                    <div key={f.name}>
+                      <label className="label">{f.label}</label>
+                      <input type="text" className="input" placeholder="e.g. Fast Food, Wholesale"
+                        value={form[f.name] || ''}
+                        onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                    </div>
+                  );
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label}</label>
+                      <select className="input" value={form[f.name] || ''}
+                        onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                        <option value="">— Select Sub-Category —</option>
+                        {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  );
+                }
 
                 return (
                   <div key={f.name}>
