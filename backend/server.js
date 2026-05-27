@@ -19,6 +19,7 @@ const districtRoutes = require('./routes/districts');
 const flowImageRoutes = require('./routes/flowImages');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
+const categoryImageRoutes = require('./routes/categoryImages');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -76,6 +77,7 @@ app.use('/api/districts', districtRoutes);
 app.use('/api/flow-images', flowImageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/category-images', categoryImageRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 

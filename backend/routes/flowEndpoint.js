@@ -22,6 +22,7 @@ const Organizer = require('../models/Organizer');
 const Member = require('../models/Member');
 const Plan = require('../models/Plan');
 const Review = require('../models/Review');
+const CategoryImage = require('../models/CategoryImage');
 
 const router = express.Router();
 
@@ -535,10 +536,15 @@ async function handleDataExchange({ screen, data, flow_token }) {
 
     // Business kind → show category selector before sending CTA link
     if (kind === 'business') {
-      const catOptions = [
-        { id: 'All', title: '\uD83D\uDD0D All Categories' },
-        ...CATEGORIES.map((c) => ({ id: c, title: c })),
-      ];
+      const catImgDocs = await CategoryImage.find({ category: { $in: CATEGORIES } }).lean().catch(() => []);
+      const catImgMap  = {};
+      catImgDocs.forEach((d) => { catImgMap[d.category] = d.imageUrl || ''; });
+
+      const catOptions = CATEGORIES.map((c) => ({
+        id:    c,
+        title: c,
+        ...(catImgMap[c] ? { image: catImgMap[c] } : {}),
+      }));
       return {
         screen: 'SELECT_CATEGORY',
         data: {

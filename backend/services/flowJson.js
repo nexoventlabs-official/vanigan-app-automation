@@ -226,13 +226,14 @@ function buildFlowJSON() {
             items: {
               type: 'object',
               properties: {
-                id: { type: 'string' },
+                id:    { type: 'string' },
                 title: { type: 'string' },
+                image: { type: 'string' },
               },
             },
             __example__: [
-              { id: 'All', title: '\uD83D\uDD0D All Categories' },
-              { id: 'Hospitals', title: 'Hospitals' },
+              { id: 'Hospitals & Clinics', title: 'Hospitals & Clinics', image: '' },
+              { id: 'Transport', title: 'Transport', image: '' },
             ],
           },
         },
@@ -250,9 +251,9 @@ function buildFlowJSON() {
             },
             { type: 'TextHeading', text: '${data.screen_heading}' },
             {
-              type: 'Dropdown',
+              type: 'RadioButtonsGroup',
               name: 'selected_category',
-              label: 'Category',
+              label: 'Choose a Category',
               required: true,
               'data-source': '${data.categories}',
             },

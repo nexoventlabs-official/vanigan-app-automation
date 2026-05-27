@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   LogOut,
   Menu,
+  LayoutGrid,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -21,6 +22,7 @@ const NAV = [
   { to: '/plans', label: 'Subscription Plans', icon: Sparkles },
   { to: '/reviews', label: 'Reviews', icon: Star },
   { to: '/flow-images', label: 'Flow Images', icon: ImageIcon },
+  { to: '/category-images', label: 'Category Images', icon: LayoutGrid },
   { to: '/users', label: 'WhatsApp Users', icon: ShieldCheck },
 ];
 
