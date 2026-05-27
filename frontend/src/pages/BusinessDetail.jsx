@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../api';
 import DistrictAssemblySelect from '../components/DistrictAssemblySelect.jsx';
+import SUB_CATEGORIES from '../data/subCategories.js';
 
 const CATEGORIES = [
   'Emart','Hospitals','Transport','Electricals','Education','Sports',
@@ -28,7 +29,7 @@ const CATEGORIES = [
 
 const EXTRA_FIELDS = [
   { name: 'category', label: 'Category', type: 'select', options: CATEGORIES },
-  { name: 'subCategory',      label: 'Sub-Category',                  placeholder: 'e.g. Fast Food, Wholesale' },
+  { name: 'subCategory',      label: 'Sub-Category',                  type: 'subcat' },
   { name: 'address',          label: 'Address',                       type: 'textarea' },
   { name: 'landmark',         label: 'Landmark / How to Reach',       placeholder: 'Near bus stand, opp. post office' },
   { name: 'serviceLocations', label: 'Service Locations',             placeholder: 'Areas you serve (optional)' },
@@ -854,7 +855,11 @@ export default function BusinessDetail() {
                   <div key={f.name}>
                     <label className="label">{f.label}</label>
                     <select className="input" value={form[f.name] || ''}
-                      onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                      onChange={(e) => {
+                        const next = { ...form, [f.name]: e.target.value };
+                        if (f.name === 'category') next.subCategory = '';
+                        setForm(next);
+                      }}>
                       <option value="">— Select —</option>
                       {(f.options || []).map((o) => (
                         <option key={o} value={o}>{o}</option>
@@ -903,6 +908,28 @@ export default function BusinessDetail() {
                           ))}
                         </div>
                       )}
+                    </div>
+                  );
+                }
+
+                if (f.type === 'subcat') {
+                  const opts = SUB_CATEGORIES[form.category] || [];
+                  if (!opts.length) return (
+                    <div key={f.name}>
+                      <label className="label">{f.label}</label>
+                      <input type="text" className="input" placeholder="e.g. Fast Food, Wholesale"
+                        value={form[f.name] || ''}
+                        onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                    </div>
+                  );
+                  return (
+                    <div key={f.name}>
+                      <label className="label">{f.label}</label>
+                      <select className="input" value={form[f.name] || ''}
+                        onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}>
+                        <option value="">— Select Sub-Category —</option>
+                        {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
                     </div>
                   );
                 }

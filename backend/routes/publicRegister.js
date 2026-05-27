@@ -6,6 +6,8 @@ const districts = require('../services/districts');
 const Business = require('../models/Business');
 const meta = require('../services/metaCloud');
 const generateListingCode = require('../utils/generateListingCode');
+const SUB_CATEGORIES = require('../utils/subCategories');
+const SUB_CATEGORIES_JSON = JSON.stringify(SUB_CATEGORIES);
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -617,9 +619,11 @@ function buildFormHtml(phone) {
             ${['Emart','Hospitals','Transport','Electricals','Education','Sports','Real Estate','Spa and Facial','Digital Products','Anything on Hire','Automobile','B2B','Banquets','Bills & Recharge','Books','Cabs & Car rentals','Caterers','Civil Contractors','Courier','Daily Needs','Art & Artists','Doctor','Jobs','Jewellery','Labs','Language Classes','Bank','Medical','Modular Kitchen','Home Service','Packers and Movers','Party','Personal Care','Pest Control','Pet and Pet Care','Play School','Sports Goods','Training Institute','Transporters','Travel','Wedding','Auditor','Advocate','Cinema','Printing Services','Textiles','Photo Studio','Online service','Manufacturer','Export Import','Retailer and Stationery','Engineering','Distributor','Organic Products','Hotel and Restaurant','Online Ticket Booking','Advertising','Food Stall','IT And Software','All Shops','Repairs','Home Appliance','Demand Service','Spices','Butcher shop','TOURISM','Construction Materials','Insurance','Customs House','Shopping','Hostel and Mansion','AGRICULTURE','RELIGIOUS'].map(c => `<option value="${c}">${c}</option>`).join('')}
           </select>
         </div>
-        <div>
+        <div id="subCatWrap" style="display:none">
           <label>Sub-Category</label>
-          <input type="text" name="subCategory" placeholder="e.g. Fast Food, Wholesale">
+          <select id="subCatSel" name="subCategory">
+            <option value="">— Select Sub-Category —</option>
+          </select>
         </div>
       </div>
 
@@ -821,6 +825,25 @@ function buildFormHtml(phone) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
   const BACKEND = '${backendUrl}';
+  const SUB_CATS = ${SUB_CATEGORIES_JSON};
+
+  (function () {
+    const catSel = document.querySelector('select[name="category"]');
+    const wrap   = document.getElementById('subCatWrap');
+    const subSel = document.getElementById('subCatSel');
+    function refreshSub() {
+      const opts = SUB_CATS[catSel.value] || [];
+      subSel.innerHTML = '<option value="">\u2014 Select Sub-Category \u2014</option>';
+      opts.forEach(function(s) {
+        const o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        subSel.appendChild(o);
+      });
+      wrap.style.display = opts.length ? '' : 'none';
+    }
+    catSel.addEventListener('change', refreshSub);
+    refreshSub();
+  })();
   let districtMap = {};
   let cropper = null;
 
