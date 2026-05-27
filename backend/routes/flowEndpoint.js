@@ -541,10 +541,24 @@ async function handleDataExchange({ screen, data, flow_token }) {
       const catImgMap  = {};
       catImgDocs.forEach((d) => { catImgMap[d.category] = d.imageUrl || ''; });
 
+      /* WhatsApp Flows requires raw base64 for data-source images, not URLs.
+         Convert each category thumbnail in parallel (80×80, quality 55) to
+         keep the total response well under the ~250 KB cap. */
+      const base64Map = {};
+      await Promise.all(
+        CATEGORIES
+          .filter((c) => catImgMap[c])
+          .map(async (c) => {
+            base64Map[c] = await urlToBase64(catImgMap[c], {
+              width: 80, height: 80, crop: 'fill', quality: 55, format: 'jpg',
+            });
+          })
+      );
+
       const catOptions = CATEGORIES.map((c) => ({
         id:    c,
         title: c,
-        ...(catImgMap[c] ? { image: catImgMap[c] } : {}),
+        ...(base64Map[c] ? { image: base64Map[c] } : {}),
       }));
       return {
         screen: 'SELECT_CATEGORY',
