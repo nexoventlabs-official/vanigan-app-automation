@@ -92,11 +92,12 @@ export default function Navbar() {
           outline: none;
         }
         .nav-link:hover {
-          color: var(--accent);
-          background-color: rgba(0, 149, 246, 0.05);
+          color: var(--text);
+          background-color: var(--bg2);
         }
         .nav-link.active {
-          color: var(--accent) !important;
+          color: var(--text) !important;
+          background-color: var(--bg2);
         }
         
         .mobile-nav-link {
@@ -117,12 +118,12 @@ export default function Navbar() {
           outline: none;
         }
         .mobile-nav-link:hover, .mobile-nav-link:active {
-          color: var(--accent);
-          background-color: rgba(0, 149, 246, 0.05);
+          color: var(--text);
+          background-color: var(--bg2);
         }
         .mobile-nav-link.active {
-          color: var(--accent) !important;
-          background-color: rgba(0, 149, 246, 0.05);
+          color: var(--text) !important;
+          background-color: var(--bg2);
         }
 
         @media (max-width: 640px) {

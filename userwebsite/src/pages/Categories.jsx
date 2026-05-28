@@ -44,7 +44,12 @@ export default function Categories() {
       {loading ? (
         <div className="spinner-wrap"><div className="spinner" /></div>
       ) : filtered.length === 0 ? (
-        <div className="empty"><div className="empty-icon">🔍</div><h3>No categories found</h3></div>
+        <div className="empty">
+          <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <Search size={44} style={{ color: 'var(--muted2)' }} />
+          </div>
+          <h3>No categories found</h3>
+        </div>
       ) : (
         <div className="grid-5">
           {filtered.map(cat => (
@@ -57,8 +62,16 @@ export default function Categories() {
                 textAlign: 'center', transition: 'all .2s', padding: 0,
                 display: 'flex', flexDirection: 'column',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,149,246,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--muted2)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.04)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               <div style={{ aspectRatio: '1', background: 'var(--bg2)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {cat.imageUrl ? (

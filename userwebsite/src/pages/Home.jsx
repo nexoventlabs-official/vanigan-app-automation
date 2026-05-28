@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ArrowRight, Plus, Grid3X3, Store } from 'lucide-react';
+import { Search, ArrowRight, Plus, Grid3X3, Store, MapPin } from 'lucide-react';
 import { getCategories, getBusinesses } from '../api.js';
 import { useNav } from '../App.jsx';
 
@@ -38,14 +38,13 @@ export default function Home() {
         overflow: 'hidden',
         borderBottom: '1px solid var(--border)',
       }}>
-        {/* Decorative Grid Accent */}
         <div style={{
           position: 'absolute',
           top: 0,
           right: 0,
           width: '400px',
           height: '400px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,149,246,0.08) 0%, transparent 75%)',
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(24,24,27,0.04) 0%, transparent 75%)',
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -614,9 +613,19 @@ function BizCard({ biz, onClick }) {
       <div style={{ padding: '14px' }}>
         <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 4 }}>{biz.name}</div>
         {biz.category && <div style={{ fontSize: '.78rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</div>}
+        {biz.rating > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <Star size={11} fill="#fbbf24" stroke="#fbbf24" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.rating}</span>
+            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0})</span>
+          </div>
+        )}
         {biz.address && (
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            📍 {biz.address}
+          <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin size={12} style={{ flexShrink: 0 }} />
+            <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {biz.address}
+            </span>
           </div>
         )}
       </div>

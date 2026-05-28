@@ -24,11 +24,11 @@ export default function AddBusiness() {
       </button>
 
       {/* Icon */}
-      <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(0,149,246,.12)', border: '1px solid rgba(0,149,246,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <Store size={28} style={{ color: 'var(--accent)' }} />
+      <div style={{ width: 64, height: 64, borderRadius: 12, background: 'var(--bg2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <Store size={28} style={{ color: 'var(--text)' }} />
       </div>
 
-      <h1 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: 8 }}>Add Your Business</h1>
+      <h1 style={{ fontSize: '1.8rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>Add Your Business</h1>
       <p style={{ color: 'var(--muted)', marginBottom: 32, lineHeight: 1.6 }}>
         List your business on Vanigan for free. Get discovered by customers in your area and across Tamil Nadu.
       </p>
@@ -50,7 +50,7 @@ export default function AddBusiness() {
 
       {/* Form */}
       <div className="card" style={{ padding: 24 }}>
-        <div style={{ fontWeight: 800, marginBottom: 16 }}>Enter Your WhatsApp Number</div>
+        <div style={{ fontWeight: 600, marginBottom: 16 }}>Enter Your WhatsApp Number</div>
         <p style={{ fontSize: '.83rem', color: 'var(--muted)', marginBottom: 16 }}>
           This will be your primary contact number for your business listing.
         </p>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Search, Filter, Store, Phone, MapPin, Tag, ChevronLeft, X } from 'lucide-react';
+import { Search, Filter, Store, Phone, MapPin, Tag, ChevronLeft, X, Star } from 'lucide-react';
 import { getBusinesses, getDistricts } from '../api.js';
 import { useNav } from '../App.jsx';
 
@@ -184,7 +184,9 @@ export default function BusinessList({ params = {} }) {
         <div className="spinner-wrap"><div className="spinner" /></div>
       ) : businesses.length === 0 ? (
         <div className="empty">
-          <div className="empty-icon">🔍</div>
+          <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <Search size={44} style={{ color: 'var(--muted2)' }} />
+          </div>
           <h3>No businesses found</h3>
           <p style={{ marginTop: 8 }}>Try adjusting your filters or search term</p>
         </div>
@@ -246,9 +248,19 @@ function BizCard({ biz, onClick }) {
             {biz.category}{biz.subCategory && ` · ${biz.subCategory}`}
           </div>
         )}
+        {biz.avgRating > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, marginBottom: 6 }}>
+            <Star size={11} fill="#fbbf24" stroke="#fbbf24" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.avgRating.toFixed(1)}</span>
+            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} review{biz.reviewCount !== 1 ? 's' : ''})</span>
+          </div>
+        )}
         {biz.address && (
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 8 }}>
-            📍 {biz.assembly}{biz.district && `, ${biz.district}`}
+          <div style={{ fontSize: '.78rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+            <MapPin size={12} style={{ flexShrink: 0 }} />
+            <span style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {biz.assembly}{biz.district && `, ${biz.district}`}
+            </span>
           </div>
         )}
         {phone && (

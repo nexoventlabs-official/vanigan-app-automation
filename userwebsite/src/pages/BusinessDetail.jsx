@@ -4,7 +4,7 @@ import {
   ChevronLeft, Tag, MessageCircle, Facebook, Twitter, Instagram,
   Video, Map, Image as ImageIcon, Store, ChevronRight, ChevronLeft as PrevIcon,
 } from 'lucide-react';
-import { getBusiness } from '../api.js';
+import { getBusiness, postReview, getStoredPhone, setStoredPhone, getReviewed, markReviewed } from '../api.js';
 import { useNav } from '../App.jsx';
 
 export default function BusinessDetail({ params = {} }) {
@@ -14,19 +14,76 @@ export default function BusinessDetail({ params = {} }) {
   const [galIdx, setGalIdx]   = useState(0);
   const [galOpen, setGalOpen] = useState(false);
 
+  // Review & Rating State
+  const [reviews, setReviews]             = useState([]);
+  const [reviewerName, setReviewerName]   = useState('');
+  const [reviewPhone, setReviewPhone]     = useState(() => getStoredPhone());
+  const [formRating, setFormRating]       = useState(0);
+  const [formText, setFormText]           = useState('');
+  const [submitting, setSubmitting]       = useState(false);
+  const [submitError, setSubmitError]     = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+
   useEffect(() => {
     if (!params.id) { setLoading(false); return; }
     getBusiness(params.id)
-      .then(r => setBiz(r.data))
+      .then(r => {
+        setBiz(r.data);
+        setReviews(r.data.reviews || []);
+        /* Check localStorage: has this user already reviewed this business? */
+        if (getReviewed().includes(r.data._id?.toString())) setAlreadyReviewed(true);
+      })
       .catch(() => setBiz(null))
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!formRating) { setSubmitError('Please select a rating of 1 to 5 stars.'); return; }
+    if (!reviewerName.trim()) { setSubmitError('Please enter your name.'); return; }
+    setSubmitting(true);
+    setSubmitError('');
+    setSubmitSuccess(false);
+    try {
+      const phone = reviewPhone.replace(/\D/g, '');
+      const res = await postReview(biz._id, {
+        reviewerName: reviewerName.trim(),
+        rating: formRating,
+        text: formText.trim(),
+        phone,
+      });
+      if (phone) setStoredPhone(phone);
+      markReviewed(biz._id.toString());
+      setAlreadyReviewed(true);
+      setReviews(prev => [res.data, ...prev]);
+      setSubmitSuccess(true);
+      setReviewerName('');
+      setFormRating(0);
+      setFormText('');
+      const freshBiz = await getBusiness(biz._id);
+      setBiz(freshBiz.data);
+    } catch (err) {
+      const code = err.response?.data?.error;
+      if (code === 'already_reviewed') {
+        markReviewed(biz._id.toString());
+        setAlreadyReviewed(true);
+        setSubmitError('You have already submitted a review for this business.');
+      } else {
+        setSubmitError(code || 'Failed to submit review.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="spinner-wrap"><div className="spinner" /></div>;
   if (!biz)    return (
     <div className="container section">
       <div className="empty">
-        <div className="empty-icon">❌</div>
+        <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <Store size={48} style={{ color: 'var(--muted2)' }} />
+        </div>
         <h3>Business not found</h3>
         <button onClick={() => navigate('home')} className="btn btn-primary" style={{ marginTop: 16 }}>Go Home</button>
       </div>
@@ -63,7 +120,7 @@ export default function BusinessDetail({ params = {} }) {
           </div>
         )}
         {/* Back button */}
-        <button onClick={() => navigate(-1)} style={{
+        <button onClick={() => window.history.length > 1 ? window.history.back() : navigate('list', {})} style={{
           position: 'absolute', top: 16, left: 16,
           background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
           border: 'none', color: '#fff', cursor: 'pointer',
@@ -104,17 +161,52 @@ export default function BusinessDetail({ params = {} }) {
                 {biz.active ? '✅ Active' : '⏳ Pending'}
               </span>
             </div>
+
+            {/* Ratings Summary */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+              {biz.rating > 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 1 }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        size={14}
+                        fill={star <= Math.round(biz.rating) ? '#fbbf24' : 'none'}
+                        stroke={star <= Math.round(biz.rating) ? '#fbbf24' : '#a1a1aa'}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '.88rem', fontWeight: 700, color: 'var(--text)' }}>{biz.rating}</span>
+                  <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} reviews)</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 1 }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        size={14}
+                        fill="none"
+                        stroke="#e4e4e7"
+                      />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>No ratings yet</span>
+                </div>
+              )}
+            </div>
+
             {biz.category && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '.85rem', color: 'var(--accent)', fontWeight: 700 }}>{biz.category}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '.85rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</span>
                 {biz.subCategory && <>
                   <span style={{ color: 'var(--muted2)' }}>›</span>
-                  <span style={{ fontSize: '.82rem', color: 'var(--muted)', fontWeight: 600 }}>{biz.subCategory}</span>
+                  <span style={{ fontSize: '.82rem', color: 'var(--muted)', fontWeight: 500 }}>{biz.subCategory}</span>
                 </>}
               </div>
             )}
             {biz.listingCode && (
-              <div style={{ marginTop: 6 }}>
+              <div style={{ marginTop: 8 }}>
                 <span className="badge badge-blue"># {biz.listingCode}</span>
               </div>
             )}
@@ -207,6 +299,165 @@ export default function BusinessDetail({ params = {} }) {
                 </div>
               </Section>
             )}
+
+            {/* Reviews & Ratings Section */}
+            <Section title="Reviews & Ratings">
+              {/* Write a Review Form — hidden if already reviewed */}
+              {alreadyReviewed ? (
+                <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, color: '#4ade80', fontSize: '.88rem', fontWeight: 600 }}>
+                  ✅ You have already reviewed this business. Thank you!
+                </div>
+              ) : (
+              <div className="card" style={{ padding: 24, marginBottom: 24 }}>
+                <h4 style={{ fontWeight: 600, fontSize: '0.98rem', marginBottom: 6 }}>Write a Review</h4>
+                <p style={{ fontSize: '.82rem', color: 'var(--muted)', marginBottom: 16 }}>Share your experience with this business. Your review helps others make better decisions.</p>
+                
+                {submitSuccess && (
+                  <div className="badge badge-green" style={{ display: 'flex', padding: '10px 14px', borderRadius: 8, fontSize: '.85rem', width: '100%', marginBottom: 16, justifyContent: 'flex-start', lineHeight: 1.4 }}>
+                    ✓ Review submitted successfully! Thank you.
+                  </div>
+                )}
+                
+                {submitError && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '10px 14px', borderRadius: 8, fontSize: '.82rem', marginBottom: 16 }}>
+                    ⚠ {submitError}
+                  </div>
+                )}
+
+                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div className="field">
+                    <label className="label">Your Name *</label>
+                    <input
+                      className="input"
+                      type="text"
+                      required
+                      placeholder="e.g. John Doe"
+                      value={reviewerName}
+                      onChange={e => setReviewerName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="label">Rating *</label>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFormRating(star)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 2,
+                            display: 'inline-flex',
+                            transition: 'transform 0.1s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                          <Star
+                            size={22}
+                            fill={star <= formRating ? '#fbbf24' : 'none'}
+                            stroke={star <= formRating ? '#fbbf24' : '#a1a1aa'}
+                          />
+                        </button>
+                      ))}
+                      <span style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--muted)', marginLeft: 8 }}>
+                        {formRating ? `${formRating} Star${formRating !== 1 ? 's' : ''}` : 'Select rating'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="field">
+                    <label className="label">Review Text (Optional)</label>
+                    <textarea
+                      className="input"
+                      rows={3}
+                      placeholder="Tell us what you liked or how they can improve..."
+                      value={formText}
+                      onChange={e => setFormText(e.target.value)}
+                      style={{ resize: 'vertical', minHeight: 80, fontFamily: 'inherit' }}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="label">Your Phone (Optional — prevents duplicate review)</label>
+                    <input
+                      className="input"
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={reviewPhone}
+                      onChange={e => setReviewPhone(e.target.value)}
+                      maxLength={15}
+                      inputMode="numeric"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submitting}
+                    style={{ alignSelf: 'flex-start', marginTop: 4 }}
+                  >
+                    {submitting ? 'Submitting…' : 'Submit Review'}
+                  </button>
+                </form>
+              </div>
+              )}
+
+              {/* Reviews List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h4 style={{ fontWeight: 600, fontSize: '0.98rem', borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px' }}>
+                  <span>Recent Reviews</span>
+                  <span style={{ fontSize: '.82rem', color: 'var(--muted)', fontWeight: 500 }}>{reviews.length} total</span>
+                </h4>
+
+                {reviews.length === 0 ? (
+                  <p style={{ fontSize: '.85rem', color: 'var(--muted)', fontStyle: 'italic', padding: '12px 0' }}>
+                    No reviews yet. Be the first to write a review!
+                  </p>
+                ) : (
+                  reviews.map((rev) => (
+                    <div key={rev._id} style={{
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 12,
+                      padding: 16,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--text)' }}>
+                            {rev.reviewerName || 'Anonymous'}
+                          </div>
+                          <div style={{ display: 'flex', gap: 1, marginTop: 4 }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <Star
+                                key={star}
+                                size={12}
+                                fill={star <= rev.rating ? '#fbbf24' : 'none'}
+                                stroke={star <= rev.rating ? '#fbbf24' : '#d4d4d8'}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '.75rem', color: 'var(--muted2)', fontWeight: 500 }}>
+                          {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      {rev.text && (
+                        <p style={{ fontSize: '.85rem', color: 'var(--muted)', lineHeight: 1.5, marginTop: 2 }}>
+                          {rev.text}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </Section>
           </div>
 
           {/* Right sidebar */}
@@ -286,10 +537,10 @@ export default function BusinessDetail({ params = {} }) {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
                         <span key={d} style={{
-                          padding: '2px 8px', borderRadius: 6, fontSize: '.75rem', fontWeight: 600,
-                           background: days.includes(d) ? 'rgba(0,149,246,.12)' : 'rgba(0,0,0,.03)',
-                           color: days.includes(d) ? 'var(--accent)' : 'var(--muted2)',
-                           border: `1px solid ${days.includes(d) ? 'rgba(0,149,246,.3)' : 'var(--border)'}`,
+                          padding: '3px 8px', borderRadius: 5, fontSize: '.72rem', fontWeight: 600,
+                          background: days.includes(d) ? 'var(--accent)' : 'var(--bg2)',
+                          color: days.includes(d) ? '#ffffff' : 'var(--muted)',
+                          border: `1px solid ${days.includes(d) ? 'var(--accent)' : 'var(--border)'}`,
                         }}>{d}</span>
                       ))}
                     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Phone, RefreshCw, Store, Trash2, ExternalLink, MessageCircle, Globe, MapPin, Mail, Clock, Tag, Map } from 'lucide-react';
-import { getBusinesses, REGISTER_URL } from '../api.js';
+import { Phone, RefreshCw, Store, Trash2, ExternalLink, MessageCircle, Globe, MapPin, Mail, Clock, Tag, Map, Star } from 'lucide-react';
+import { getBusinesses, getBusiness, REGISTER_URL, setStoredPhone, getStoredPhone } from '../api.js';
 import { useNav } from '../App.jsx';
 
 const LS_KEY = 'vanigan_my_business';
@@ -24,9 +24,13 @@ export default function MyBusiness() {
       const list = r.data.businesses || [];
       if (list.length === 0) { setNotFound(true); setBiz(null); localStorage.removeItem(LS_KEY); }
       else {
-        const found = list[0];
+        const foundList = list[0];
+        // Fetch detailed profile with reviews and ratings
+        const detailRes = await getBusiness(foundList._id);
+        const found = detailRes.data;
         setBiz(found);
         localStorage.setItem(LS_KEY, JSON.stringify(found));
+        setStoredPhone(digits);
       }
     } catch {
       setError('Could not connect. Please try again.');
@@ -38,9 +42,28 @@ export default function MyBusiness() {
     lookup(phone);
   };
 
-  const refresh = () => {
-    if (biz?.phone || biz?.ownerPhone) lookup(biz.phone || biz.ownerPhone);
+  /* Refresh: re-fetch by _id (detail endpoint) so rating/reviews always fresh */
+  const refresh = async () => {
+    if (!biz?._id) return;
+    setLoading(true);
+    try {
+      const r = await getBusiness(biz._id);
+      const fresh = r.data;
+      setBiz(fresh);
+      localStorage.setItem(LS_KEY, JSON.stringify(fresh));
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
   };
+
+  /* On mount: if we have a cached biz, silently re-fetch fresh data */
+  useEffect(() => {
+    const cached = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; } })();
+    if (cached?._id) {
+      getBusiness(cached._id)
+        .then(r => { setBiz(r.data); localStorage.setItem(LS_KEY, JSON.stringify(r.data)); })
+        .catch(() => {});
+    }
+  }, []);
 
   const clear = () => {
     setBiz(null);
@@ -57,17 +80,17 @@ export default function MyBusiness() {
         ← Back
       </button>
 
-      <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(0,149,246,.12)', border: '1px solid rgba(0,149,246,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <Store size={28} style={{ color: 'var(--accent)' }} />
+      <div style={{ width: 64, height: 64, borderRadius: 12, background: 'var(--bg2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <Store size={28} style={{ color: 'var(--text)' }} />
       </div>
 
-      <h1 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: 8 }}>My Business</h1>
+      <h1 style={{ fontSize: '1.8rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>My Business</h1>
       <p style={{ color: 'var(--muted)', marginBottom: 32 }}>
         Enter your registered WhatsApp number to view your business listing.
       </p>
 
       <div className="card" style={{ padding: 24 }}>
-        <div style={{ fontWeight: 800, marginBottom: 4 }}>Find Your Business</div>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>Find Your Business</div>
         <p style={{ fontSize: '.82rem', color: 'var(--muted)', marginBottom: 16 }}>Use the same number you registered with.</p>
         <form onSubmit={handleFind}>
           <div className="field" style={{ marginBottom: 14 }}>
@@ -123,8 +146,43 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
               <div style={{ flex: 1 }}>
                 <h1 style={{ fontSize: '1.4rem', fontWeight: 900 }}>{biz.name}</h1>
+                
+                {/* Ratings Summary */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  {biz.rating > 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 1 }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star
+                            key={star}
+                            size={12}
+                            fill={star <= Math.round(biz.rating) ? '#fbbf24' : 'none'}
+                            stroke={star <= Math.round(biz.rating) ? '#fbbf24' : '#a1a1aa'}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--text)' }}>{biz.rating}</span>
+                      <span style={{ fontSize: '.75rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} reviews)</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 1 }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star
+                            key={star}
+                            size={12}
+                            fill="none"
+                            stroke="#e4e4e7"
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '.75rem', color: 'var(--muted)' }}>No ratings yet</span>
+                    </div>
+                  )}
+                </div>
+
                 {biz.category && (
-                  <div style={{ color: 'var(--accent)', fontSize: '.83rem', fontWeight: 700, marginTop: 4 }}>
+                  <div style={{ color: 'var(--accent)', fontSize: '.83rem', fontWeight: 600, marginTop: 6 }}>
                     {biz.category}{biz.subCategory && ` › ${biz.subCategory}`}
                   </div>
                 )}
@@ -216,6 +274,55 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
                 </div>
               </InfoSection>
             )}
+
+            {/* Reviews Section */}
+            <InfoSection title={`Customer Reviews (${(biz.reviews || []).length})`}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {!biz.reviews || biz.reviews.length === 0 ? (
+                  <p style={{ fontSize: '.85rem', color: 'var(--muted)', fontStyle: 'italic', padding: '12px 0' }}>
+                    No reviews received yet. Share your public listing URL with clients to get ratings!
+                  </p>
+                ) : (
+                  biz.reviews.map((rev) => (
+                    <div key={rev._id} style={{
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 12,
+                      padding: 16,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--text)' }}>
+                            {rev.reviewerName || 'Anonymous'}
+                          </div>
+                          <div style={{ display: 'flex', gap: 1, marginTop: 4 }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <Star
+                                key={star}
+                                size={12}
+                                fill={star <= rev.rating ? '#fbbf24' : 'none'}
+                                stroke={star <= rev.rating ? '#fbbf24' : '#d4d4d8'}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '.75rem', color: 'var(--muted2)', fontWeight: 500 }}>
+                          {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      {rev.text && (
+                        <p style={{ fontSize: '.85rem', color: 'var(--muted)', lineHeight: 1.5, marginTop: 2 }}>
+                          {rev.text}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </InfoSection>
           </div>
 
           {/* Right sidebar */}
@@ -249,10 +356,10 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
                         <span key={d} style={{
-                          padding: '2px 7px', borderRadius: 5, fontSize: '.72rem', fontWeight: 600,
-                          background: days.includes(d) ? 'rgba(0,149,246,.12)' : 'rgba(0,0,0,.03)',
-                          color: days.includes(d) ? 'var(--accent)' : 'var(--muted2)',
-                          border: `1px solid ${days.includes(d) ? 'rgba(0,149,246,.3)' : 'var(--border)'}`,
+                          padding: '3px 8px', borderRadius: 5, fontSize: '.72rem', fontWeight: 600,
+                          background: days.includes(d) ? 'var(--accent)' : 'var(--bg2)',
+                          color: days.includes(d) ? '#ffffff' : 'var(--muted)',
+                          border: `1px solid ${days.includes(d) ? 'var(--accent)' : 'var(--border)'}`,
                         }}>{d}</span>
                       ))}
                     </div>
