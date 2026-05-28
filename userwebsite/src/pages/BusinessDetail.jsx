@@ -57,9 +57,9 @@ export default function BusinessDetail({ params = {} }) {
         ) : (
           <div style={{
             height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a1628, #0d1e3d)',
+            background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
           }}>
-            <Store size={48} style={{ color: 'var(--muted2)', opacity: 0.4 }} />
+            <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
           </div>
         )}
         {/* Back button */}
@@ -93,7 +93,7 @@ export default function BusinessDetail({ params = {} }) {
             <img src={biz.image} alt={biz.name} style={{
               width: 80, height: 80, borderRadius: 14, objectFit: 'cover',
               border: '3px solid var(--border2)', flexShrink: 0,
-              marginTop: -48, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
+              marginTop: -48, boxShadow: '0 4px 20px rgba(0,0,0,.08)',
               background: 'var(--card)',
             }} />
           )}
@@ -287,9 +287,9 @@ export default function BusinessDetail({ params = {} }) {
                       {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
                         <span key={d} style={{
                           padding: '2px 8px', borderRadius: 6, fontSize: '.75rem', fontWeight: 600,
-                          background: days.includes(d) ? 'rgba(0,149,246,.15)' : 'rgba(255,255,255,.04)',
-                          color: days.includes(d) ? 'var(--accent)' : 'var(--muted2)',
-                          border: `1px solid ${days.includes(d) ? 'rgba(0,149,246,.3)' : 'var(--border)'}`,
+                           background: days.includes(d) ? 'rgba(0,149,246,.12)' : 'rgba(0,0,0,.03)',
+                           color: days.includes(d) ? 'var(--accent)' : 'var(--muted2)',
+                           border: `1px solid ${days.includes(d) ? 'rgba(0,149,246,.3)' : 'var(--border)'}`,
                         }}>{d}</span>
                       ))}
                     </div>

@@ -107,8 +107,8 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
         {biz.coverImage ? (
           <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a1628, #0d1e3d)' }}>
-            <Store size={48} style={{ color: 'var(--muted2)', opacity: 0.3 }} />
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' }}>
+            <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
           </div>
         )}
       </div>
@@ -185,7 +185,7 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
                       {s.image && <img src={s.image} alt={s.name} style={{ width: '100%', height: 80, objectFit: 'cover' }} />}
                       <div style={{ padding: 10 }}>
                         <div style={{ fontWeight: 700, fontSize: '.88rem' }}>{s.name}</div>
-                        {s.price && <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '.82rem', marginTop: 2 }}>₹ {s.price}</div>}
+                        {s.price && <div style={{ color: 'var(--green)', fontWeight: 700, fontSize: '.82rem', marginTop: 2 }}>₹ {s.price}</div>}
                         {s.detail && <div style={{ color: 'var(--muted)', fontSize: '.76rem', marginTop: 3 }}>{s.detail}</div>}
                       </div>
                     </div>
@@ -212,7 +212,7 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
               <InfoSection title="FAQ">
                 <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
                   <div style={{ fontWeight: 700, marginBottom: 6 }}><span style={{ color: 'var(--accent)' }}>Q.</span> {biz.infoQuestion}</div>
-                  {biz.infoAnswer && <div style={{ color: 'var(--muted)', fontSize: '.9rem' }}><span style={{ color: '#4ade80' }}>A.</span> {biz.infoAnswer}</div>}
+                  {biz.infoAnswer && <div style={{ color: 'var(--muted)', fontSize: '.9rem' }}><span style={{ color: 'var(--green)' }}>A.</span> {biz.infoAnswer}</div>}
                 </div>
               </InfoSection>
             )}
@@ -250,7 +250,7 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
                       {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
                         <span key={d} style={{
                           padding: '2px 7px', borderRadius: 5, fontSize: '.72rem', fontWeight: 600,
-                          background: days.includes(d) ? 'rgba(0,149,246,.15)' : 'rgba(255,255,255,.04)',
+                          background: days.includes(d) ? 'rgba(0,149,246,.12)' : 'rgba(0,0,0,.03)',
                           color: days.includes(d) ? 'var(--accent)' : 'var(--muted2)',
                           border: `1px solid ${days.includes(d) ? 'rgba(0,149,246,.3)' : 'var(--border)'}`,
                         }}>{d}</span>

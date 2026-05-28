@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import Navbar       from './components/Navbar.jsx';
+import Footer       from './components/Footer.jsx';
 import Home         from './pages/Home.jsx';
 import Categories   from './pages/Categories.jsx';
 import BusinessList from './pages/BusinessList.jsx';
@@ -33,6 +34,7 @@ export default function App() {
       <div className="page">
         {pages[page.name] || <Home />}
       </div>
+      <Footer />
     </NavCtx.Provider>
   );
 }
