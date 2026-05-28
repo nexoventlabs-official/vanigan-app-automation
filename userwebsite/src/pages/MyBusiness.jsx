@@ -127,9 +127,34 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
     <div>
       {/* Cover */}
       <div style={{ position: 'relative' }}>
-        <div style={{ height: 180, background: 'var(--bg2)', overflow: 'hidden' }}>
+        <div style={{ height: 180, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
           {biz.coverImage ? (
-            <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <>
+              {/* Blurred background backdrop */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `url(${biz.coverImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(15px) brightness(0.85)',
+                transform: 'scale(1.1)',
+                opacity: 0.45,
+                zIndex: 1,
+              }} />
+              {/* Crisp foreground banner showing full view */}
+              <img
+                src={biz.coverImage}
+                alt={biz.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              />
+            </>
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' }}>
               <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
@@ -232,7 +257,7 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, paddingTop: 24 }}>
+        <div className="biz-detail-grid">
           <div>
             {/* Description */}
             {biz.description && (

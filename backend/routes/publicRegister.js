@@ -1074,8 +1074,8 @@ function buildFormHtml(phone) {
     reader.readAsDataURL(input.files[0]);
   }
 
-  /* ── Cover image banner crop (ratio matches h-44 / max-w-4xl = 896/176 ≈ 5.09) ── */
-  const BANNER_RATIO = 896 / 176;
+  /* ── Cover image banner crop (4:1 ratio matches current cover display) ── */
+  const BANNER_RATIO = 4;
   let coverCropper = null;
 
   document.getElementById('coverImageInput').addEventListener('change', function () {

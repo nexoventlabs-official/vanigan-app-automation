@@ -111,7 +111,32 @@ export default function BusinessDetail({ params = {} }) {
       <div style={{ position: 'relative' }}>
         <div style={{ height: 200, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
           {biz.coverImage ? (
-            <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <>
+              {/* Blurred background backdrop */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `url(${biz.coverImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(15px) brightness(0.85)',
+                transform: 'scale(1.1)',
+                opacity: 0.45,
+                zIndex: 1,
+              }} />
+              {/* Crisp foreground banner showing full view */}
+              <img
+                src={biz.coverImage}
+                alt={biz.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              />
+            </>
           ) : (
             <div style={{
               height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -127,6 +152,7 @@ export default function BusinessDetail({ params = {} }) {
             border: 'none', color: '#fff', cursor: 'pointer',
             borderRadius: 10, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6,
             fontSize: '.85rem', fontWeight: 600,
+            zIndex: 10,
           }}>
             <ChevronLeft size={16} /> Back
           </button>
@@ -136,6 +162,7 @@ export default function BusinessDetail({ params = {} }) {
             background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
             border: 'none', color: '#fff', cursor: 'pointer',
             borderRadius: 10, padding: '8px', display: 'flex', alignItems: 'center',
+            zIndex: 10,
           }}>
             <Share2 size={16} />
           </button>
@@ -241,7 +268,7 @@ export default function BusinessDetail({ params = {} }) {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, paddingTop: 24 }}>
+        <div className="biz-detail-grid">
           <div>
             {/* Description */}
             {biz.description && (
@@ -610,12 +637,6 @@ export default function BusinessDetail({ params = {} }) {
           </div>
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 768px) {
-          .biz-detail-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }
