@@ -596,21 +596,32 @@ function CategoryCard({ cat, onClick }) {
 }
 
 function BizCard({ biz, onClick }) {
+  const cover   = biz.coverImage || biz.image || '';
+  const profile = biz.coverImage && biz.image ? biz.image : '';
   return (
     <div className="card card-hover" onClick={onClick}>
-      <div style={{ height: 100, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
-        {biz.image ? (
-          <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Store size={28} style={{ color: 'var(--muted2)' }} />
-          </div>
-        )}
+      <div style={{ height: 110, background: 'var(--bg2)', overflow: 'visible', position: 'relative' }}>
+        <div style={{ height: 110, overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+          {cover ? (
+            <img src={cover} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Store size={28} style={{ color: 'var(--muted2)' }} />
+            </div>
+          )}
+        </div>
         {biz.active && (
           <div className="badge badge-green" style={{ position: 'absolute', top: 8, right: 8 }}>Active</div>
         )}
+        {profile && (
+          <img src={profile} alt="" style={{
+            position: 'absolute', bottom: -18, left: 14,
+            width: 40, height: 40, borderRadius: 10, objectFit: 'cover',
+            border: '2px solid var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,.3)',
+          }} />
+        )}
       </div>
-      <div style={{ padding: '14px' }}>
+      <div style={{ padding: '14px', paddingTop: profile ? 24 : 14 }}>
         <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 4 }}>{biz.name}</div>
         {biz.category && <div style={{ fontSize: '.78rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</div>}
         {biz.avgRating > 0 && (
