@@ -522,6 +522,18 @@ export default function BusinessDetail({ params = {} }) {
                   <Map size={13} /> Open in Maps
                 </a>
               )}
+              {(() => {
+                const src = (biz.lat && biz.lng)
+                  ? `https://maps.google.com/maps?q=${biz.lat},${biz.lng}&output=embed&z=15`
+                  : [biz.name, biz.address, biz.city, biz.district].filter(Boolean).length
+                    ? `https://maps.google.com/maps?q=${encodeURIComponent([biz.name, biz.address, biz.city, biz.district].filter(Boolean).join(', '))}&output=embed&z=14`
+                    : '';
+                return src ? (
+                  <iframe src={src} title="Business Location" width="100%" height="220"
+                    style={{ border: 0, borderRadius: 10, marginTop: 12, display: 'block' }}
+                    allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                ) : null;
+              })()}
             </div>
 
             {/* Hours */}

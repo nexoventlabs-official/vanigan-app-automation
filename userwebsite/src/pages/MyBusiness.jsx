@@ -126,22 +126,29 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
   return (
     <div>
       {/* Cover */}
-      <div style={{ height: 180, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
-        {biz.coverImage ? (
-          <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' }}>
-            <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
-          </div>
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 180, background: 'var(--bg2)', overflow: 'hidden' }}>
+          {biz.coverImage ? (
+            <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' }}>
+              <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
+            </div>
+          )}
+        </div>
+        {biz.image && (
+          <img src={biz.image} alt={biz.name} style={{
+            position: 'absolute', bottom: -32, left: 24,
+            width: 76, height: 76, borderRadius: 14, objectFit: 'cover',
+            border: '3px solid var(--card)', background: 'var(--card)',
+            boxShadow: '0 4px 14px rgba(0,0,0,.35)', zIndex: 2,
+          }} />
         )}
       </div>
 
       <div className="container" style={{ paddingTop: 0 }}>
         {/* Header */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', padding: '20px 0 20px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-          {biz.image && (
-            <img src={biz.image} alt={biz.name} style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: '3px solid var(--border2)', flexShrink: 0, marginTop: -36, background: 'var(--card)' }} />
-          )}
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', padding: '20px 0 20px', paddingTop: biz.image ? 48 : 20, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
               <div style={{ flex: 1 }}>
@@ -346,6 +353,24 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
                 biz.pincode          && { icon: MapPin, label: 'Pincode',     value: biz.pincode },
                 biz.serviceLocations && { icon: Tag,    label: 'Service Areas', value: biz.serviceLocations },
               ].filter(Boolean).map((r, i) => <InfoRow key={i} {...r} />)}
+              {(biz.lat && biz.lng) && (
+                <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer"
+                  className="btn btn-outline btn-sm btn-full" style={{ marginTop: 10 }}>
+                  <Map size={13} /> Open in Maps
+                </a>
+              )}
+              {(() => {
+                const src = (biz.lat && biz.lng)
+                  ? `https://maps.google.com/maps?q=${biz.lat},${biz.lng}&output=embed&z=15`
+                  : [biz.name, biz.address, biz.city, biz.district].filter(Boolean).length
+                    ? `https://maps.google.com/maps?q=${encodeURIComponent([biz.name, biz.address, biz.city, biz.district].filter(Boolean).join(', '))}&output=embed&z=14`
+                    : '';
+                return src ? (
+                  <iframe src={src} title="Business Location" width="100%" height="200"
+                    style={{ border: 0, borderRadius: 10, marginTop: 12, display: 'block' }}
+                    allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                ) : null;
+              })()}
             </SideCard>
 
             {(days.length > 0 || biz.openTime) && (
