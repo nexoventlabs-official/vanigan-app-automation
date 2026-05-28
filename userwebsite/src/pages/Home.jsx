@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ArrowRight, Plus, Grid3X3, Store, MapPin } from 'lucide-react';
+import { Search, ArrowRight, Plus, Grid3X3, Store, MapPin, Star } from 'lucide-react';
 import { getCategories, getBusinesses } from '../api.js';
 import { useNav } from '../App.jsx';
 
