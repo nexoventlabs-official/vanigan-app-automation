@@ -756,12 +756,12 @@ function buildFormHtml(phone) {
         <label>Cover / Banner Photo <span style="color:#888;font-weight:400">(banner ratio — crops to fit)</span></label>
         <input type="file" name="coverImage" id="coverImageInput" accept="image/*" style="display:none">
         <div id="coverPreview" style="display:none;margin-bottom:10px">
-          <img id="coverPreviewImg" style="width:100%;aspect-ratio:13/4;object-fit:cover;border-radius:10px;border:1.5px solid #e5e7eb">
+          <img id="coverPreviewImg" style="width:100%;height:110px;object-fit:cover;border-radius:10px;border:1.5px solid #e5e7eb">
         </div>
         <button type="button" class="img-upload-btn" onclick="document.getElementById('coverImageInput').click()">
           🖼️ Tap to upload cover / banner photo
         </button>
-        <p style="font-size:.75rem;color:#9ca3af;margin-top:5px">Banner ratio 13:4 (wide landscape)  JPG, PNG, WebP  max 5 MB</p>
+        <p style="font-size:.75rem;color:#9ca3af;margin-top:5px">Banner width × 5:1 ratio • JPG, PNG, WebP • max 5 MB</p>
       </div>
 
       <div class="sec-title" style="margin-top:4px">Gallery Images <span style="font-weight:400;text-transform:none;font-size:.7rem;color:#888">(optional — up to 10)</span></div>
@@ -1074,8 +1074,8 @@ function buildFormHtml(phone) {
     reader.readAsDataURL(input.files[0]);
   }
 
-  /* ── Cover image banner crop — matches card display (110px h × ~358px w = 13:4 ≈ 3.25:1) ── */
-  const BANNER_RATIO = 13 / 4;
+  /* ── Cover image banner crop (ratio matches h-44 / max-w-4xl = 896/176 ≈ 5.09) ── */
+  const BANNER_RATIO = 896 / 176;
   let coverCropper = null;
 
   document.getElementById('coverImageInput').addEventListener('change', function () {

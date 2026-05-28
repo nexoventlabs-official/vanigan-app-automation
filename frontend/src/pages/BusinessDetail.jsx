@@ -706,10 +706,10 @@ export default function BusinessDetail() {
                   const coverPrev = form._coverFile ? URL.createObjectURL(form._coverFile) : form.coverImage || null;
                   return (
                     <div key={f.name}>
-                      <label className="label">{f.label} <span className="text-gray-400 font-normal normal-case text-xs">(banner ratio 13:4 ≈ 3.25:1)</span></label>
+                      <label className="label">{f.label} <span className="text-gray-400 font-normal normal-case text-xs">(banner ratio ~5:1)</span></label>
                       {coverPrev && <img src={coverPrev} alt="cover" className="w-full rounded-xl mb-2.5 object-cover border border-white/[0.08] bg-[#0A0E17]" style={{height:'80px'}} />}
                       <input type="file" accept="image/*" className="input"
-                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 13/4, 'cover'); e.target.value = ''; }} />
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) openCrop(file, 896/176, 'cover'); e.target.value = ''; }} />
                     </div>
                   );
                 }
