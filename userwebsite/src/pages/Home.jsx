@@ -266,7 +266,7 @@ export default function Home() {
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
               <div>
-                <h2 className="section-title">⭐ Top Rated Businesses</h2>
+                <h2 className="section-title">Top Rated Businesses</h2>
                 <p className="section-sub">Highest rated by customers</p>
               </div>
               <button onClick={() => navigate('list', {})} className="btn btn-ghost btn-sm">

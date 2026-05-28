@@ -20,6 +20,35 @@ router.get('/businesses', async (req, res) => {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: re }, { description: re }, { address: re }, { serviceLocations: re }, { subCategory: re }];
     }
+    /* ── sort=rating: query Review first, then fetch those businesses ── */
+    if (sort === 'rating') {
+      const topStats = await Review.aggregate([
+        { $match: { targetKind: 'business' } },
+        { $group: { _id: '$targetId', avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+        { $sort: { avg: -1, count: -1 } },
+        { $limit: PAGE_LIMIT },
+      ]).catch(() => []);
+
+      if (topStats.length === 0) {
+        return res.json({ businesses: [], total: 0, page: 1, limit: PAGE_LIMIT });
+      }
+
+      const topIds    = topStats.map((s) => s._id);
+      const statsMap2 = {};
+      topStats.forEach((s) => { statsMap2[s._id.toString()] = { avgRating: parseFloat(s.avg.toFixed(1)), reviewCount: s.count }; });
+
+      /* Filter by active + any extra filters (category etc.) the caller may have passed */
+      const bizDocs2 = await Business.find({ ...filter, _id: { $in: topIds } })
+        .select('-ownerPhone').lean();
+
+      const businesses2 = bizDocs2
+        .map((b) => ({ ...b, ...statsMap2[b._id.toString()] }))
+        .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
+
+      return res.json({ businesses: businesses2, total: businesses2.length, page: 1, limit: PAGE_LIMIT });
+    }
+
+    /* ── default path: paginated alphabetical ── */
     const skip = (parseInt(page, 10) - 1) * PAGE_LIMIT;
     const [bizDocs, total] = await Promise.all([
       Business.find(filter)
@@ -31,7 +60,6 @@ router.get('/businesses', async (req, res) => {
       Business.countDocuments(filter),
     ]);
 
-    /* Attach avg rating + review count from Review collection */
     const bizIds = bizDocs.map((b) => b._id);
     const stats  = await Review.aggregate([
       { $match: { targetKind: 'business', targetId: { $in: bizIds } } },
@@ -40,15 +68,11 @@ router.get('/businesses', async (req, res) => {
     const statsMap = {};
     stats.forEach((s) => { statsMap[s._id.toString()] = { avgRating: parseFloat(s.avg.toFixed(1)), reviewCount: s.count }; });
 
-    let businesses = bizDocs.map((b) => ({
+    const businesses = bizDocs.map((b) => ({
       ...b,
       avgRating:   statsMap[b._id.toString()]?.avgRating   ?? 0,
       reviewCount: statsMap[b._id.toString()]?.reviewCount ?? 0,
     }));
-
-    if (sort === 'rating') {
-      businesses.sort((a, b) => b.avgRating - a.avgRating || b.reviewCount - a.reviewCount);
-    }
 
     res.json({ businesses, total, page: parseInt(page, 10), limit: PAGE_LIMIT });
   } catch (err) {
