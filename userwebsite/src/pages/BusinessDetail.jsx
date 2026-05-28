@@ -107,55 +107,57 @@ export default function BusinessDetail({ params = {} }) {
 
   return (
     <div>
-      {/* Cover */}
-      <div style={{ height: 200, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
-        {biz.coverImage ? (
-          <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{
-            height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+      {/* Cover — outer wrapper allows profile icon to overflow the bottom edge */}
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 200, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
+          {biz.coverImage ? (
+            <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{
+              height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+            }}>
+              <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
+            </div>
+          )}
+          {/* Back button */}
+          <button onClick={() => window.history.length > 1 ? window.history.back() : navigate('list', {})} style={{
+            position: 'absolute', top: 16, left: 16,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+            border: 'none', color: '#fff', cursor: 'pointer',
+            borderRadius: 10, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: '.85rem', fontWeight: 600,
           }}>
-            <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
-          </div>
+            <ChevronLeft size={16} /> Back
+          </button>
+          {/* Share */}
+          <button onClick={share} style={{
+            position: 'absolute', top: 16, right: 16,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+            border: 'none', color: '#fff', cursor: 'pointer',
+            borderRadius: 10, padding: '8px', display: 'flex', alignItems: 'center',
+          }}>
+            <Share2 size={16} />
+          </button>
+        </div>
+        {biz.image && (
+          <img src={biz.image} alt={biz.name} style={{
+            position: 'absolute', bottom: -36, left: 24, zIndex: 2,
+            width: 80, height: 80, borderRadius: 14, objectFit: 'cover',
+            border: '3px solid var(--card)', background: 'var(--card)',
+            boxShadow: '0 4px 16px rgba(0,0,0,.35)',
+          }} />
         )}
-        {/* Back button */}
-        <button onClick={() => window.history.length > 1 ? window.history.back() : navigate('list', {})} style={{
-          position: 'absolute', top: 16, left: 16,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-          border: 'none', color: '#fff', cursor: 'pointer',
-          borderRadius: 10, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: '.85rem', fontWeight: 600,
-        }}>
-          <ChevronLeft size={16} /> Back
-        </button>
-        {/* Share */}
-        <button onClick={share} style={{
-          position: 'absolute', top: 16, right: 16,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-          border: 'none', color: '#fff', cursor: 'pointer',
-          borderRadius: 10, padding: '8px', display: 'flex', alignItems: 'center',
-        }}>
-          <Share2 size={16} />
-        </button>
       </div>
 
       <div className="container" style={{ paddingTop: 0 }}>
         {/* Profile + identity */}
         <div style={{
           display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap',
-          padding: '20px 0 24px', borderBottom: '1px solid var(--border)',
+          padding: '20px 0 24px', paddingTop: biz.image ? 52 : 20, borderBottom: '1px solid var(--border)',
         }}>
-          {biz.image && (
-            <img src={biz.image} alt={biz.name} style={{
-              width: 80, height: 80, borderRadius: 14, objectFit: 'cover',
-              border: '3px solid var(--border2)', flexShrink: 0,
-              marginTop: -48, boxShadow: '0 4px 20px rgba(0,0,0,.08)',
-              background: 'var(--card)',
-            }} />
-          )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginTop: biz.image ? -8 : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 900, lineHeight: 1.2, flex: 1 }}>{biz.name}</h1>
               <span className={`badge ${biz.active ? 'badge-green' : 'badge-gray'}`}>
                 {biz.active ? '✅ Active' : '⏳ Pending'}

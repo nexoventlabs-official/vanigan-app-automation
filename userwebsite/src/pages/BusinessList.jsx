@@ -219,29 +219,33 @@ export default function BusinessList({ params = {} }) {
 }
 
 function BizCard({ biz, onClick }) {
-  const phone = biz.phone || biz.whatsappNo || '';
+  const phone      = biz.phone || biz.whatsappNo || '';
+  const hasProfile = !!(biz.image && biz.coverImage);
   return (
     <div className="card card-hover" onClick={onClick}>
-      <div style={{ height: 110, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
-        {biz.coverImage ? (
-          <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : biz.image ? (
-          <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Store size={30} style={{ color: 'var(--muted2)' }} />
-          </div>
-        )}
-        {biz.image && biz.coverImage && (
+      {/* Outer wrapper keeps overflow:visible so profile icon isn't clipped */}
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 110, background: 'var(--bg2)', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+          {biz.coverImage ? (
+            <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : biz.image ? (
+            <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Store size={30} style={{ color: 'var(--muted2)' }} />
+            </div>
+          )}
+        </div>
+        {hasProfile && (
           <img src={biz.image} alt="" style={{
-            position: 'absolute', bottom: -18, left: 14,
+            position: 'absolute', bottom: -16, left: 12, zIndex: 1,
             width: 40, height: 40, borderRadius: 10, objectFit: 'cover',
-            border: '2px solid var(--bg)', boxShadow: '0 2px 8px rgba(0,0,0,.4)',
+            border: '2px solid var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,.4)',
           }} />
         )}
       </div>
 
-      <div style={{ padding: '14px', paddingTop: biz.image && biz.coverImage ? 22 : 14 }}>
+      <div style={{ padding: '14px', paddingTop: hasProfile ? 22 : 14 }}>
         <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 3, lineHeight: 1.3 }}>{biz.name}</div>
         {biz.category && (
           <div style={{ fontSize: '.75rem', color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>
