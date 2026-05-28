@@ -532,11 +532,23 @@ export default function Home() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  position: 'relative',
                 }}>
                   <img
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fwa.me%2F919791659816%3Ftext%3DHi"
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&ecc=H&data=https%3A%2F%2Fwa.me%2F919791659816%3Ftext%3DHi"
                     alt="WhatsApp QR Code"
                     style={{ width: '180px', height: '180px', objectFit: 'contain' }}
+                  />
+                  {/* Center Business Logo Overlay */}
+                  <img
+                    src="/business_illustration.png"
+                    alt="Vanigan Logo"
+                    style={{
+                      position: 'absolute',
+                      width: '48px',
+                      height: '48px',
+                      objectFit: 'contain',
+                    }}
                   />
                 </div>
 
