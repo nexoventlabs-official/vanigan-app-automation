@@ -13,7 +13,7 @@ export default function Home() {
   useEffect(() => {
     Promise.all([
       getCategories().catch(() => ({ data: { images: [] } })),
-      getBusinesses({ page: 1 }).catch(() => ({ data: { businesses: [] } })),
+      getBusinesses({ sort: 'rating', page: 1 }).catch(() => ({ data: { businesses: [] } })),
     ]).then(([catRes, bizRes]) => {
       setCategories(catRes.data.images || []);
       setFeatured((bizRes.data.businesses || []).slice(0, 6));
@@ -266,8 +266,8 @@ export default function Home() {
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
               <div>
-                <h2 className="section-title">Featured Businesses</h2>
-                <p className="section-sub">Explore listed businesses</p>
+                <h2 className="section-title">⭐ Top Rated Businesses</h2>
+                <p className="section-sub">Highest rated by customers</p>
               </div>
               <button onClick={() => navigate('list', {})} className="btn btn-ghost btn-sm">
                 View All <ArrowRight size={14} />
@@ -613,11 +613,11 @@ function BizCard({ biz, onClick }) {
       <div style={{ padding: '14px' }}>
         <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 4 }}>{biz.name}</div>
         {biz.category && <div style={{ fontSize: '.78rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</div>}
-        {biz.rating > 0 && (
+        {biz.avgRating > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
             <Star size={11} fill="#fbbf24" stroke="#fbbf24" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.rating}</span>
-            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0})</span>
+            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.avgRating.toFixed(1)}</span>
+            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} review{biz.reviewCount !== 1 ? 's' : ''})</span>
           </div>
         )}
         {biz.address && (

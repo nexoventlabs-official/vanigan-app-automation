@@ -9,7 +9,7 @@ const PAGE_LIMIT = 60;
 /* ── GET /api/public/businesses ── */
 router.get('/businesses', async (req, res) => {
   try {
-    const { category, subcategory, district, assembly, search, ownerPhone, page = 1 } = req.query;
+    const { category, subcategory, district, assembly, search, ownerPhone, sort, page = 1 } = req.query;
     const filter = { active: true };
     if (category)                              filter.category    = category;
     if (subcategory && subcategory !== 'All')  filter.subCategory = subcategory;
@@ -40,11 +40,16 @@ router.get('/businesses', async (req, res) => {
     const statsMap = {};
     stats.forEach((s) => { statsMap[s._id.toString()] = { avgRating: parseFloat(s.avg.toFixed(1)), reviewCount: s.count }; });
 
-    const businesses = bizDocs.map((b) => ({
+    let businesses = bizDocs.map((b) => ({
       ...b,
       avgRating:   statsMap[b._id.toString()]?.avgRating   ?? 0,
       reviewCount: statsMap[b._id.toString()]?.reviewCount ?? 0,
     }));
+
+    if (sort === 'rating') {
+      businesses.sort((a, b) => b.avgRating - a.avgRating || b.reviewCount - a.reviewCount);
+    }
+
     res.json({ businesses, total, page: parseInt(page, 10), limit: PAGE_LIMIT });
   } catch (err) {
     res.status(500).json({ error: err.message });
