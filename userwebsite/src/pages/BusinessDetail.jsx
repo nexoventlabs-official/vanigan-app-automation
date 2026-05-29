@@ -24,6 +24,7 @@ export default function BusinessDetail({ params = {} }) {
   const [submitError, setSubmitError]     = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
 
   useEffect(() => {
     if (!params.id) { setLoading(false); return; }
@@ -109,7 +110,7 @@ export default function BusinessDetail({ params = {} }) {
     <div>
       {/* Cover — outer wrapper allows profile icon to overflow the bottom edge */}
       <div style={{ position: 'relative' }}>
-        <div style={{ height: 200, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
+        <div className="biz-cover-container">
           {biz.coverImage ? (
             <>
               {/* Blurred background backdrop */}
@@ -128,20 +129,11 @@ export default function BusinessDetail({ params = {} }) {
               <img
                 src={biz.coverImage}
                 alt={biz.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  position: 'relative',
-                  zIndex: 2,
-                }}
+                className="biz-cover-img"
               />
             </>
           ) : (
-            <div style={{
-              height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
-            }}>
+            <div className="biz-cover-placeholder">
               <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
             </div>
           )}
@@ -280,14 +272,14 @@ export default function BusinessDetail({ params = {} }) {
             {/* Services */}
             {services.length > 0 && (
               <Section title="Services & Pricing">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                <div className="services-grid">
                   {services.map((s, i) => (
-                    <div key={i} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-                      {s.image && <img src={s.image} alt={s.name} style={{ width: '100%', height: 90, objectFit: 'cover' }} />}
-                      <div style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{s.name}</div>
-                        {s.price && <div style={{ color: 'var(--green)', fontWeight: 700, fontSize: '.85rem', marginTop: 3 }}>₹ {s.price}</div>}
-                        {s.detail && <div style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 4 }}>{s.detail}</div>}
+                    <div key={i} className="service-card" onClick={() => setSelectedService(s)}>
+                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" />}
+                      <div className="service-card-content">
+                        <div className="service-card-title">{s.name}</div>
+                        {s.price && <div className="service-card-price">₹ {s.price}</div>}
+                        {s.detail && <div className="service-card-detail">{s.detail}</div>}
                       </div>
                     </div>
                   ))}
@@ -634,6 +626,29 @@ export default function BusinessDetail({ params = {} }) {
           </button>
           <div style={{ position: 'absolute', bottom: 20, color: 'rgba(255,255,255,.6)', fontSize: '.85rem' }}>
             {galIdx + 1} / {gallery.length}
+          </div>
+        </div>
+      )}
+
+      {/* Service Details Modal */}
+      {selectedService && (
+        <div className="dialog-overlay" onClick={() => setSelectedService(null)}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+            <button className="dialog-close" onClick={() => setSelectedService(null)}>
+              ✕
+            </button>
+            <div className="dialog-body">
+              {selectedService.image && (
+                <div className="dialog-img-wrap">
+                  <img src={selectedService.image} alt={selectedService.name} className="dialog-img" />
+                </div>
+              )}
+              <div className="dialog-info">
+                <h3 className="dialog-title">{selectedService.name}</h3>
+                {selectedService.price && <div className="dialog-price">₹ {selectedService.price}</div>}
+                {selectedService.detail && <p className="dialog-desc">{selectedService.detail}</p>}
+              </div>
+            </div>
           </div>
         </div>
       )}

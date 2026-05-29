@@ -175,28 +175,88 @@ export default function Home() {
 
             {/* Right Graphic Column */}
             <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }} className="hero-graphic-wrap">
-              {/* Soft decorative shadow disc behind image */}
+              {/* Soft decorative shadow disc behind devices */}
               <div style={{
                 position: 'absolute',
-                width: '80%',
-                height: '80%',
+                width: '100%',
+                height: '100%',
                 borderRadius: '50%',
-                background: 'rgba(0, 149, 246, 0.04)',
-                filter: 'blur(40px)',
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)',
+                filter: 'blur(30px)',
                 zIndex: 1,
               }} />
-              <img
-                src="/hero_illustration.png"
-                alt="Tamil Nadu Directory Showcase"
-                style={{
-                  width: '100%',
-                  maxWidth: '380px',
-                  objectFit: 'contain',
-                  zIndex: 2,
-                  filter: 'drop-shadow(0 15px 30px rgba(0, 149, 246, 0.1))',
-                  animation: 'heroFloat 5s ease-in-out infinite',
-                }}
-              />
+
+              {/* Coded iOS and Laptop Devices Showcase */}
+              <div className="devices-showcase" style={{ zIndex: 2 }}>
+                
+                {/* 1. Laptop (MacBook Style) */}
+                <div className="laptop-mockup">
+                  <div className="laptop-screen-bezel">
+                    <div className="laptop-screen-display">
+                      <div className="laptop-web-header">
+                        <div className="laptop-web-dot"></div>
+                        <div className="laptop-web-dot"></div>
+                        <div className="laptop-web-dot"></div>
+                        <div className="laptop-web-address"></div>
+                      </div>
+                      <div className="laptop-web-content">
+                        {/* Mock Hero banner */}
+                        <div className="laptop-mock-hero">
+                          <div style={{ fontSize: '0.45rem', fontWeight: 800, letterSpacing: '0.2px' }}>
+                            VANIGAN COMMERCIAL MAP
+                          </div>
+                        </div>
+                        {/* Mock product card grid */}
+                        <div className="laptop-mock-card-row">
+                          {[1, 2, 3].map(n => (
+                            <div className="laptop-mock-card" key={n}>
+                              <div className="laptop-mock-card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', overflow: 'hidden' }}>
+                                <img src="/business_illustration.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              </div>
+                              <div className="laptop-mock-card-text"></div>
+                              <div className="laptop-mock-card-text"></div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="laptop-keyboard-base">
+                    <div className="laptop-keyboard-indent"></div>
+                  </div>
+                </div>
+
+                {/* 2. iOS Phone (iPhone 15 Pro Style) */}
+                <div className="phone-mockup">
+                  <div className="phone-bezel">
+                    <div className="phone-screen">
+                      <div className="phone-dynamic-island"></div>
+                      <div className="phone-app-header">
+                        <div className="phone-app-logo">Vanigan</div>
+                        <div className="phone-app-menu">
+                          <div className="phone-app-bar"></div>
+                          <div className="phone-app-bar"></div>
+                          <div className="phone-app-bar"></div>
+                        </div>
+                      </div>
+                      <div className="phone-app-content">
+                        {/* Mini Phone mockup profile card */}
+                        <div className="phone-mock-profile-card">
+                          <div className="phone-mock-cover"></div>
+                          <img src="/business_illustration.png" className="phone-mock-avatar" alt="" style={{ objectFit: 'contain', background: '#ffffff' }} />
+                          <div className="phone-mock-title"></div>
+                          <div className="phone-mock-subtitle"></div>
+                          <div className="phone-mock-btn-row">
+                            <div className="phone-mock-btn"></div>
+                            <div className="phone-mock-btn phone-mock-btn-green"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
           </div>
@@ -209,6 +269,256 @@ export default function Home() {
             50% { transform: translateY(-12px) rotate(1.5deg); }
             100% { transform: translateY(0px) rotate(0deg); }
           }
+          
+          /* Devices Showcase Layout */
+          .devices-showcase {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            height: 300px;
+            margin: 0 auto;
+          }
+          
+          /* MacBook Laptop */
+          .laptop-mockup {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 360px;
+            z-index: 2;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.12));
+          }
+          .laptop-screen-bezel {
+            background: #18181b;
+            border-radius: 16px 16px 0 0;
+            padding: 8px 8px 10px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.15);
+          }
+          .laptop-screen-display {
+            background: #ffffff;
+            aspect-ratio: 16 / 10;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #09090b;
+            display: flex;
+            flex-direction: column;
+          }
+          .laptop-web-header {
+            height: 18px;
+            background: #f4f4f5;
+            border-bottom: 1px solid #e4e4e7;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+          }
+          .laptop-web-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #ef4444;
+          }
+          .laptop-web-dot:nth-child(2) { background: #eab308; }
+          .laptop-web-dot:nth-child(3) { background: #22c55e; }
+          .laptop-web-address {
+            flex: 1;
+            height: 9px;
+            background: #ffffff;
+            border-radius: 3px;
+            border: 1px solid #e4e4e7;
+            margin: 0 16px;
+          }
+          .laptop-web-content {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fafafa;
+          }
+          .laptop-mock-hero {
+            height: 32px;
+            background: linear-gradient(135deg, #18181b 0%, #3b82f6 100%);
+            border-radius: 6px;
+            padding: 6px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .laptop-mock-card-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+          }
+          .laptop-mock-card {
+            background: #ffffff;
+            border: 1px solid #e4e4e7;
+            border-radius: 5px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+          .laptop-mock-card-img {
+            height: 18px;
+            background: #f4f4f5;
+            border-radius: 3px;
+          }
+          .laptop-mock-card-text {
+            height: 3px;
+            background: #e4e4e7;
+            border-radius: 1.5px;
+            width: 80%;
+          }
+          .laptop-mock-card-text:nth-child(3) {
+            width: 50%;
+            background: #3b82f6;
+          }
+          .laptop-keyboard-base {
+            height: 8px;
+            background: linear-gradient(to bottom, #d4d4d8 0%, #a1a1aa 100%);
+            border-radius: 0 0 12px 12px;
+            position: relative;
+          }
+          .laptop-keyboard-indent {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: #71717a;
+            border-radius: 0 0 4px 4px;
+          }
+          
+          /* iPhone 17 Pro */
+          .phone-mockup {
+            position: absolute;
+            bottom: -10px;
+            left: 240px;
+            width: 130px;
+            z-index: 10;
+            filter: drop-shadow(0 25px 50px rgba(0,0,0,0.22));
+          }
+          .phone-bezel {
+            background: #18181b;
+            border: 2px solid #09090b;
+            border-radius: 28px;
+            padding: 2.5px;
+            box-shadow: 0 0 0 1px #52525b;
+          }
+          .phone-screen {
+            background: #ffffff;
+            aspect-ratio: 9 / 19;
+            border-radius: 25px;
+            overflow: hidden;
+            position: relative;
+            border: none;
+            display: flex;
+            flex-direction: column;
+          }
+          .phone-dynamic-island {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 9px;
+            background: #09090b;
+            border-radius: 50px;
+            z-index: 20;
+          }
+          .phone-app-header {
+            height: 22px;
+            background: #ffffff;
+            border-bottom: 1px solid #e4e4e7;
+            padding: 5px 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          .phone-app-logo {
+            font-size: 0.5rem;
+            font-weight: 900;
+            color: #18181b;
+            transform: scale(0.95);
+          }
+          .phone-app-menu {
+            width: 7px;
+            height: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .phone-app-bar {
+            height: 1px;
+            background: #18181b;
+            width: 100%;
+          }
+          .phone-app-content {
+            flex: 1;
+            padding: 8px 6px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+          }
+          .phone-mock-profile-card {
+            background: #ffffff;
+            border: 1px solid #e4e4e7;
+            border-radius: 6px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          }
+          .phone-mock-cover {
+            height: 36px;
+            background: linear-gradient(135deg, #18181b 0%, #10b981 100%);
+            border-radius: 3px;
+          }
+          .phone-mock-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            background: #ffffff;
+            margin-top: -14px;
+            margin-left: 4px;
+            border: 1.5px solid #ffffff;
+            overflow: hidden;
+          }
+          .phone-mock-title {
+            height: 4px;
+            background: #18181b;
+            border-radius: 1.5px;
+            width: 70%;
+            margin-left: 3px;
+          }
+          .phone-mock-subtitle {
+            height: 2.5px;
+            background: #71717a;
+            border-radius: 1px;
+            width: 40%;
+            margin-left: 3px;
+          }
+          .phone-mock-btn-row {
+            display: flex;
+            gap: 3px;
+            margin-top: 2px;
+          }
+          .phone-mock-btn {
+            flex: 1;
+            height: 9px;
+            background: #18181b;
+            border-radius: 2px;
+          }
+          .phone-mock-btn-green {
+            background: #10b981;
+          }
+          
           @media (max-width: 900px) {
             .hero-split-grid {
               grid-template-columns: 1fr !important;
@@ -222,8 +532,83 @@ export default function Home() {
               text-align: center !important;
             }
             .hero-graphic-wrap {
-              max-width: 320px !important;
+              max-width: 440px !important;
               margin: 0 auto !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .hero-graphic-wrap {
+              display: none !important;
+            }
+          }
+          @media (max-width: 480px) {
+            .devices-showcase {
+              max-width: 320px !important;
+              height: 220px !important;
+            }
+            .laptop-mockup {
+              width: 250px !important;
+              left: -15px !important;
+              top: 15px !important;
+            }
+            .laptop-mock-hero {
+              height: 24px !important;
+            }
+            .laptop-mock-card-row {
+              gap: 4px !important;
+            }
+            .laptop-mock-card {
+              padding: 3px !important;
+            }
+            .laptop-mock-card-img {
+              height: 12px !important;
+            }
+            .phone-mockup {
+              width: 96px !important;
+              left: 139px !important;
+              right: auto !important;
+              bottom: -5px !important;
+            }
+            .phone-bezel {
+              border-radius: 20px !important;
+              padding: 2px !important;
+            }
+            .phone-screen {
+              border-radius: 17px !important;
+            }
+            .phone-dynamic-island {
+              width: 22px !important;
+              height: 6px !important;
+              border-radius: 3px !important;
+              top: 4px !important;
+            }
+            .phone-app-header {
+              height: 16px !important;
+              padding: 3px 4px 0 !important;
+            }
+            .phone-app-logo {
+              font-size: 0.4rem !important;
+            }
+            .phone-mock-profile-card {
+              border-radius: 4px !important;
+              padding: 4px !important;
+            }
+            .phone-mock-cover {
+              height: 26px !important;
+            }
+            .phone-mock-avatar {
+              width: 16px !important;
+              height: 16px !important;
+              margin-top: -10px !important;
+            }
+            .phone-mock-title {
+              height: 3px !important;
+            }
+            .phone-mock-subtitle {
+              height: 2px !important;
+            }
+            .phone-mock-btn {
+              height: 6px !important;
             }
           }
         `}</style>

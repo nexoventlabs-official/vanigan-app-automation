@@ -122,12 +122,13 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
   const services = (biz.services || []).filter(s => s.name);
   const gallery  = (biz.galleryImages || []).filter(g => g.url);
   const days     = biz.openDays ? biz.openDays.split(',').map(d => d.trim()) : [];
+  const [selectedService, setSelectedService] = useState(null);
 
   return (
     <div>
       {/* Cover */}
       <div style={{ position: 'relative' }}>
-        <div style={{ height: 180, background: 'var(--bg2)', overflow: 'hidden', position: 'relative' }}>
+        <div className="biz-cover-container">
           {biz.coverImage ? (
             <>
               {/* Blurred background backdrop */}
@@ -146,17 +147,11 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
               <img
                 src={biz.coverImage}
                 alt={biz.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  position: 'relative',
-                  zIndex: 2,
-                }}
+                className="biz-cover-img"
               />
             </>
           ) : (
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' }}>
+            <div className="biz-cover-placeholder">
               <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
             </div>
           )}
@@ -269,14 +264,14 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
             {/* Services */}
             {services.length > 0 && (
               <InfoSection title={`Services (${services.length})`}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                <div className="services-grid">
                   {services.map((s, i) => (
-                    <div key={i} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-                      {s.image && <img src={s.image} alt={s.name} style={{ width: '100%', height: 80, objectFit: 'cover' }} />}
-                      <div style={{ padding: 10 }}>
-                        <div style={{ fontWeight: 700, fontSize: '.88rem' }}>{s.name}</div>
-                        {s.price && <div style={{ color: 'var(--green)', fontWeight: 700, fontSize: '.82rem', marginTop: 2 }}>₹ {s.price}</div>}
-                        {s.detail && <div style={{ color: 'var(--muted)', fontSize: '.76rem', marginTop: 3 }}>{s.detail}</div>}
+                    <div key={i} className="service-card" onClick={() => setSelectedService(s)}>
+                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" />}
+                      <div className="service-card-content">
+                        <div className="service-card-title">{s.name}</div>
+                        {s.price && <div className="service-card-price">₹ {s.price}</div>}
+                        {s.detail && <div className="service-card-detail">{s.detail}</div>}
                       </div>
                     </div>
                   ))}
@@ -426,6 +421,29 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading }) {
           </div>
         </div>
       </div>
+
+      {/* Service Details Modal */}
+      {selectedService && (
+        <div className="dialog-overlay" onClick={() => setSelectedService(null)}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+            <button className="dialog-close" onClick={() => setSelectedService(null)}>
+              ✕
+            </button>
+            <div className="dialog-body">
+              {selectedService.image && (
+                <div className="dialog-img-wrap">
+                  <img src={selectedService.image} alt={selectedService.name} className="dialog-img" />
+                </div>
+              )}
+              <div className="dialog-info">
+                <h3 className="dialog-title">{selectedService.name}</h3>
+                {selectedService.price && <div className="dialog-price">₹ {selectedService.price}</div>}
+                {selectedService.detail && <p className="dialog-desc">{selectedService.detail}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
