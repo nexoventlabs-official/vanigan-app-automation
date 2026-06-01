@@ -16,6 +16,7 @@ export default function Businesses() {
     <ListingPage
       title="Businesses"
       resource="businesses"
+      searchPlaceholder="Search by name or list code (e.g. LIST001)…"
       extraFields={[
         /* ── Identity ── */
         { name: 'category', label: 'Category', type: 'select', options: CATEGORIES },

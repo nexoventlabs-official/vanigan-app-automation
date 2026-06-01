@@ -80,7 +80,13 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       const filter = {};
       if (district) filter.district = district;
       if (assembly) filter.assembly = assembly;
-      if (q) filter.name = new RegExp(String(q).trim(), 'i');
+      if (q) {
+        const term = String(q).trim();
+        const safe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex specials
+        const rx = new RegExp(safe, 'i');
+        // Search by business name OR listing code (e.g. "LIST001" or "001")
+        filter.$or = [{ name: rx }, { listingCode: rx }];
+      }
       const skip = (Math.max(1, parseInt(page)) - 1) * Math.min(200, parseInt(limit));
       const take = Math.min(200, parseInt(limit));
       const [items, total] = await Promise.all([

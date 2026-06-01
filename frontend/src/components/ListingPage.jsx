@@ -66,7 +66,7 @@ function CropModal({ file, aspect, onDone, onClose }) {
   );
 }
 
-export default function ListingPage({ title, resource, extraFields = [], defaultDescription, detailPath }) {
+export default function ListingPage({ title, resource, extraFields = [], defaultDescription, detailPath, searchPlaceholder }) {
   const navigate = useNavigate();
   const location = useLocation();
   const pendingEditRef = useRef(location.state?.editId || null);
@@ -277,7 +277,7 @@ export default function ListingPage({ title, resource, extraFields = [], default
             <Search size={14} className="absolute left-3 top-3.5 text-gray-500" />
             <input
               className="input pl-8"
-              placeholder="Search by name…"
+              placeholder={searchPlaceholder || 'Search by name…'}
               value={filter.q}
               onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))}
             />
