@@ -441,46 +441,63 @@ async function handleDataExchange({ screen, data, flow_token }) {
     }
 
     if (sel === 'my_business') {
-      // Include pending (active:false) businesses so owner can see their listing even before activation
-      const myBusinesses = phone
-        ? await Business.find({ ownerPhone: phone }).sort({ name: 1 }).limit(20).lean()
-        : [];
+      // Fetch business directly — no radio screen needed
+      const doc = phone
+        ? await Business.findOne({ ownerPhone: phone }).sort({ createdAt: -1 }).lean()
+        : null;
 
-      if (!myBusinesses.length) {
+      if (!doc) {
         return {
           screen: 'INFO',
           data: {
-            info_title: 'No Businesses Found',
-            info_body: 'You have not registered any businesses yet.\n\nChoose *Add Your Business* to get listed on Vanigan! 🏪',
+            info_title: 'No Business Found',
+            info_body: 'We could not find a registered business for your number.\n\nChoose *Add Your Business* to get listed on Vanigan! 🏪',
           },
         };
       }
 
-      const myItems = await Promise.all(
-        myBusinesses.map(async (b) => {
-          const item = {
-            id: b._id.toString(),
-            title: (b.name || 'Business').substring(0, 30),
-            description: (b.category || b.description || '').substring(0, 60),
-          };
-          if (b.image) {
-            const b64 = await urlToBase64(b.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
-            if (b64) item.image = b64;
-          }
-          return item;
-        })
-      );
+      // Build body text
+      const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+      const bizUrl  = `${backend}/public/dir/${doc._id}?phone=${encodeURIComponent(phone)}`;
+      const statusLine = doc.active ? '✅ Active' : '⏳ Pending Review — our team will activate it shortly';
+      const lines = [
+        `🏪 *${doc.name}*`,
+        statusLine,
+        '',
+      ];
+      if (doc.category) lines.push(`🏷️ ${doc.category}${doc.subCategory ? ` › ${doc.subCategory}` : ''}`);
+      if (doc.listingCode) lines.push(`📋 Code: ${doc.listingCode}`);
+      if (doc.address) lines.push(`📍 ${doc.address}`);
+      if (doc.city) lines.push(`🏙️ ${doc.city}${doc.pincode ? ` – ${doc.pincode}` : ''}`);
+      if (doc.phone || doc.whatsappNo) lines.push(`📞 ${doc.phone || doc.whatsappNo}`);
+      if (doc.openDays) {
+        const timeStr = [doc.openTime, doc.closeTime].filter(Boolean).join(' – ');
+        lines.push(`🕐 ${[doc.openDays, timeStr].filter(Boolean).join('  |  ')}`);
+      }
+      lines.push('');
+      lines.push('Tap the button below to view your full listing, edit details, or manage your business.');
 
+      // Send CTA message async after flow closes
+      setImmediate(async () => {
+        try {
+          await meta.sendCtaUrlMessage(phone, {
+            headerImageUrl: doc.coverImage || doc.image || undefined,
+            bodyText: lines.join('\n'),
+            footerText: 'Vanigan Directory',
+            buttonText: '🏪 View & Manage My Business',
+            url: bizUrl,
+          });
+        } catch (err) {
+          console.error('[flowEndpoint] my_business CTA failed:', err.message);
+        }
+      });
+
+      // Close the flow immediately — terminal INFO screen
       return {
-        screen: 'MY_BUSINESS_LIST',
+        screen: 'INFO',
         data: {
-          screen_banner: images.banner_business || '',
-          has_screen_banner: !!images.banner_business,
-          screen_heading: 'My Businesses',
-          kind: 'business',
-          district: '',
-          assembly: '',
-          items: myItems,
+          info_title: `${doc.name}`,
+          info_body: `Your business details are being sent to you on WhatsApp now.\n\nTap the link in the message to view, edit, or manage your listing. 🏪`,
         },
       };
     }
