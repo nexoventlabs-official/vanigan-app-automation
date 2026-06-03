@@ -456,47 +456,20 @@ async function handleDataExchange({ screen, data, flow_token }) {
         };
       }
 
-      // Build body text
-      const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
-      const bizUrl  = `${backend}/public/dir/${doc._id}?phone=${encodeURIComponent(phone)}`;
-      const statusLine = doc.active ? '✅ Active' : '⏳ Pending Review — our team will activate it shortly';
-      const lines = [
-        `🏪 *${doc.name}*`,
-        statusLine,
-        '',
-      ];
-      if (doc.category) lines.push(`🏷️ ${doc.category}${doc.subCategory ? ` › ${doc.subCategory}` : ''}`);
-      if (doc.listingCode) lines.push(`📋 Code: ${doc.listingCode}`);
-      if (doc.address) lines.push(`📍 ${doc.address}`);
-      if (doc.city) lines.push(`🏙️ ${doc.city}${doc.pincode ? ` – ${doc.pincode}` : ''}`);
-      if (doc.phone || doc.whatsappNo) lines.push(`📞 ${doc.phone || doc.whatsappNo}`);
-      if (doc.openDays) {
-        const timeStr = [doc.openTime, doc.closeTime].filter(Boolean).join(' – ');
-        lines.push(`🕐 ${[doc.openDays, timeStr].filter(Boolean).join('  |  ')}`);
+      // Store the business ID in pendingAction so the webhook nfm_reply can send the CTA
+      if (phone) {
+        await User.findOneAndUpdate(
+          { phone },
+          { $set: { pendingAction: `my_business:${doc._id.toString()}` } },
+          { upsert: true }
+        ).catch(() => {});
       }
-      lines.push('');
-      lines.push('Tap the button below to view your full listing, edit details, or manage your business.');
 
-      // Send CTA message async after flow closes
-      setImmediate(async () => {
-        try {
-          await meta.sendCtaUrlMessage(phone, {
-            headerImageUrl: doc.coverImage || doc.image || undefined,
-            bodyText: lines.join('\n'),
-            footerText: 'Vanigan Directory',
-            buttonText: '🏪 View & Manage My Business',
-            url: bizUrl,
-          });
-        } catch (err) {
-          console.error('[flowEndpoint] my_business CTA failed:', err.message);
-        }
-      });
-
-      // Close the flow immediately — terminal INFO screen
+      // Close the flow — nfm_reply webhook will send the CTA message
       return {
         screen: 'INFO',
         data: {
-          info_title: `${doc.name}`,
+          info_title: doc.name,
           info_body: `Your business details are being sent to you on WhatsApp now.\n\nTap the link in the message to view, edit, or manage your listing. 🏪`,
         },
       };
