@@ -10,6 +10,18 @@ export const getBusiness    = (id)        => api.get(`/api/public/businesses/${i
 export const getDistricts   = ()          => api.get('/public/districts');
 export const postReview     = (bizId, data) => api.post(`/api/public/businesses/${bizId}/review`, data);
 
+/* ── Owner PIN APIs ── */
+export const checkOwnerPhone = (ownerPhone) =>
+  api.post('/api/public/owner/check-phone', { ownerPhone });
+export const setOwnerPin = (ownerPhone, pin) =>
+  api.post('/api/public/owner/set-pin', { ownerPhone, pin });
+export const verifyOwnerPin = (ownerPhone, pin) =>
+  api.post('/api/public/owner/verify-pin', { ownerPhone, pin });
+export const updateOwnerBusiness = (bizId, formData) =>
+  api.put(`/api/public/owner/update/${bizId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
 export const REGISTER_URL = (phone = '') =>
   `${BASE}/public/register${phone ? `?phone=${encodeURIComponent(phone)}` : ''}`;
 

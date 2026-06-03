@@ -1,10 +1,14 @@
 const express  = require('express');
 const mongoose = require('mongoose');
+const multer   = require('multer');
+const bcrypt   = require('bcryptjs');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
+const { uploadBuffer, destroy } = require('../services/businessCloudinary');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
+
 
 /* ── GET /api/public/businesses ── */
 router.get('/businesses', async (req, res) => {
@@ -139,6 +143,177 @@ router.post('/businesses/:id/review', async (req, res) => {
     });
     res.json(newReview);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── POST /api/public/owner/set-pin  (called once after registration to set 4-digit PIN) ── */
+router.post('/owner/set-pin', async (req, res) => {
+  try {
+    const { ownerPhone, pin } = req.body;
+    const digits = String(ownerPhone || '').replace(/\D/g, '');
+    if (!digits || !/^\d{4}$/.test(String(pin || ''))) {
+      return res.status(400).json({ error: 'ownerPhone and a 4-digit PIN are required.' });
+    }
+    const biz = await Business.findOne({ ownerPhone: digits });
+    if (!biz) return res.status(404).json({ error: 'Business not found.' });
+    if (biz.ownerPin) return res.status(409).json({ error: 'pin_already_set' });
+    biz.ownerPin = await bcrypt.hash(String(pin), 10);
+    await biz.save();
+    res.json({ ok: true, businessId: biz._id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── POST /api/public/owner/verify-pin  (look up by phone + validate PIN, returns full biz data) ── */
+router.post('/owner/verify-pin', async (req, res) => {
+  try {
+    const { ownerPhone, pin } = req.body;
+    const digits = String(ownerPhone || '').replace(/\D/g, '');
+    if (!digits || !/^\d{4}$/.test(String(pin || ''))) {
+      return res.status(400).json({ error: 'ownerPhone and a 4-digit PIN are required.' });
+    }
+    /* find including inactive so owner can see pending status */
+    const biz = await Business.findOne({ ownerPhone: digits }).lean();
+    if (!biz) return res.status(404).json({ error: 'no_business' });
+    if (!biz.ownerPin) return res.status(403).json({ error: 'no_pin_set' });
+    const ok = await bcrypt.compare(String(pin), biz.ownerPin);
+    if (!ok) return res.status(403).json({ error: 'wrong_pin' });
+
+    /* fetch reviews */
+    const reviews = await Review.find({ targetKind: 'business', targetId: biz._id })
+      .sort({ createdAt: -1 }).lean();
+    const avgAgg = await Review.aggregate([
+      { $match: { targetKind: 'business', targetId: new mongoose.Types.ObjectId(biz._id.toString()) } },
+      { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ]);
+    const { ownerPin: _pin, ownerPhone: _ph, ...safeBiz } = biz;
+    res.json({
+      ...safeBiz,
+      reviews,
+      rating: avgAgg[0] ? parseFloat(avgAgg[0].avg.toFixed(1)) : 0,
+      reviewCount: avgAgg[0] ? avgAgg[0].count : 0,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── POST /api/public/owner/check-phone  (returns whether a business + PIN exists for the phone) ── */
+router.post('/owner/check-phone', async (req, res) => {
+  try {
+    const digits = String(req.body.ownerPhone || '').replace(/\D/g, '');
+    if (!digits) return res.status(400).json({ error: 'ownerPhone required' });
+    const biz = await Business.findOne({ ownerPhone: digits }).select('_id name ownerPin').lean();
+    if (!biz) return res.json({ found: false });
+    res.json({ found: true, hasPin: !!biz.ownerPin, name: biz.name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── PUT /api/public/owner/update/:id  (owner edits their business, PIN required) ── */
+const _ownerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+  .fields([
+    { name: 'image',          maxCount: 1 },
+    { name: 'coverImageFile', maxCount: 1 },
+    { name: 'galleryFiles',   maxCount: 20 },
+    ...[1,2,3,4,5,6].map(n => ({ name: `service${n}Image`, maxCount: 1 })),
+  ]);
+
+router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
+  try {
+    const { pin, ownerPhone } = req.body;
+    const digits = String(ownerPhone || '').replace(/\D/g, '');
+    if (!digits || !/^\d{4}$/.test(String(pin || ''))) {
+      return res.status(400).json({ error: 'ownerPhone and PIN are required.' });
+    }
+    const biz = await Business.findById(req.params.id);
+    if (!biz) return res.status(404).json({ error: 'Not found' });
+    if (String(biz.ownerPhone).replace(/\D/g, '') !== digits) {
+      return res.status(403).json({ error: 'Phone mismatch' });
+    }
+    if (!biz.ownerPin) return res.status(403).json({ error: 'no_pin_set' });
+    const ok = await bcrypt.compare(String(pin), biz.ownerPin);
+    if (!ok) return res.status(403).json({ error: 'wrong_pin' });
+
+    /* Apply text fields */
+    const TEXT_FIELDS = [
+      'name','description','category','subCategory',
+      'address','landmark','serviceLocations','city','pincode',
+      'phone','whatsappNo','landline','phone2','email','website',
+      'fbLink','twitterLink','instaLink','googleMap','videoUrl',
+      'openTime','closeTime','lat','lng','infoQuestion','infoAnswer',
+    ];
+    for (const f of TEXT_FIELDS) {
+      if (req.body[f] !== undefined) biz[f] = String(req.body[f]);
+    }
+    if (req.body.openDays !== undefined) {
+      const raw = req.body.openDays;
+      biz.openDays = Array.isArray(raw) ? raw.join(',') : String(raw || '');
+    }
+
+    /* Profile image */
+    if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
+      if (biz.imagePublicId) await destroy(biz.imagePublicId).catch(() => {});
+      const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const r = await uploadBuffer(buffer, { folder: 'vanigan_biz' });
+      biz.image = r.secure_url; biz.imagePublicId = r.public_id;
+    } else if (req.files?.image?.[0]) {
+      if (biz.imagePublicId) await destroy(biz.imagePublicId).catch(() => {});
+      const r = await uploadBuffer(req.files.image[0].buffer, { folder: 'vanigan_biz' });
+      biz.image = r.secure_url; biz.imagePublicId = r.public_id;
+    }
+
+    /* Cover image */
+    if (req.files?.coverImageFile?.[0]) {
+      if (biz.coverImagePublicId) await destroy(biz.coverImagePublicId).catch(() => {});
+      const r = await uploadBuffer(req.files.coverImageFile[0].buffer, { folder: 'vanigan_biz' });
+      biz.coverImage = r.secure_url; biz.coverImagePublicId = r.public_id;
+    }
+
+    /* Gallery - remove old */
+    const toRemove = (req.body.galleryToRemove || '').split(',').filter(Boolean);
+    for (const pid of toRemove) await destroy(pid).catch(() => {});
+    if (toRemove.length) {
+      biz.galleryImages = (biz.galleryImages || []).filter(g => !toRemove.includes(g.publicId));
+    }
+    /* Gallery - add new */
+    const newGallery = req.files?.galleryFiles || [];
+    for (const gf of newGallery) {
+      const r = await uploadBuffer(gf.buffer, { folder: 'vanigan_biz/gallery' });
+      biz.galleryImages = biz.galleryImages || [];
+      biz.galleryImages.push({ url: r.secure_url, publicId: r.public_id });
+    }
+
+    /* Services */
+    const existing = Array.isArray(biz.services) ? [...biz.services] : [];
+    while (existing.length < 6) existing.push({ name:'', price:'', detail:'', image:'', imagePublicId:'' });
+    for (let i = 1; i <= 6; i++) {
+      const s = { ...existing[i-1] };
+      if (req.body[`service${i}Name`]   !== undefined) s.name   = req.body[`service${i}Name`];
+      if (req.body[`service${i}Price`]  !== undefined) s.price  = req.body[`service${i}Price`];
+      if (req.body[`service${i}Detail`] !== undefined) s.detail = req.body[`service${i}Detail`];
+      const sf = req.files?.[`service${i}Image`]?.[0];
+      if (sf) {
+        if (s.imagePublicId) await destroy(s.imagePublicId).catch(() => {});
+        const r = await uploadBuffer(sf.buffer, { folder: 'vanigan_biz/services' });
+        s.image = r.secure_url; s.imagePublicId = r.public_id;
+      }
+      existing[i-1] = s;
+    }
+    biz.services = existing.filter(s => s.name || s.image);
+
+    await biz.save();
+
+    /* Return safe version */
+    const saved = biz.toObject();
+    const { ownerPin: _pin2, ownerPhone: _ph2, ...safeDoc } = saved;
+    res.json({ item: safeDoc });
+  } catch (err) {
+    console.error('[owner.update]', err);
     res.status(500).json({ error: err.message });
   }
 });

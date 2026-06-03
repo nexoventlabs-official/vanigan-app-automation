@@ -156,18 +156,13 @@ router.post('/register', uploadFields, async (req, res) => {
     if (doc.ownerPhone) {
       meta.sendText(
         doc.ownerPhone,
-        `✅ *${doc.name}* has been submitted for listing on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nOur team will review and activate your business shortly.\n\nThank you 🙏`
+        `✅ *${doc.name}* has been submitted for listing on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nPlease set your 4-digit security PIN at the registration link to manage your listing.\n\nOur team will review and activate your business shortly.\n\nThank you 🙏`
       ).catch(() => {});
     }
 
+    /* ── Show PIN setup page ── */
     res.setHeader('Content-Type', 'text/html').send(
-      pageShell('Registration Successful', `
-        <div class="icon">✅</div>
-        <h1>Registration Submitted!</h1>
-        <p><strong>${escHtml(doc.name)}</strong> has been submitted for listing on Vanigan.</p>
-        <p style="margin-top:14px">Your Listing Code: <strong>${escHtml(doc.listingCode)}</strong></p>
-        <p class="sub">Our team will review and activate your listing shortly.<br>You'll receive a WhatsApp confirmation. 🙏</p>
-      `)
+      buildPinSetupHtml({ name: doc.name, listingCode: doc.listingCode, ownerPhone: doc.ownerPhone || '' })
     );
   } catch (err) {
     console.error('[publicRegister] error:', err.message);
@@ -1176,6 +1171,158 @@ function buildFormHtml(phone) {
       updateIcons(newTheme);
     });
   })();
+</script>
+</body>
+</html>`;
+}
+
+/* ── PIN Setup Page (shown after registration) ── */
+function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
+  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Your PIN — Vanigan</title>
+  <style>
+    :root{--bg:#000;--card:#0A0E17;--border:rgba(255,255,255,0.08);--text:#fff;--muted:#9ca3af;--accent:#66ff4c;--accent-rgb:102,255,76;--topbar:rgba(10,14,23,0.85)}
+    [data-theme="light"]{--bg:#f9fafb;--card:#fff;--border:rgba(0,0,0,0.08);--text:#111827;--muted:#4b5563;--accent:#16a34a;--accent-rgb:22,163,74;--topbar:rgba(255,255,255,0.9)}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px 24px}
+    .top-bar{position:fixed;top:0;left:0;right:0;background:var(--topbar);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:40px 32px;width:100%;max-width:420px;text-align:center}
+    .icon{font-size:3rem;margin-bottom:16px;filter:drop-shadow(0 0 10px rgba(var(--accent-rgb),.3))}
+    h1{font-size:1.7rem;font-weight:900;margin-bottom:8px;letter-spacing:-.02em}
+    .sub{color:var(--muted);font-size:.87rem;line-height:1.6;margin-bottom:28px}
+    .code-badge{display:inline-block;background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.3);color:var(--accent);border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:700;letter-spacing:.05em;margin:8px 0 20px}
+    .pin-wrap{display:flex;gap:12px;justify-content:center;margin:8px 0 20px}
+    .pin-box{width:56px;height:64px;border:2px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);font-size:1.8rem;font-weight:900;text-align:center;color:var(--text);outline:none;transition:all .2s;caret-color:transparent}
+    .pin-box:focus{border-color:var(--accent);box-shadow:0 0 12px rgba(var(--accent-rgb),.2)}
+    label.lbl{display:block;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:left}
+    .btn{width:100%;background:var(--accent);color:rgba(0,0,0,.9);font-weight:850;padding:14px;border-radius:14px;border:none;font-size:.88rem;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:all .2s;box-shadow:0 0 15px rgba(var(--accent-rgb),.25);margin-top:4px}
+    [data-theme="light"] .btn{color:#fff}
+    .btn:hover:not(:disabled){background:#52e038;transform:translateY(-1px)}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .err{color:#f87171;font-size:.8rem;margin-top:8px;min-height:20px}
+    .ok-msg{display:none;background:rgba(var(--accent-rgb),.08);border:1px solid rgba(var(--accent-rgb),.2);border-radius:12px;padding:16px;margin-top:16px;color:var(--accent);font-size:.87rem;font-weight:600}
+    .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+  </style>
+  <script>(function(){const t=localStorage.getItem('vanigan-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+</head>
+<body>
+  <div class="top-bar">
+    <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style="height:28px">
+    <button onclick="(function(){const t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vanigan-theme',t)})()" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%">🌓</button>
+  </div>
+
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>Registration Submitted!</h1>
+    <p class="sub"><strong style="color:var(--text)">${escHtml(name)}</strong> has been submitted for listing on Vanigan.<br>Our team will review and activate it shortly.</p>
+    <div class="code-badge"># ${escHtml(listingCode)}</div>
+
+    <hr class="divider">
+
+    <p style="font-size:.95rem;font-weight:700;margin-bottom:6px">🔐 Set Your Security PIN</p>
+    <p class="sub" style="margin-bottom:20px">Create a 4-digit PIN to manage and edit your listing. You'll need it to access "My Business".</p>
+
+    <div id="step1">
+      <label class="lbl">Enter 4-digit PIN</label>
+      <div class="pin-wrap" id="pinBoxes1">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="0">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="1">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="2">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="3">
+      </div>
+
+      <label class="lbl" style="margin-top:16px">Confirm PIN</label>
+      <div class="pin-wrap" id="pinBoxes2">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="0">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="1">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="2">
+        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="3">
+      </div>
+
+      <div class="err" id="pinErr"></div>
+      <button class="btn" id="setPinBtn" onclick="submitPin()">Set PIN &amp; Confirm</button>
+    </div>
+
+    <div class="ok-msg" id="okMsg">
+      🎉 PIN set successfully! You can now access your business listing using your WhatsApp number and this PIN in the "My Business" section.
+    </div>
+  </div>
+
+<script>
+  const BACKEND = '${backendUrl}';
+  const OWNER_PHONE = '${escHtml(ownerPhone)}';
+
+  function initPinBoxes(wrapId) {
+    const boxes = document.querySelectorAll('#' + wrapId + ' .pin-box');
+    boxes.forEach((box, i) => {
+      box.addEventListener('input', function() {
+        this.value = this.value.replace(/\\D/g,'').slice(-1);
+        if (this.value && i < boxes.length - 1) boxes[i+1].focus();
+      });
+      box.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !this.value && i > 0) boxes[i-1].focus();
+      });
+      box.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\\D/g,'');
+        text.split('').slice(0,4).forEach((ch, j) => { if (boxes[i+j]) boxes[i+j].value = ch; });
+        const last = Math.min(i + text.length, boxes.length - 1);
+        boxes[last].focus();
+      });
+    });
+  }
+
+  initPinBoxes('pinBoxes1');
+  initPinBoxes('pinBoxes2');
+
+  function getPin(wrapId) {
+    return Array.from(document.querySelectorAll('#' + wrapId + ' .pin-box')).map(b => b.value).join('');
+  }
+
+  async function submitPin() {
+    const pin1 = getPin('pinBoxes1');
+    const pin2 = getPin('pinBoxes2');
+    const errEl = document.getElementById('pinErr');
+    errEl.textContent = '';
+
+    if (pin1.length < 4) { errEl.textContent = 'Please enter a 4-digit PIN.'; return; }
+    if (pin2.length < 4) { errEl.textContent = 'Please confirm your PIN.'; return; }
+    if (pin1 !== pin2)   { errEl.textContent = 'PINs do not match. Please try again.'; return; }
+
+    const btn = document.getElementById('setPinBtn');
+    btn.textContent = 'Setting PIN…';
+    btn.disabled = true;
+
+    try {
+      const resp = await fetch(BACKEND + '/api/public/owner/set-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerPhone: OWNER_PHONE, pin: pin1 }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        if (data.error === 'pin_already_set') {
+          errEl.textContent = 'A PIN is already set for this business.';
+        } else {
+          errEl.textContent = data.error || 'Something went wrong. Please try again.';
+        }
+        btn.textContent = 'Set PIN & Confirm';
+        btn.disabled = false;
+        return;
+      }
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('okMsg').style.display = 'block';
+    } catch(e) {
+      errEl.textContent = 'Connection error. Please try again.';
+      btn.textContent = 'Set PIN & Confirm';
+      btn.disabled = false;
+    }
+  }
 </script>
 </body>
 </html>`;
