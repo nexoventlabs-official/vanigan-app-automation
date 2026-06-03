@@ -930,98 +930,197 @@ router.get('/:id/edit', async (req, res) => {
   const catOpts = CATEGORIES.map(c => `<option value="${esc(c)}"${biz.category===c?' selected':''}>${esc(c)}</option>`).join('');
   const DAYS_ALL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const activeDays = biz.openDays ? biz.openDays.split(',').map(d=>d.trim()) : [];
-  const daysChecks = DAYS_ALL.map(d => `<label style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid ${activeDays.includes(d)?'var(--accent-color)':'var(--card-border)'};border-radius:20px;cursor:pointer;font-size:.8rem;margin:3px;background:${activeDays.includes(d)?'rgba(var(--accent-rgb),0.1)':'transparent'};color:${activeDays.includes(d)?'var(--accent-color)':'var(--text-muted)'}"><input type="checkbox" name="openDays" value="${d}" style="width:auto;accent-color:var(--accent-color)"${activeDays.includes(d)?' checked':''}> ${d}</label>`).join('');
+  const errCode = req.query.err || '';
+  const savedOk = req.query.saved === '1';
+  const errMsg = errCode === 'wrongpin' ? 'Incorrect PIN. Please try again.'
+    : errCode === 'nopin' ? 'No PIN is set for this account. Set a PIN below first.'
+    : errCode === 'pin' ? 'Please enter your 4-digit PIN.'
+    : errCode === 'pinmatch' ? 'New PINs do not match. Please try again.'
+    : '';
 
-  const pinBoxes = `<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:4px">
-    ${[0,1,2,3].map(i=>`<input type="password" maxlength="1" inputmode="numeric" name="pin_${i}" required style="width:48px;height:54px;text-align:center;font-size:1.4rem;font-weight:900;border:2px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text-main);outline:none" oninput="this.value=this.value.replace(/\\D/g,'').slice(-1);${i<3?`document.querySelectorAll('.pin-box')[${i+1}].focus()`:''}" onkeydown="if(event.key==='Backspace'&&!this.value&&${i}>0)document.querySelectorAll('.pin-box')[${i-1}].focus()" class="pin-box">`).join('')}
-  </div>`;
+  /* PIN boxes helper */
+  const pinRow = (prefix, label) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">${label}</div>
+      <div style="display:flex;gap:10px">
+        ${[0,1,2,3].map(i=>`<input type="password" maxlength="1" inputmode="numeric" data-pin="${prefix}" data-idx="${i}"
+          style="width:52px;height:60px;text-align:center;font-size:1.5rem;font-weight:900;border:1px solid var(--input-border);border-radius:12px;background:var(--input-bg);color:var(--text-main);outline:none;transition:border-color .15s"
+          oninput="pinInput(this)" onkeydown="pinBack(this,event)" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--input-border)'">`).join('')}
+      </div>
+    </div>`;
+
+  /* Section card */
+  const sec = (icon, title, content) => `
+    <div class="section" style="margin-bottom:16px">
+      <div class="sec-head">${icon} ${title}</div>
+      ${content}
+    </div>`;
+
+  /* Field row */
+  const row2 = (a, b) => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0">${a}${b}</div>`;
+  const field = (lbl, inp) => `<div><label style="display:block;font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;margin-top:14px">${lbl}</label>${inp}</div>`;
+  const inp = (attrs) => `<input ${attrs} style="width:100%;border:1px solid var(--input-border);border-radius:10px;padding:11px 14px;font-size:.88rem;outline:none;background:var(--input-bg);color:var(--text-main);transition:all .25s;margin-bottom:0" onfocus="this.style.borderColor='var(--accent-color)';this.style.boxShadow='0 0 10px rgba(var(--accent-rgb),.15)'" onblur="this.style.borderColor='var(--input-border)';this.style.boxShadow='none'">`;
+  const txta = (attrs, val) => `<textarea ${attrs} style="width:100%;border:1px solid var(--input-border);border-radius:10px;padding:11px 14px;font-size:.88rem;outline:none;background:var(--input-bg);color:var(--text-main);resize:vertical;transition:all .25s;margin-bottom:0" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--input-border)'">${val}</textarea>`;
+  const sel = (attrs, opts) => `<select ${attrs} style="width:100%;border:1px solid var(--input-border);border-radius:10px;padding:11px 14px;font-size:.88rem;outline:none;background:var(--input-bg);color:var(--text-main);appearance:none;transition:all .25s;margin-bottom:0;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2366ff4c%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E');background-position:right .75rem center;background-size:1.25rem;background-repeat:no-repeat;padding-right:2.5rem" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--input-border)'">${opts}</select>`;
+
+  const daysHtml = DAYS_ALL.map(d => {
+    const on = activeDays.includes(d);
+    return `<button type="button" onclick="toggleDay(this,'${d}')" data-day="${d}" data-on="${on?'1':'0'}"
+      style="padding:7px 14px;border-radius:20px;font-size:.8rem;font-weight:700;border:1px solid ${on?'var(--accent-color)':'var(--input-border)'};background:${on?'rgba(var(--accent-rgb),.1)':'transparent'};color:${on?'var(--accent-color)':'var(--text-muted)'};cursor:pointer;transition:all .15s">${d}</button>`;
+  }).join('');
 
   const body = `<div class="wrap">
-  <div class="section">
-    <div class="sec-head">✏️ Edit Business</div>
-    <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:20px">Update your business details below. Enter your PIN to confirm changes.</div>
-    <form id="editForm" method="POST" action="/public/dir/${esc(req.params.id)}/edit?phone=${esc(userPhone)}" enctype="multipart/form-data">
+  ${savedOk ? `<div class="toast" style="margin-bottom:16px">✅ Changes saved successfully!</div>` : ''}
+  ${errMsg ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;color:#f87171;font-size:.85rem;font-weight:600">${errMsg}</div>` : ''}
 
-      <label>Business Name *</label>
-      <input type="text" name="name" value="${val('name')}" required placeholder="Business name">
+  <form id="editForm" method="POST" action="/public/dir/${esc(req.params.id)}/edit?phone=${esc(userPhone)}">
+  <input type="hidden" name="pin" id="pinHidden">
+  <input type="hidden" name="openDays" id="openDaysHidden" value="${esc(biz.openDays || '')}">
 
-      <label>Category</label>
-      <select name="category"><option value="">— Select —</option>${catOpts}</select>
+  ${sec('🏪', 'Basic Info', `
+    ${field('Business Name *', inp(`type="text" name="name" value="${val('name')}" required placeholder="e.g. Sri Lakshmi Stores"`))}
+    ${row2(
+      field('Category', sel(`name="category"`, `<option value="">— Select —</option>${catOpts}`)),
+      field('Sub-Category', inp(`type="text" name="subCategory" value="${val('subCategory')}" placeholder="Sub-category"`))
+    )}
+    ${field('Description', txta(`name="description" rows="3" placeholder="Brief description of your business"`, val('description')))}
+  `)}
 
-      <label>Sub-Category</label>
-      <input type="text" name="subCategory" value="${val('subCategory')}" placeholder="Sub-category">
+  ${sec('📍', 'Location', `
+    ${field('Address *', txta(`name="address" rows="2" required placeholder="Full business address"`, val('address')))}
+    ${row2(
+      field('Landmark', inp(`type="text" name="landmark" value="${val('landmark')}" placeholder="Near bus stand, opp. post office"`)),
+      field('Service Areas', inp(`type="text" name="serviceLocations" value="${val('serviceLocations')}" placeholder="Areas you serve"`))
+    )}
+    ${row2(
+      field('City', inp(`type="text" name="city" value="${val('city')}" placeholder="e.g. Chennai"`)),
+      field('Pincode', inp(`type="text" name="pincode" value="${val('pincode')}" maxlength="6" inputmode="numeric" placeholder="6-digit PIN"`))
+    )}
+  `)}
 
-      <label>Description</label>
-      <textarea name="description" rows="3">${val('description')}</textarea>
+  ${sec('📞', 'Contact', `
+    ${row2(
+      field('Primary Phone', inp(`type="tel" name="phone" value="${val('phone')}" placeholder="10-digit number"`)),
+      field('WhatsApp No', inp(`type="tel" name="whatsappNo" value="${val('whatsappNo')}" placeholder="WhatsApp number"`))
+    )}
+    ${row2(
+      field('Landline', inp(`type="tel" name="landline" value="${val('landline')}" placeholder="STD code + number"`)),
+      field('Alternate Phone', inp(`type="tel" name="phone2" value="${val('phone2')}" placeholder="Optional"`))
+    )}
+    ${row2(
+      field('Email', inp(`type="email" name="email" value="${val('email')}" placeholder="business@example.com"`)),
+      field('Website', inp(`type="url" name="website" value="${val('website')}" placeholder="https://..."`))
+    )}
+  `)}
 
-      <label>Address *</label>
-      <textarea name="address" rows="2" required>${val('address')}</textarea>
+  ${sec('🔗', 'Social & Media', `
+    ${field('Facebook', inp(`type="url" name="fbLink" value="${val('fbLink')}" placeholder="https://facebook.com/..."`))  }
+    ${field('Instagram', inp(`type="url" name="instaLink" value="${val('instaLink')}" placeholder="https://instagram.com/..."`))}
+    ${field('Twitter / X', inp(`type="url" name="twitterLink" value="${val('twitterLink')}" placeholder="https://twitter.com/..."`))}
+    ${field('Google Maps', inp(`type="url" name="googleMap" value="${val('googleMap')}" placeholder="https://maps.google.com/..."`))}
+    ${field('YouTube', inp(`type="url" name="videoUrl" value="${val('videoUrl')}" placeholder="https://youtube.com/..."`))}
+  `)}
 
-      <label>Landmark</label>
-      <input type="text" name="landmark" value="${val('landmark')}">
+  ${sec('🕐', 'Hours', `
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;margin-top:14px">Opening Days</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px" id="daysWrap">${daysHtml}</div>
+    ${row2(
+      field('Open Time', inp(`type="time" name="openTime" value="${val('openTime')}"`)),
+      field('Close Time', inp(`type="time" name="closeTime" value="${val('closeTime')}"`) )
+    )}
+  `)}
 
-      <label>City</label>
-      <input type="text" name="city" value="${val('city')}">
+  ${sec('❓', 'FAQ', `
+    ${field('Frequently Asked Question', inp(`type="text" name="infoQuestion" value="${val('infoQuestion')}" placeholder="e.g. Do you offer home delivery?"`))}
+    ${field('Answer', txta(`name="infoAnswer" rows="2" placeholder="Your answer"`, val('infoAnswer')))}
+  `)}
 
-      <label>Pincode</label>
-      <input type="text" name="pincode" value="${val('pincode')}" maxlength="6" inputmode="numeric">
+  ${sec('🔐', 'Confirm with PIN', `
+    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:20px">Enter your current 4-digit PIN to save any changes above.</p>
+    ${pinRow('current', 'Current PIN *')}
+    <div id="editErr" style="color:#f87171;font-size:.82rem;min-height:18px;margin-top:-10px;margin-bottom:14px"></div>
+    <button type="submit" class="submit-btn" id="saveBtn">Save Changes</button>
+  `)}
 
-      <label>Service Areas</label>
-      <input type="text" name="serviceLocations" value="${val('serviceLocations')}" placeholder="Areas you serve">
+  ${sec('🔑', `${biz.ownerPin ? 'Change PIN' : 'Set Security PIN'}`, `
+    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:20px">${biz.ownerPin
+      ? 'To change your PIN, enter your current PIN above, then set a new one below.'
+      : 'Set a 4-digit PIN to protect your listing. Required to access and edit your business.'}</p>
+    ${pinRow('new', 'New PIN')}
+    ${pinRow('confirm', 'Confirm New PIN')}
+    <div id="pinChangeErr" style="color:#f87171;font-size:.82rem;min-height:18px;margin-top:-10px"></div>
+  `)}
 
-      <label>Primary Phone</label>
-      <input type="tel" name="phone" value="${val('phone')}">
-
-      <label>WhatsApp No</label>
-      <input type="tel" name="whatsappNo" value="${val('whatsappNo')}">
-
-      <label>Landline</label>
-      <input type="tel" name="landline" value="${val('landline')}">
-
-      <label>Email</label>
-      <input type="email" name="email" value="${val('email')}">
-
-      <label>Website</label>
-      <input type="url" name="website" value="${val('website')}">
-
-      <label>Opening Days</label>
-      <div style="margin-bottom:14px">${daysChecks}</div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label>Open Time</label><input type="time" name="openTime" value="${val('openTime')}"></div>
-        <div><label>Close Time</label><input type="time" name="closeTime" value="${val('closeTime')}"></div>
-      </div>
-
-      <label>FAQ Question</label>
-      <input type="text" name="infoQuestion" value="${val('infoQuestion')}">
-
-      <label>FAQ Answer</label>
-      <textarea name="infoAnswer" rows="2">${val('infoAnswer')}</textarea>
-
-      <div style="border-top:1px solid var(--card-border);margin:20px 0;padding-top:20px">
-        <div style="font-size:.72rem;font-weight:900;color:var(--accent-color);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">🔐 Confirm with your PIN</div>
-        ${pinBoxes}
-        <div id="editErr" style="color:#f87171;font-size:.8rem;margin-top:8px;min-height:18px"></div>
-      </div>
-
-      <input type="hidden" name="pin" id="pinHidden">
-      <button type="submit" class="submit-btn" id="saveBtn">Save Changes</button>
-    </form>
-  </div>
+  </form>
 </div>
+
 <script>
+  /* Days toggle */
+  function toggleDay(btn, day) {
+    const on = btn.dataset.on === '1';
+    btn.dataset.on = on ? '0' : '1';
+    btn.style.borderColor = on ? 'var(--input-border)' : 'var(--accent-color)';
+    btn.style.background  = on ? 'transparent' : 'rgba(var(--accent-rgb),.1)';
+    btn.style.color       = on ? 'var(--text-muted)' : 'var(--accent-color)';
+    const active = Array.from(document.querySelectorAll('#daysWrap button[data-on="1"]')).map(b=>b.dataset.day);
+    document.getElementById('openDaysHidden').value = active.join(',');
+  }
+
+  /* PIN boxes */
+  function pinInput(el) {
+    el.value = el.value.replace(/\\D/g,'').slice(-1);
+    const prefix = el.dataset.pin;
+    const idx = parseInt(el.dataset.idx);
+    if (el.value) {
+      const next = document.querySelector('[data-pin="'+prefix+'"][data-idx="'+(idx+1)+'"]');
+      if (next) next.focus();
+    }
+  }
+  function pinBack(el, e) {
+    if (e.key === 'Backspace' && !el.value) {
+      const idx = parseInt(el.dataset.idx);
+      const prefix = el.dataset.pin;
+      const prev = document.querySelector('[data-pin="'+prefix+'"][data-idx="'+(idx-1)+'"]');
+      if (prev) prev.focus();
+    }
+  }
+  function getPin(prefix) {
+    return Array.from(document.querySelectorAll('[data-pin="'+prefix+'"]')).map(i=>i.value).join('');
+  }
+
   document.getElementById('editForm').addEventListener('submit', function(e) {
-    const boxes = document.querySelectorAll('.pin-box');
-    const pin = Array.from(boxes).map(b=>b.value).join('');
-    if (pin.length < 4) { e.preventDefault(); document.getElementById('editErr').textContent='Enter your 4-digit PIN to save'; return; }
-    document.getElementById('pinHidden').value = pin;
+    e.preventDefault();
+    const currentPin = getPin('current');
+    const newPin     = getPin('new');
+    const confirmPin = getPin('confirm');
+    const editErr    = document.getElementById('editErr');
+    const pinChangeErr = document.getElementById('pinChangeErr');
+    editErr.textContent = '';
+    pinChangeErr.textContent = '';
+
+    if (currentPin.length < 4) { editErr.textContent = 'Enter your current 4-digit PIN to save.'; return; }
+
+    /* If user started filling a new PIN, both new + confirm must match */
+    if (newPin || confirmPin) {
+      if (newPin.length < 4)     { pinChangeErr.textContent = 'New PIN must be 4 digits.'; return; }
+      if (confirmPin.length < 4) { pinChangeErr.textContent = 'Please confirm your new PIN.'; return; }
+      if (newPin !== confirmPin) { pinChangeErr.textContent = 'New PINs do not match.'; return; }
+    }
+
+    document.getElementById('pinHidden').value = currentPin;
+    if (newPin && newPin === confirmPin) {
+      const np = document.createElement('input');
+      np.type='hidden'; np.name='newPin'; np.value=newPin;
+      this.appendChild(np);
+    }
     document.getElementById('saveBtn').textContent = 'Saving…';
     document.getElementById('saveBtn').disabled = true;
+    this.submit();
   });
 </script>`;
 
   res.setHeader('Content-Type','text/html; charset=utf-8');
-  res.send(shell(`Edit — ${biz.name}`, body, `/public/dir/${req.params.id}?phone=${encodeURIComponent(userPhone)}`, false));
+  res.send(shell(`Edit — ${esc(biz.name)}`, body, `/public/dir/${req.params.id}?phone=${encodeURIComponent(userPhone)}`, false));
 });
 
 /* ── POST /public/dir/:id/edit  (owner save edit) ── */
@@ -1031,27 +1130,33 @@ router.post('/:id/edit', async (req, res) => {
   let biz;
   try { biz = await Business.findById(req.params.id); } catch { biz = null; }
   if (!biz) return res.status(404).send('Not found');
-  if (!digits || String(biz.ownerPhone).replace(/\D/g,'') !== digits) {
-    return res.status(403).send('Forbidden');
-  }
+  if (!digits || String(biz.ownerPhone).replace(/\D/g,'') !== digits) return res.status(403).send('Forbidden');
+
   const pin = String(req.body.pin || '').replace(/\D/g,'');
-  if (!/^\d{4}$/.test(pin)) {
-    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=pin`);
-  }
-  if (!biz.ownerPin) {
-    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=nopin`);
-  }
+  if (!/^\d{4}$/.test(pin)) return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=pin`);
+
   const bcrypt = require('bcryptjs');
-  const ok = await bcrypt.compare(pin, biz.ownerPin);
-  if (!ok) {
-    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=wrongpin`);
+  /* If PIN is already set, verify current PIN */
+  if (biz.ownerPin) {
+    const ok = await bcrypt.compare(pin, biz.ownerPin);
+    if (!ok) return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=wrongpin`);
+  } else {
+    /* No PIN set yet — treat the submitted pin as the new PIN to set */
+    biz.ownerPin = await bcrypt.hash(pin, 10);
   }
-  const TEXT_FIELDS = ['name','description','category','subCategory','address','landmark','serviceLocations','city','pincode','phone','whatsappNo','landline','phone2','email','website','openTime','closeTime','infoQuestion','infoAnswer'];
+
+  /* Handle PIN change */
+  const newPin = String(req.body.newPin || '').replace(/\D/g,'');
+  if (newPin && /^\d{4}$/.test(newPin)) {
+    biz.ownerPin = await bcrypt.hash(newPin, 10);
+  }
+
+  const TEXT_FIELDS = ['name','description','category','subCategory','address','landmark','serviceLocations','city','pincode','phone','whatsappNo','landline','phone2','email','website','openTime','closeTime','infoQuestion','infoAnswer','fbLink','twitterLink','instaLink','googleMap','videoUrl'];
   for (const f of TEXT_FIELDS) {
     if (req.body[f] !== undefined) biz[f] = String(req.body[f]).trim();
   }
   const rawDays = req.body.openDays;
-  biz.openDays = Array.isArray(rawDays) ? rawDays.join(',') : (rawDays || '');
+  biz.openDays = Array.isArray(rawDays) ? rawDays.join(',') : String(rawDays || '').trim();
   await biz.save();
   res.redirect(`/public/dir/${req.params.id}?phone=${encodeURIComponent(userPhone)}&saved=1`);
 });

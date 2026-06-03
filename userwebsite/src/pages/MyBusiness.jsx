@@ -483,6 +483,9 @@ const CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics
 function EditBusiness({ biz, ownerPhone, pin, onSave, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
+  const [newPin, setNewPin]         = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinChangeError, setPinChangeError] = useState('');
 
   /* form state */
   const [form, setForm] = useState({
@@ -590,11 +593,23 @@ function EditBusiness({ biz, ownerPhone, pin, onSave, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Business name is required.'); return; }
+
+    // Validate PIN change if user filled any new pin boxes
+    const cleanNew     = newPin.replace(/\D/g,'');
+    const cleanConfirm = confirmPin.replace(/\D/g,'');
+    if (cleanNew || cleanConfirm) {
+      if (cleanNew.length < 4)     { setPinChangeError('New PIN must be 4 digits.'); return; }
+      if (cleanConfirm.length < 4) { setPinChangeError('Please confirm your new PIN.'); return; }
+      if (cleanNew !== cleanConfirm) { setPinChangeError('New PINs do not match.'); return; }
+    }
+    setPinChangeError('');
+
     setSaving(true); setError('');
 
     const fd = new FormData();
     fd.append('ownerPhone', ownerPhone);
     fd.append('pin', pin);
+    if (cleanNew && cleanNew === cleanConfirm) fd.append('newPin', cleanNew);
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     fd.append('openDays', openDays.join(','));
     if (galleryToRemove.length) fd.append('galleryToRemove', galleryToRemove.join(','));
@@ -800,12 +815,32 @@ function EditBusiness({ biz, ownerPhone, pin, onSave, onCancel }) {
         {/* Card 8: FAQ & Submission */}
         <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 32, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
           <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 8 of 8</span>
-            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>FAQ &amp; Submission</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Answer a custom FAQ and save all modifications</p>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 8 of 9</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>FAQ</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Add a frequently asked question about your business</p>
           </div>
           <div style={fieldStyle}><label style={labelStyle}>Question</label><input style={inputStyle} value={form.infoQuestion} onChange={e => setField('infoQuestion', e.target.value)} /></div>
-          <div style={{ ...fieldStyle, marginBottom: 28 }}><label style={labelStyle}>Answer</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={form.infoAnswer} onChange={e => setField('infoAnswer', e.target.value)} /></div>
+          <div style={{ ...fieldStyle, marginBottom: 0 }}><label style={labelStyle}>Answer</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={form.infoAnswer} onChange={e => setField('infoAnswer', e.target.value)} /></div>
+        </div>
+
+        {/* Card 9: PIN & Submission */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 32, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 9 of 9</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Security PIN</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Update your 4-digit security PIN (optional)</p>
+          </div>
+
+          <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <div style={{ ...labelStyle, marginBottom: 12 }}>New PIN <span style={{ color: 'var(--color-cool-gray)', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(leave blank to keep current)</span></div>
+            <PinInput value={newPin} onChange={setNewPin} disabled={saving} />
+          </div>
+
+          <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <div style={{ ...labelStyle, marginBottom: 12 }}>Confirm New PIN</div>
+            <PinInput value={confirmPin} onChange={setConfirmPin} disabled={saving} />
+            {pinChangeError && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: 10, textAlign: 'center', fontFamily: 'var(--font-pp-neue-montreal)' }}>{pinChangeError}</p>}
+          </div>
 
           {error && <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 12, padding: '12px 16px', color: '#ef4444', fontSize: '13px', marginBottom: 20, fontFamily: 'var(--font-sf-pro-text)' }}>{error}</div>}
 

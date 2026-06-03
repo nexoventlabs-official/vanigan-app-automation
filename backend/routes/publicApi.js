@@ -254,6 +254,12 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
       biz.openDays = Array.isArray(raw) ? raw.join(',') : String(raw || '');
     }
 
+    /* Handle PIN change */
+    const newPin = String(req.body.newPin || '').replace(/\D/g,'');
+    if (newPin && /^\d{4}$/.test(newPin)) {
+      biz.ownerPin = await bcrypt.hash(newPin, 10);
+    }
+
     /* Profile image */
     if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
       if (biz.imagePublicId) await destroy(biz.imagePublicId).catch(() => {});
