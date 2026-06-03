@@ -691,7 +691,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
           headerImageUrl: doc.coverImage || doc.image || undefined,
           bodyText,
           footerText: 'Vanigan Directory',
-          buttonText: '🏪 View & Manage My Business',
+          buttonText: 'Manage My Business',
           url: bizUrl,
         });
       } catch (err) {

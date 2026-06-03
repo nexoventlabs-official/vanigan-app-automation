@@ -184,7 +184,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
         headerImageUrl: doc.coverImage || doc.image || undefined,
         bodyText: lines.join('\n'),
         footerText: 'Vanigan Directory',
-        buttonText: '🏪 View & Manage My Business',
+        buttonText: 'Manage My Business',
         url: bizUrl,
       });
       return;
