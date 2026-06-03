@@ -30,10 +30,10 @@ export default function Home() {
 
   return (
     <div>
-      {/* ── Hero Split Section (Canva Design) ── */}
+      {/* ── Hero Split Section (Medium style) ── */}
       <section style={{
-        background: '#ffffff',
-        padding: '80px 0 64px',
+        background: 'var(--color-vellum-background)',
+        padding: '96px 0 64px',
         position: 'relative',
         overflow: 'hidden',
         borderBottom: '1px solid var(--border)',
@@ -44,16 +44,7 @@ export default function Home() {
           right: 0,
           width: '400px',
           height: '400px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(24,24,27,0.04) 0%, transparent 75%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '-100px',
-          left: '-100px',
-          width: '300px',
-          height: '300px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.06) 0%, transparent 75%)',
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(80,179,58,0.03) 0%, transparent 75%)',
           pointerEvents: 'none',
         }} />
 
@@ -68,46 +59,45 @@ export default function Home() {
             {/* Left Content Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'flex-start' }}>
               <h1 style={{
-                fontSize: 'clamp(2rem, 5.5vw, 3.6rem)',
-                fontWeight: 900,
-                lineHeight: 1.15,
-                color: 'var(--text)',
+                fontFamily: 'var(--font-sf-pro-display)',
+                fontSize: 'clamp(2.5rem, 5.8vw, 4rem)',
+                fontWeight: 700,
+                lineHeight: 1.05,
+                color: 'var(--color-ink)',
                 textAlign: 'left',
-                letterSpacing: '-1px'
+                letterSpacing: '-0.022em',
+                fontFeatureSettings: '"lnum" on, "pnum" on'
               }}>
-                Discover Trusted<br />
-                <span style={{
-                  background: 'linear-gradient(90deg, var(--accent) 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>Businesses</span> Across TN
+                Discover trusted <span style={{ color: 'var(--color-azure)' }}>local businesses</span> across Tamil Nadu.
               </h1>
               
               <p style={{
-                fontSize: '1.05rem',
-                color: 'var(--muted)',
-                lineHeight: 1.6,
+                fontFamily: 'var(--font-sf-pro-text)',
+                fontSize: '20px',
+                color: 'var(--color-graphite)',
+                lineHeight: 1.54,
                 maxWidth: '540px',
                 textAlign: 'left',
-                margin: '4px 0 8px'
+                margin: '4px 0 8px',
+                fontWeight: 400,
+                letterSpacing: '-0.01em'
               }}>
                 Connecting buyers and sellers across all districts of Tamil Nadu. Find local services, registered merchants, and direct wholesale B2B contacts.
               </p>
 
-              {/* Canva Search bar layout */}
+              {/* Minimal Search Bar */}
               <form onSubmit={handleSearch} style={{
                 width: '100%',
                 maxWidth: '560px',
                 display: 'flex',
                 gap: '8px',
-                background: '#ffffff',
+                background: 'var(--color-parchment-white)',
                 padding: '6px',
-                borderRadius: '16px',
-                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
+                borderRadius: 'var(--radius-buttons)',
                 border: '1px solid var(--border)',
               }}>
                 <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Search size={20} style={{ position: 'absolute', left: 14, color: 'var(--muted2)' }} />
+                  <Search size={20} style={{ position: 'absolute', left: 14, color: 'var(--color-muted-text-gray)' }} />
                   <input
                     className="input"
                     value={search}
@@ -116,28 +106,30 @@ export default function Home() {
                     style={{
                       paddingLeft: 44,
                       height: 48,
-                      fontSize: '.95rem',
+                      fontSize: '15px',
                       border: 'none',
                       background: 'none',
                       outline: 'none',
-                      width: '100%'
+                      width: '100%',
+                      fontFamily: 'var(--font-sohne)'
                     }}
                   />
                 </div>
                 <button type="submit" className="btn btn-primary" style={{
                   height: 48,
                   paddingInline: 24,
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '.95rem'
+                  borderRadius: 'var(--radius-buttons)',
+                  fontWeight: 400,
+                  fontSize: '15px',
+                  fontFamily: 'var(--font-sohne)'
                 }}>
                   Search
                 </button>
               </form>
 
-              {/* Quick Tags / Chips underneath search */}
+              {/* Quick Tags / Chips */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
-                <span style={{ fontSize: '.78rem', color: 'var(--muted2)', fontWeight: 600 }}>Popular:</span>
+                <span style={{ fontFamily: 'var(--font-sohne)', fontSize: '13px', color: 'var(--color-muted-text-gray)', fontWeight: 500 }}>Popular:</span>
                 {[
                   'Garments', 'Hotels', 'Garages', 'Computers', 'Organic Stores'
                 ].map(tag => (
@@ -146,24 +138,25 @@ export default function Home() {
                     type="button"
                     onClick={() => navigate('list', { search: tag })}
                     style={{
-                      background: 'rgba(0, 149, 246, 0.05)',
-                      border: '1px solid rgba(0, 149, 246, 0.12)',
-                      padding: '4px 12px',
-                      borderRadius: '100px',
-                      fontSize: '.75rem',
-                      fontWeight: 600,
-                      color: 'var(--accent)',
+                      background: 'var(--color-parchment-white)',
+                      border: '1px solid var(--border)',
+                      padding: '4px 14px',
+                      borderRadius: 'var(--radius-pillbuttons)',
+                      fontSize: '12px',
+                      fontFamily: 'var(--font-sohne)',
+                      fontWeight: 400,
+                      color: 'var(--color-inkwell-black)',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       outline: 'none',
                     }}
                     onMouseEnter={e => {
-                      e.target.style.background = 'rgba(0, 149, 246, 0.1)';
-                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.background = 'rgba(25, 25, 25, 0.04)';
+                      e.target.style.borderColor = 'var(--color-charcoal-black)';
                     }}
                     onMouseLeave={e => {
-                      e.target.style.background = 'rgba(0, 149, 246, 0.05)';
-                      e.target.style.transform = 'none';
+                      e.target.style.background = 'var(--color-parchment-white)';
+                      e.target.style.borderColor = 'var(--border)';
                     }}
                   >
                     {tag}
@@ -175,21 +168,20 @@ export default function Home() {
 
             {/* Right Graphic Column */}
             <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }} className="hero-graphic-wrap">
-              {/* Soft decorative shadow disc behind devices */}
               <div style={{
                 position: 'absolute',
                 width: '100%',
                 height: '100%',
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(80, 179, 58, 0.04) 0%, transparent 70%)',
                 filter: 'blur(30px)',
                 zIndex: 1,
               }} />
 
-              {/* Coded iOS and Laptop Devices Showcase */}
+              {/* iOS and Laptop Devices Showcase */}
               <div className="devices-showcase" style={{ zIndex: 2 }}>
                 
-                {/* 1. Laptop (MacBook Style) */}
+                {/* Laptop (MacBook Style) */}
                 <div className="laptop-mockup">
                   <div className="laptop-screen-bezel">
                     <div className="laptop-screen-display">
@@ -202,11 +194,11 @@ export default function Home() {
                       <div className="laptop-web-content">
                         {/* Mock Hero banner */}
                         <div className="laptop-mock-hero">
-                          <div style={{ fontSize: '0.45rem', fontWeight: 800, letterSpacing: '0.2px' }}>
+                          <div style={{ fontSize: '0.45rem', fontWeight: 600, letterSpacing: '0.2px', fontFamily: 'var(--font-sohne)' }}>
                             VANIGAN COMMERCIAL MAP
                           </div>
                         </div>
-                        {/* Mock product card grid */}
+                        {/* Mock product card row */}
                         <div className="laptop-mock-card-row">
                           {[1, 2, 3].map(n => (
                             <div className="laptop-mock-card" key={n}>
@@ -226,7 +218,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* 2. iOS Phone (iPhone 15 Pro Style) */}
+                {/* iOS Phone (iPhone 15 Pro Style) */}
                 <div className="phone-mockup">
                   <div className="phone-bezel">
                     <div className="phone-screen">
@@ -262,14 +254,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* CSS tags */}
+        {/* CSS mockup layout */}
         <style>{`
-          @keyframes heroFloat {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(1.5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-          }
-          
           /* Devices Showcase Layout */
           .devices-showcase {
             position: relative;
@@ -286,28 +272,28 @@ export default function Home() {
             left: 10px;
             width: 360px;
             z-index: 2;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.12));
+            filter: drop-shadow(0 20px 40px rgba(25,25,25,0.06));
           }
           .laptop-screen-bezel {
-            background: #18181b;
+            background: #191919;
             border-radius: 16px 16px 0 0;
             padding: 8px 8px 10px;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.15);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.1);
           }
           .laptop-screen-display {
-            background: #ffffff;
+            background: var(--color-vellum-background);
             aspect-ratio: 16 / 10;
             border-radius: 4px;
             overflow: hidden;
             position: relative;
-            border: 1px solid #09090b;
+            border: 1px solid #191919;
             display: flex;
             flex-direction: column;
           }
           .laptop-web-header {
             height: 18px;
-            background: #f4f4f5;
-            border-bottom: 1px solid #e4e4e7;
+            background: var(--color-parchment-white);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 4px;
@@ -317,16 +303,15 @@ export default function Home() {
             width: 5px;
             height: 5px;
             border-radius: 50%;
-            background: #ef4444;
+            background: #e5e5e5;
+            border: 0.5px solid var(--border);
           }
-          .laptop-web-dot:nth-child(2) { background: #eab308; }
-          .laptop-web-dot:nth-child(3) { background: #22c55e; }
           .laptop-web-address {
             flex: 1;
             height: 9px;
-            background: #ffffff;
+            background: var(--color-vellum-background);
             border-radius: 3px;
-            border: 1px solid #e4e4e7;
+            border: 1px solid var(--border);
             margin: 0 16px;
           }
           .laptop-web-content {
@@ -335,14 +320,14 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background: #fafafa;
+            background: var(--color-vellum-background);
           }
           .laptop-mock-hero {
             height: 32px;
-            background: linear-gradient(135deg, #18181b 0%, #3b82f6 100%);
-            border-radius: 6px;
+            background: var(--color-charcoal-black);
+            border-radius: 4px;
             padding: 6px;
-            color: #ffffff;
+            color: var(--color-parchment-white);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -353,9 +338,9 @@ export default function Home() {
             gap: 6px;
           }
           .laptop-mock-card {
-            background: #ffffff;
-            border: 1px solid #e4e4e7;
-            border-radius: 5px;
+            background: var(--color-parchment-white);
+            border: 1px solid var(--border);
+            border-radius: 4px;
             padding: 6px;
             display: flex;
             flex-direction: column;
@@ -363,22 +348,22 @@ export default function Home() {
           }
           .laptop-mock-card-img {
             height: 18px;
-            background: #f4f4f5;
-            border-radius: 3px;
+            background: var(--color-vellum-background);
+            border-radius: 2px;
           }
           .laptop-mock-card-text {
             height: 3px;
-            background: #e4e4e7;
+            background: var(--border);
             border-radius: 1.5px;
             width: 80%;
           }
           .laptop-mock-card-text:nth-child(3) {
             width: 50%;
-            background: #3b82f6;
+            background: var(--color-story-green);
           }
           .laptop-keyboard-base {
             height: 8px;
-            background: linear-gradient(to bottom, #d4d4d8 0%, #a1a1aa 100%);
+            background: #eae6dc;
             border-radius: 0 0 12px 12px;
             position: relative;
           }
@@ -389,28 +374,28 @@ export default function Home() {
             transform: translateX(-50%);
             width: 50px;
             height: 3px;
-            background: #71717a;
+            background: #cbd5e1;
             border-radius: 0 0 4px 4px;
           }
           
-          /* iPhone 17 Pro */
+          /* iPhone Phone */
           .phone-mockup {
             position: absolute;
             bottom: -10px;
             left: 240px;
             width: 130px;
             z-index: 10;
-            filter: drop-shadow(0 25px 50px rgba(0,0,0,0.22));
+            filter: drop-shadow(0 25px 50px rgba(25,25,25,0.1));
           }
           .phone-bezel {
-            background: #18181b;
-            border: 2px solid #09090b;
+            background: #191919;
+            border: 2px solid #191919;
             border-radius: 28px;
             padding: 2.5px;
-            box-shadow: 0 0 0 1px #52525b;
+            box-shadow: 0 0 0 1px #d5d2c6;
           }
           .phone-screen {
-            background: #ffffff;
+            background: var(--color-parchment-white);
             aspect-ratio: 9 / 19;
             border-radius: 25px;
             overflow: hidden;
@@ -426,14 +411,14 @@ export default function Home() {
             transform: translateX(-50%);
             width: 32px;
             height: 9px;
-            background: #09090b;
+            background: #191919;
             border-radius: 50px;
             z-index: 20;
           }
           .phone-app-header {
             height: 22px;
-            background: #ffffff;
-            border-bottom: 1px solid #e4e4e7;
+            background: var(--color-vellum-background);
+            border-bottom: 1px solid var(--border);
             padding: 5px 6px 0;
             display: flex;
             align-items: center;
@@ -441,8 +426,9 @@ export default function Home() {
           }
           .phone-app-logo {
             font-size: 0.5rem;
-            font-weight: 900;
-            color: #18181b;
+            font-weight: 600;
+            color: var(--color-charcoal-black);
+            font-family: var(--font-sohne);
             transform: scale(0.95);
           }
           .phone-app-menu {
@@ -454,52 +440,51 @@ export default function Home() {
           }
           .phone-app-bar {
             height: 1px;
-            background: #18181b;
+            background: var(--color-charcoal-black);
             width: 100%;
           }
           .phone-app-content {
             flex: 1;
             padding: 8px 6px;
-            background: #fafafa;
+            background: var(--color-vellum-background);
             display: flex;
             flex-direction: column;
             gap: 5px;
           }
           .phone-mock-profile-card {
-            background: #ffffff;
-            border: 1px solid #e4e4e7;
+            background: var(--color-parchment-white);
+            border: 1px solid var(--border);
             border-radius: 6px;
             padding: 5px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
           }
           .phone-mock-cover {
             height: 36px;
-            background: linear-gradient(135deg, #18181b 0%, #10b981 100%);
+            background: var(--color-charcoal-black);
             border-radius: 3px;
           }
           .phone-mock-avatar {
             width: 22px;
             height: 22px;
             border-radius: 4px;
-            background: #ffffff;
+            background: var(--color-parchment-white);
             margin-top: -14px;
             margin-left: 4px;
-            border: 1.5px solid #ffffff;
+            border: 1.5px solid var(--color-parchment-white);
             overflow: hidden;
           }
           .phone-mock-title {
             height: 4px;
-            background: #18181b;
+            background: var(--color-charcoal-black);
             border-radius: 1.5px;
             width: 70%;
             margin-left: 3px;
           }
           .phone-mock-subtitle {
             height: 2.5px;
-            background: #71717a;
+            background: var(--color-muted-text-gray);
             border-radius: 1px;
             width: 40%;
             margin-left: 3px;
@@ -512,11 +497,11 @@ export default function Home() {
           .phone-mock-btn {
             flex: 1;
             height: 9px;
-            background: #18181b;
+            background: var(--border);
             border-radius: 2px;
           }
           .phone-mock-btn-green {
-            background: #10b981;
+            background: var(--color-story-green);
           }
           
           @media (max-width: 900px) {
@@ -551,73 +536,19 @@ export default function Home() {
               left: -15px !important;
               top: 15px !important;
             }
-            .laptop-mock-hero {
-              height: 24px !important;
-            }
-            .laptop-mock-card-row {
-              gap: 4px !important;
-            }
-            .laptop-mock-card {
-              padding: 3px !important;
-            }
-            .laptop-mock-card-img {
-              height: 12px !important;
-            }
             .phone-mockup {
               width: 96px !important;
               left: 139px !important;
-              right: auto !important;
               bottom: -5px !important;
-            }
-            .phone-bezel {
-              border-radius: 20px !important;
-              padding: 2px !important;
-            }
-            .phone-screen {
-              border-radius: 17px !important;
-            }
-            .phone-dynamic-island {
-              width: 22px !important;
-              height: 6px !important;
-              border-radius: 3px !important;
-              top: 4px !important;
-            }
-            .phone-app-header {
-              height: 16px !important;
-              padding: 3px 4px 0 !important;
-            }
-            .phone-app-logo {
-              font-size: 0.4rem !important;
-            }
-            .phone-mock-profile-card {
-              border-radius: 4px !important;
-              padding: 4px !important;
-            }
-            .phone-mock-cover {
-              height: 26px !important;
-            }
-            .phone-mock-avatar {
-              width: 16px !important;
-              height: 16px !important;
-              margin-top: -10px !important;
-            }
-            .phone-mock-title {
-              height: 3px !important;
-            }
-            .phone-mock-subtitle {
-              height: 2px !important;
-            }
-            .phone-mock-btn {
-              height: 6px !important;
             }
           }
         `}</style>
       </section>
 
       {/* ── Featured Categories ── */}
-      <section className="section">
+      <section className="section" style={{ background: 'var(--color-parchment-white)' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
             <div>
               <h2 className="section-title">Browse by Category</h2>
               <p className="section-sub">Find businesses in popular categories</p>
@@ -637,7 +568,7 @@ export default function Home() {
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginTop: 28 }}>
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
             <button onClick={() => navigate('categories')} className="btn btn-outline">
               View All {categories.length} Categories <ArrowRight size={16} />
             </button>
@@ -647,9 +578,9 @@ export default function Home() {
 
       {/* ── Featured Businesses ── */}
       {featured.length > 0 && (
-        <section className="section" style={{ background: 'var(--bg)', borderTop: '1px solid var(--border)' }}>
+        <section className="section" style={{ background: 'var(--color-vellum-background)', borderTop: '1px solid var(--border)' }}>
           <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
               <div>
                 <h2 className="section-title">Top Rated Businesses</h2>
                 <p className="section-sub">Highest rated by customers</p>
@@ -668,13 +599,13 @@ export default function Home() {
       )}
 
       {/* ── YouTube Videos Section ── */}
-      <section className="section" style={{ borderTop: '1px solid var(--border)' }}>
+      <section className="section" style={{ borderTop: '1px solid var(--border)', background: 'var(--color-parchment-white)' }}>
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <div className="badge badge-blue" style={{ marginBottom: 12 }}>
               தமிழ்நாடு வணிகர்களின் சங்கமம்
             </div>
-            <h2 className="section-title">The Most Trusted Portal for Local Businesses</h2>
+            <h2 className="section-title" style={{ fontSize: '32px' }}>The Most Trusted B2B B2C Merchant Network</h2>
             <p className="section-sub">
               Watch our videos and conference highlights to learn more about the B2B & B2C marketplace community
             </p>
@@ -726,12 +657,32 @@ export default function Home() {
                     style={{ border: 'none', display: 'block' }}
                   />
                 </div>
-                <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <h3 style={{ fontWeight: 800, fontSize: '.92rem', lineHeight: 1.3, marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <h3 style={{
+                      fontFamily: 'var(--font-sohne)',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      lineHeight: 1.3,
+                      marginBottom: 8,
+                      color: 'var(--color-charcoal-black)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
                       {video.title}
                     </h3>
-                    <p style={{ fontSize: '.78rem', color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4 }}>
+                    <p style={{
+                      fontFamily: 'var(--font-sohne)',
+                      fontSize: '13px',
+                      color: 'var(--color-muted-text-gray)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: 1.4
+                    }}>
                       {video.subtitle}
                     </p>
                   </div>
@@ -742,8 +693,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── WhatsApp Connect Section ── */}
-      <section className="section" style={{ padding: '64px 0', background: 'linear-gradient(180deg, #ffffff 0%, #f4fbf7 100%)', borderTop: '1px solid var(--border)' }}>
+      {/* ── WhatsApp Connect Section (Fruitful style) ── */}
+      <section className="section" style={{ padding: '64px 0', background: 'var(--color-mint-green-glow)' }}>
         <div className="container">
           <div style={{
             display: 'grid',
@@ -759,14 +710,15 @@ export default function Home() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: '#e8f9f0',
-                color: '#15803d',
+                background: 'var(--color-muted-sage)',
+                color: 'var(--color-deep-fern-green)',
                 padding: '6px 14px',
-                borderRadius: '50px',
-                fontSize: '0.8rem',
-                fontWeight: 700,
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: 600,
                 textTransform: 'uppercase',
-                letterSpacing: '0.5px'
+                letterSpacing: '0.5px',
+                fontFamily: 'var(--font-pp-neue-montreal)'
               }}>
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.451L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.588 2.01 14.113.993 11.486.993c-5.438 0-9.863 4.37-9.867 9.8-.001 1.73.457 3.419 1.323 4.908l-.98 3.577 3.69-.958zm12.39-5.464c-.307-.154-1.817-.897-2.097-.998-.28-.103-.483-.154-.686.154-.203.308-.785.998-.962 1.194-.177.197-.355.22-.662.066-.307-.154-1.3-.478-2.473-1.523-.913-.814-1.53-1.82-1.708-2.128-.178-.308-.019-.475.135-.628.138-.138.307-.359.46-.539.154-.18.206-.308.308-.513.102-.206.05-.385-.025-.539-.075-.154-.687-1.657-.941-2.272-.247-.597-.5-.516-.686-.525-.178-.008-.38-.01-.583-.01-.203 0-.533.077-.812.384-.28.308-1.068 1.046-1.068 2.552 0 1.506 1.096 2.961 1.248 3.166.153.206 2.158 3.302 5.228 4.618.73.313 1.299.5 1.743.642.733.233 1.401.2 1.929.121.588-.087 1.817-.743 2.071-1.46.254-.718.254-1.333.178-1.46-.076-.128-.279-.205-.586-.359z"/>
@@ -775,18 +727,26 @@ export default function Home() {
               </div>
               
               <h2 style={{
-                fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
-                fontWeight: 900,
+                fontFamily: 'var(--font-pp-neue-montreal)',
+                fontSize: 'clamp(1.8rem, 4.5vw, 2.6rem)',
+                fontWeight: 700,
                 lineHeight: 1.2,
-                color: 'var(--text)',
+                color: 'var(--color-rich-black)',
                 textAlign: 'left',
-                letterSpacing: '-0.5px'
+                letterSpacing: '-0.019em'
               }}>
-                Have Questions? <br />
-                <span style={{ color: '#25D366' }}>Chat With Us</span> Instantly
+                Have questions? <br />
+                <span style={{ color: 'var(--color-deep-fern-green)' }}>Chat with us</span> instantly.
               </h2>
               
-              <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '520px', textAlign: 'left' }}>
+              <p style={{
+                color: 'var(--color-cool-gray)',
+                fontSize: '15px',
+                lineHeight: 1.6,
+                maxWidth: '520px',
+                textAlign: 'left',
+                fontFamily: 'var(--font-pp-neue-montreal)'
+              }}>
                 Listing your business, verifying your details, or generating leads on Vanigan is simple. Scan the QR code to message our support team on WhatsApp directly. We are online and ready to assist you.
               </p>
               
@@ -795,62 +755,50 @@ export default function Home() {
                 flexDirection: 'column',
                 gap: '12px',
                 width: '100%',
-                margin: '8px 0'
+                margin: '8px 0',
+                fontFamily: 'var(--font-pp-neue-montreal)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-muted-sage)', color: 'var(--color-deep-fern-green)' }}>
                     <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600 }}>100% Free Consultation & Guidance</span>
+                  <span style={{ color: 'var(--color-rich-black)', fontSize: '14px', fontWeight: 500 }}>100% Free Consultation & Guidance</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-muted-sage)', color: 'var(--color-deep-fern-green)' }}>
                     <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600 }}>Quick Verification & Listing Approval</span>
+                  <span style={{ color: 'var(--color-rich-black)', fontSize: '14px', fontWeight: 500 }}>Quick Verification & Listing Approval</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-muted-sage)', color: 'var(--color-deep-fern-green)' }}>
                     <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600 }}>Direct Access to Verified Buyers & Sellers</span>
+                  <span style={{ color: 'var(--color-rich-black)', fontSize: '14px', fontWeight: 500 }}>Direct Access to Verified Buyers & Sellers</span>
                 </div>
               </div>
               
+              {/* Primary Button Style */}
               <a
                 href="https://wa.me/919791659816?text=Hi"
                 target="_blank"
                 rel="noreferrer"
+                className="btn btn-primary"
                 style={{
-                  background: '#25D366',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  padding: '12px 28px',
-                  borderRadius: '12px',
-                  fontSize: '.92rem',
+                  padding: '10px 24px',
+                  fontWeight: 500,
+                  fontSize: '14px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 14px rgba(37, 211, 102, 0.3)',
-                  transition: 'all 0.2s',
-                  border: 'none',
-                  cursor: 'pointer',
                   marginTop: '8px',
                   textDecoration: 'none'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.45)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(37, 211, 102, 0.3)';
                 }}
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -882,64 +830,63 @@ export default function Home() {
                   alignItems: 'center',
                   gap: '12px',
                   width: '100%',
-                  borderBottom: '1px solid #f1f5f9',
                   paddingBottom: '14px'
                 }}>
                   <div style={{
                     width: '38px',
                     height: '38px',
                     borderRadius: '50%',
-                    background: '#25D366',
+                    background: 'var(--color-deep-fern-green)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff'
+                    color: 'var(--color-canvas-white)'
                   }}>
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.451L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.588 2.01 14.113.993 11.486.993c-5.438 0-9.863 4.37-9.867 9.8-.001 1.73.457 3.419 1.323 4.908l-.98 3.577 3.69-.958zm12.39-5.464c-.307-.154-1.817-.897-2.097-.998-.28-.103-.483-.154-.686.154-.203.308-.785.998-.962 1.194-.177.197-.355.22-.662.066-.307-.154-1.3-.478-2.473-1.523-.913-.814-1.53-1.82-1.708-2.128-.178-.308-.019-.475.135-.628.138-.138.307-.359.46-.539.154-.18.206-.308.308-.513.102-.206.05-.385-.025-.539-.075-.154-.687-1.657-.941-2.272-.247-.597-.5-.516-.686-.525-.178-.008-.38-.01-.583-.01-.203 0-.533.077-.812.384-.28.308-1.068 1.046-1.068 2.552 0 1.506 1.096 2.961 1.248 3.166.153.206 2.158 3.302 5.228 4.618.73.313 1.299.5 1.743.642.733.233 1.401.2 1.929.121.588-.087 1.817-.743 2.071-1.46.254-.718.254-1.333.178-1.46-.076-.128-.279-.205-.586-.359z"/>
-                    </svg>
+                  </svg>
+                </div>
+                <div style={{ textAlign: 'left', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-rich-black)', lineHeight: 1.2 }}>Vanigan Support</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-deep-fern-green)' }} />
+                    <span style={{ fontSize: '12px', color: 'var(--color-deep-fern-green)', fontWeight: 500 }}>Active Online</span>
                   </div>
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.2 }}>Vanigan Support</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
-                      <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>Active Online</span>
-                    </div>
-                  </div>
                 </div>
+              </div>
 
-                {/* QR Code Embed */}
-                <div style={{
-                  padding: '8px',
-                  background: '#ffffff',
-                  border: '2px dashed #cbd5e1',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                }}>
-                  <img
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&ecc=H&data=https%3A%2F%2Fwa.me%2F919791659816%3Ftext%3DHi"
-                    alt="WhatsApp QR Code"
-                    style={{ width: '180px', height: '180px', objectFit: 'contain' }}
-                  />
-                  {/* Center Business Logo Overlay */}
-                  <img
-                    src="/business_illustration.png"
-                    alt="Vanigan Logo"
-                    style={{
-                      position: 'absolute',
-                      width: '48px',
-                      height: '48px',
-                      objectFit: 'contain',
-                    }}
-                  />
-                </div>
+              {/* QR Code Embed */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+              }}>
+                <img
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&ecc=H&data=https%3A%2F%2Fwa.me%2F919791659816%3Ftext%3DHi&bgcolor=e1fdea"
+                  alt="WhatsApp QR Code"
+                  style={{ width: '180px', height: '180px', objectFit: 'contain' }}
+                />
+                {/* Center Business Logo Overlay */}
+                <img
+                  src="/business_illustration.png"
+                  alt="Vanigan Logo"
+                  style={{
+                    position: 'absolute',
+                    width: '42px',
+                    height: '42px',
+                    objectFit: 'contain',
+                    background: 'var(--color-canvas-white)',
+                    padding: '4px',
+                    borderRadius: '50%',
+                    border: '1px solid var(--color-subtle-ash)'
+                  }}
+                />
+              </div>
 
-                <div style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 600, textAlign: 'center' }}>
-                  Scan using phone camera
-                </div>
+              <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '12px', color: 'var(--color-cool-gray)', fontWeight: 500, textAlign: 'center' }}>
+                Scan using phone camera
+              </div>
               </div>
             </div>
             
@@ -972,19 +919,19 @@ export default function Home() {
 
 function CategoryCard({ cat, onClick }) {
   return (
-    <div className="card card-hover" onClick={onClick} style={{ textAlign: 'center' }}>
+    <div className="card card-hover" onClick={onClick} style={{ textAlign: 'center', background: 'var(--color-parchment-white)' }}>
       <div style={{
-        aspectRatio: '1', background: 'var(--bg2)', overflow: 'hidden',
+        aspectRatio: '1', background: 'var(--color-vellum-background)', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {cat.imageUrl ? (
           <img src={cat.imageUrl} alt={cat.category} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <Store size={32} style={{ color: 'var(--muted2)' }} />
+          <Store size={32} style={{ color: 'var(--color-muted-text-gray)' }} />
         )}
       </div>
-      <div style={{ padding: '10px 12px' }}>
-        <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--text)', lineHeight: 1.3 }}>
+      <div style={{ padding: '12px 14px' }}>
+        <div style={{ fontFamily: 'var(--font-sohne)', fontWeight: 600, fontSize: '14px', color: 'var(--color-charcoal-black)', lineHeight: 1.3 }}>
           {cat.category}
         </div>
       </div>
@@ -996,14 +943,14 @@ function BizCard({ biz, onClick }) {
   const cover   = biz.coverImage || biz.image || '';
   const profile = biz.coverImage && biz.image ? biz.image : '';
   return (
-    <div className="card card-hover" onClick={onClick}>
-      <div style={{ height: 110, background: 'var(--bg2)', overflow: 'visible', position: 'relative' }}>
-        <div style={{ height: 110, overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+    <div className="card card-hover" onClick={onClick} style={{ background: 'var(--color-parchment-white)' }}>
+      <div style={{ height: 110, background: 'var(--color-vellum-background)', overflow: 'visible', position: 'relative' }}>
+        <div style={{ height: 110, overflow: 'hidden' }}>
           {cover ? (
             <img src={cover} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Store size={28} style={{ color: 'var(--muted2)' }} />
+              <Store size={28} style={{ color: 'var(--color-muted-text-gray)' }} />
             </div>
           )}
         </div>
@@ -1013,24 +960,26 @@ function BizCard({ biz, onClick }) {
         {profile && (
           <img src={profile} alt="" style={{
             position: 'absolute', bottom: -18, left: 14,
-            width: 40, height: 40, borderRadius: 10, objectFit: 'cover',
-            border: '2px solid var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,.3)',
+            width: 40, height: 40, borderRadius: 0, objectFit: 'cover',
+            border: '1px solid var(--border)', background: 'var(--color-parchment-white)'
           }} />
         )}
       </div>
-      <div style={{ padding: '14px', paddingTop: profile ? 24 : 14 }}>
-        <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 4 }}>{biz.name}</div>
-        {biz.category && <div style={{ fontSize: '.78rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</div>}
+      <div style={{ padding: '16px', paddingTop: profile ? 24 : 16 }}>
+        <div style={{ fontFamily: 'var(--font-sohne)', fontWeight: 600, fontSize: '16px', color: 'var(--color-charcoal-black)', marginBottom: 4 }}>
+          {biz.name}
+        </div>
+        {biz.category && <div style={{ fontFamily: 'var(--font-sohne)', fontSize: '13px', color: 'var(--color-story-green)', fontWeight: 500, marginBottom: 4 }}>{biz.category}</div>}
         {biz.avgRating > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            <Star size={11} fill="#fbbf24" stroke="#fbbf24" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.avgRating.toFixed(1)}</span>
-            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} review{biz.reviewCount !== 1 ? 's' : ''})</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontFamily: 'var(--font-sohne)' }}>
+            <Star size={12} fill="var(--color-story-green)" stroke="var(--color-story-green)" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-charcoal-black)' }}>{biz.avgRating.toFixed(1)}</span>
+            <span style={{ fontSize: '12px', color: 'var(--color-muted-text-gray)' }}>({biz.reviewCount || 0} reviews)</span>
           </div>
         )}
         {biz.address && (
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <MapPin size={12} style={{ flexShrink: 0 }} />
+          <div style={{ fontFamily: 'var(--font-sohne)', fontSize: '13px', color: 'var(--color-muted-text-gray)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin size={13} style={{ flexShrink: 0 }} />
             <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {biz.address}
             </span>

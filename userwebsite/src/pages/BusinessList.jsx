@@ -109,73 +109,148 @@ export default function BusinessList({ params = {} }) {
   return (
     <div className="container section">
       {/* Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: '.85rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('home')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>Home</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: '13px', color: 'var(--color-cool-gray)', flexWrap: 'wrap', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+        <button onClick={() => navigate('home')} style={{ background: 'none', border: 'none', color: 'var(--color-rich-black)', cursor: 'pointer', fontWeight: 500, fontFamily: 'var(--font-pp-neue-montreal)' }}>Home</button>
         <span>/</span>
-        <button onClick={() => navigate('categories')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>Categories</button>
-        {category && <><span>/</span><span style={{ color: 'var(--text)' }}>{category}</span></>}
+        <button onClick={() => navigate('categories')} style={{ background: 'none', border: 'none', color: 'var(--color-rich-black)', cursor: 'pointer', fontWeight: 500, fontFamily: 'var(--font-pp-neue-montreal)' }}>Categories</button>
+        {category && <><span>/</span><span style={{ color: 'var(--color-rich-black)' }}>{category}</span></>}
       </div>
 
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 6 }}>
+      <h1 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '40px', fontWeight: 700, letterSpacing: '-0.022em', color: 'var(--color-rich-black)', marginBottom: 8 }}>
         {category || 'All Businesses'}
-        {subcategory && <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--muted)', marginLeft: 8 }}>› {subcategory}</span>}
+        {subcategory && <span style={{ fontSize: '24px', fontWeight: 500, color: 'var(--color-cool-gray)', marginLeft: 12, letterSpacing: '-0.01em' }}>› {subcategory}</span>}
       </h1>
-      <p style={{ color: 'var(--muted)', fontSize: '.9rem', marginBottom: 24 }}>
+      
+      <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)', fontSize: '14px', marginBottom: 32, letterSpacing: '-0.005em' }}>
         {loading ? 'Loading…' : `${total} business${total !== 1 ? 'es' : ''} found`}
       </p>
 
-      {/* Filters */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 16 }}>
-        {/* Search */}
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6, gridColumn: 'span 2' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted2)' }} />
-            <input className="input" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search businesses…" style={{ paddingLeft: 32, height: 40 }} />
+      {/* Search & Filter Panel */}
+      <div className="filter-console">
+        {/* Search Input Group */}
+        <form onSubmit={handleSearch} className="search-group" style={{ borderRadius: '12px' }}>
+          <div className="search-input-wrapper">
+            <Search size={16} style={{ position: 'absolute', left: 14, color: 'var(--color-cool-gray)' }} />
+            <input 
+              className="search-input" 
+              value={searchInput} 
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search by business name, keyword or services…" 
+            />
           </div>
-          <button type="submit" className="btn btn-primary btn-sm">Search</button>
+          <button type="submit" className="search-btn">
+            Search
+          </button>
         </form>
 
-        {/* Subcategory */}
-        {subCatOptions.length > 0 && (
-          <div className="field select-wrap">
-            <label className="label"><Tag size={12} style={{ display: 'inline' }} /> Sub-Category</label>
-            <select className="select" value={subcategory} onChange={e => setSubcategory(e.target.value)} style={{ height: 40 }}>
-              <option value="">All Sub-Categories</option>
-              {subCatOptions.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        )}
+        {/* Dropdowns Row */}
+        <div className="dropdowns-row">
+          {/* Subcategory */}
+          {subCatOptions.length > 0 && (
+            <div className="dropdown-field">
+              <label className="dropdown-label">
+                <Tag size={11} style={{ display: 'inline', marginRight: 4 }} /> Sub-Category
+              </label>
+              <div className="custom-select-wrap">
+                <select 
+                  className="custom-select" 
+                  value={subcategory} 
+                  onChange={e => setSubcategory(e.target.value)}
+                >
+                  <option value="">All Sub-Categories</option>
+                  {subCatOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
 
-        {/* District */}
-        <div className="field select-wrap">
-          <label className="label"><MapPin size={12} style={{ display: 'inline' }} /> District</label>
-          <select className="select" value={district} onChange={e => { setDistrict(e.target.value); setAssembly(''); }} style={{ height: 40 }}>
-            <option value="">All Districts</option>
-            {Object.keys(districtMap).sort().map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
+          {/* District */}
+          <div className="dropdown-field">
+            <label className="dropdown-label">
+              <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} /> District
+            </label>
+            <div className="custom-select-wrap">
+              <select 
+                className="custom-select" 
+                value={district} 
+                onChange={e => { setDistrict(e.target.value); setAssembly(''); }}
+              >
+                <option value="">All Districts</option>
+                {Object.keys(districtMap).sort().map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Assembly */}
+          {assemblies.length > 0 && (
+            <div className="dropdown-field">
+              <label className="dropdown-label">
+                Assembly
+              </label>
+              <div className="custom-select-wrap">
+                <select 
+                  className="custom-select" 
+                  value={assembly} 
+                  onChange={e => setAssembly(e.target.value)}
+                >
+                  <option value="">All Assemblies</option>
+                  {assemblies.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Assembly */}
-        {assemblies.length > 0 && (
-          <div className="field select-wrap">
-            <label className="label">Assembly</label>
-            <select className="select" value={assembly} onChange={e => setAssembly(e.target.value)} style={{ height: 40 }}>
-              <option value="">All Assemblies</option>
-              {assemblies.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Active filter chips */}
       {activeFilters.length > 0 && (
-        <div className="chip-row" style={{ marginBottom: 20 }}>
+        <div className="chip-row" style={{ marginBottom: 28, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginRight: 4 }}>
+            Active filters:
+          </span>
           {activeFilters.map(f => (
-            <button key={f.key} onClick={() => clearFilter(f.key)} className="chip active" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              {f.label} <X size={11} />
+            <button 
+              key={f.key} 
+              onClick={() => clearFilter(f.key)} 
+              className="chip active" 
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: 6, 
+                background: 'var(--color-muted-sage)', 
+                color: 'var(--color-deep-fern-green)', 
+                borderColor: 'var(--color-muted-sage)',
+                borderRadius: '12px',
+                padding: '4px 10px',
+                fontSize: '12px'
+              }}
+            >
+              {f.label} <X size={12} />
             </button>
           ))}
+          <button
+            onClick={() => {
+              setCategory('');
+              setSubcategory('');
+              setSearch('');
+              setSearchInput('');
+              setDistrict('');
+              setAssembly('');
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-deep-fern-green)',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 500,
+              fontFamily: 'var(--font-pp-neue-montreal)',
+              padding: '4px 8px',
+              textDecoration: 'none'
+            }}
+          >
+            Clear all
+          </button>
         </div>
       )}
 
@@ -185,10 +260,10 @@ export default function BusinessList({ params = {} }) {
       ) : businesses.length === 0 ? (
         <div className="empty">
           <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <Search size={44} style={{ color: 'var(--muted2)' }} />
+            <Search size={44} style={{ color: 'var(--color-subtle-ash)' }} />
           </div>
-          <h3>No businesses found</h3>
-          <p style={{ marginTop: 8 }}>Try adjusting your filters or search term</p>
+          <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700 }}>No businesses found</h3>
+          <p style={{ marginTop: 8, fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Try adjusting your filters or search term</p>
         </div>
       ) : (
         <>
@@ -200,76 +275,236 @@ export default function BusinessList({ params = {} }) {
 
           {/* Pagination */}
           {total > 60 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 32 }}>
-              <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => fetch(page - 1)}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 48, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+              <button 
+                className="btn btn-outline btn-sm" 
+                disabled={page <= 1} 
+                onClick={() => fetch(page - 1)}
+                style={{ borderRadius: '12px', paddingInline: 20 }}
+              >
                 <ChevronLeft size={15} /> Previous
               </button>
-              <span style={{ padding: '7px 14px', color: 'var(--muted)', fontSize: '.85rem' }}>
+              <span style={{ padding: '7px 14px', color: 'var(--color-cool-gray)', fontSize: '13px', fontFamily: 'var(--font-pp-neue-montreal)' }}>
                 Page {page}
               </span>
-              <button className="btn btn-outline btn-sm" disabled={businesses.length < 60} onClick={() => fetch(page + 1)}>
+              <button 
+                className="btn btn-outline btn-sm" 
+                disabled={businesses.length < 60} 
+                onClick={() => fetch(page + 1)}
+                style={{ borderRadius: '12px', paddingInline: 20 }}
+              >
                 Next →
               </button>
             </div>
           )}
         </>
       )}
+
+      <style>{`
+        .filter-console {
+          background: var(--color-subtle-ash);
+          border: 1px solid var(--color-subtle-ash);
+          border-radius: var(--radius-cards);
+          padding: 24px;
+          margin-bottom: 32px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        
+        .search-group {
+          display: flex;
+          align-items: center;
+          border: 1px solid var(--color-subtle-ash);
+          background: var(--color-canvas-white);
+          border-radius: 12px !important;
+          transition: border-color 0.2s ease;
+          overflow: hidden;
+          width: 100%;
+          padding: 4px;
+        }
+        .search-group:focus-within {
+          border-color: var(--color-deep-fern-green);
+        }
+        
+        .search-input-wrapper {
+          position: relative;
+          flex: 1;
+          display: flex;
+          align-items: center;
+        }
+        
+        .search-input {
+          border: none !important;
+          background: transparent !important;
+          padding-left: 36px !important;
+          padding-right: 16px !important;
+          height: 36px !important;
+          width: 100%;
+          font-size: 14px;
+          font-family: var(--font-pp-neue-montreal);
+          outline: none !important;
+          color: var(--color-rich-black);
+        }
+        
+        .search-btn {
+          height: 36px !important;
+          border-radius: 12px !important;
+          border: none !important;
+          background: var(--color-deep-fern-green) !important;
+          color: var(--color-canvas-white) !important;
+          padding: 0 24px !important;
+          font-size: 14px;
+          font-weight: 500;
+          font-family: var(--font-pp-neue-montreal);
+          cursor: pointer;
+          transition: background-color 0.2s ease !important;
+        }
+        .search-btn:hover {
+          background: #096238 !important;
+        }
+        .search-btn:active {
+          opacity: 0.9 !important;
+        }
+        
+        .dropdowns-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        
+        .dropdown-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          flex: 1 1 200px;
+        }
+        
+        .dropdown-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-cool-gray);
+          font-family: var(--font-pp-neue-montreal);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        .custom-select-wrap {
+          position: relative;
+          width: 100%;
+        }
+        
+        .custom-select-wrap::after {
+          content: '▾';
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--color-cool-gray);
+          pointer-events: none;
+          font-size: 12px;
+        }
+        
+        .custom-select {
+          width: 100%;
+          height: 40px;
+          padding: 0 36px 0 14px;
+          background: var(--color-canvas-white);
+          border: 1px solid var(--color-subtle-ash);
+          border-radius: 12px;
+          color: var(--color-rich-black);
+          font-size: 14px;
+          font-family: var(--font-pp-neue-montreal);
+          outline: none;
+          appearance: none;
+          -webkit-appearance: none;
+          transition: border-color 0.15s ease, color 0.15s ease;
+          cursor: pointer;
+        }
+        
+        .custom-select:hover {
+          border-color: var(--color-cool-gray);
+        }
+        
+        .custom-select:focus {
+          border-color: var(--color-deep-fern-green);
+        }
+ 
+        @media (max-width: 640px) {
+          .filter-console {
+            padding: 16px;
+            gap: 16px;
+          }
+          .dropdowns-row {
+            flex-direction: column;
+            gap: 12px;
+          }
+          .dropdown-field {
+            flex: 1 1 auto;
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
+ 
 function BizCard({ biz, onClick }) {
   const phone      = biz.phone || biz.whatsappNo || '';
   const hasProfile = !!(biz.image && biz.coverImage);
   return (
-    <div className="card card-hover" onClick={onClick}>
+    <div className="card card-hover" onClick={onClick} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}>
       {/* Outer wrapper keeps overflow:visible so profile icon isn't clipped */}
       <div style={{ position: 'relative' }}>
-        <div style={{ height: 110, background: 'var(--bg2)', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+        <div style={{ height: 110, background: 'var(--color-subtle-ash)', overflow: 'hidden' }}>
           {biz.coverImage ? (
             <img src={biz.coverImage} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : biz.image ? (
             <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Store size={30} style={{ color: 'var(--muted2)' }} />
+              <Store size={30} style={{ color: 'var(--color-cool-gray)' }} />
             </div>
           )}
         </div>
         {hasProfile && (
           <img src={biz.image} alt="" style={{
             position: 'absolute', bottom: -16, left: 12, zIndex: 1,
-            width: 40, height: 40, borderRadius: 10, objectFit: 'cover',
-            border: '2px solid var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,.4)',
+            width: 40, height: 40, borderRadius: '50%', objectFit: 'cover',
+            border: '2px solid var(--color-canvas-white)', background: 'var(--color-canvas-white)'
           }} />
         )}
       </div>
-
-      <div style={{ padding: '14px', paddingTop: hasProfile ? 22 : 14 }}>
-        <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 3, lineHeight: 1.3 }}>{biz.name}</div>
+ 
+      <div style={{ padding: '16px', paddingTop: hasProfile ? 22 : 16 }}>
+        <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '16px', color: 'var(--color-rich-black)', marginBottom: 4, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+          {biz.name}
+        </div>
         {biz.category && (
-          <div style={{ fontSize: '.75rem', color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-deep-fern-green)', fontWeight: 500, marginBottom: 6 }}>
             {biz.category}{biz.subCategory && ` · ${biz.subCategory}`}
           </div>
         )}
         {biz.avgRating > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, marginBottom: 6 }}>
-            <Star size={11} fill="#fbbf24" stroke="#fbbf24" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text)' }}>{biz.avgRating.toFixed(1)}</span>
-            <span style={{ fontSize: '.72rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} review{biz.reviewCount !== 1 ? 's' : ''})</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, marginBottom: 8, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+            <Star size={12} fill="var(--color-leafy-green)" stroke="var(--color-leafy-green)" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-rich-black)' }}>{biz.avgRating.toFixed(1)}</span>
+            <span style={{ fontSize: '12px', color: 'var(--color-cool-gray)' }}>({biz.reviewCount || 0} reviews)</span>
           </div>
         )}
         {biz.address && (
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-            <MapPin size={12} style={{ flexShrink: 0 }} />
+          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+            <MapPin size={13} style={{ flexShrink: 0 }} />
             <span style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {biz.assembly}{biz.district && `, ${biz.district}`}
             </span>
           </div>
         )}
         {phone && (
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Phone size={11} /> {phone}
+          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Phone size={12} /> {phone}
           </div>
         )}
       </div>

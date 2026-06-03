@@ -10,45 +10,56 @@ export default function Footer() {
 
   return (
     <footer style={{
-      backgroundColor: 'rgba(0, 0, 0, 0.71)',
-      backgroundImage: 'url("/map.png")',
-      backgroundPosition: 'center center',
-      backgroundSize: 'cover',
-      backgroundRepeat: 'no-repeat',
-      borderTop: '1px solid rgba(255,255,255,0.08)',
-      padding: '56px 0 40px',
-      color: '#f8fafc',
-      fontSize: '.85rem',
-      fontFamily: 'inherit',
+      backgroundColor: 'var(--color-subtle-ash)',
+      borderTop: '1px solid var(--color-subtle-ash)',
+      padding: '80px 0 48px',
+      color: 'var(--color-cool-gray)',
+      fontSize: '13px',
+      fontFamily: 'var(--font-pp-neue-montreal)',
       position: 'relative'
     }}>
       <div className="container footer-grid" style={{ position: 'relative', zIndex: 2 }}>
         {/* Column 1: Brand & Contact & Address */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.5px', color: '#ffffff', marginBottom: 12 }}>
+            <h2 style={{
+              fontFamily: 'var(--font-pp-neue-montreal)',
+              fontSize: '22px',
+              fontWeight: 700,
+              letterSpacing: '-0.5px',
+              color: 'var(--color-rich-black)',
+              marginBottom: 12
+            }}>
               VANIGAN
             </h2>
             
             {/* Customer Support */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 8px' }}>
               <div style={{
-                width: 42, height: 42, borderRadius: '50%',
-                border: '1px solid rgba(255,255,255,0.12)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--accent)', flexShrink: 0
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: '1px solid var(--color-subtle-ash)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-rich-black)',
+                background: 'var(--color-canvas-white)',
+                flexShrink: 0
               }}>
-                <Headphones size={20} />
+                <Headphones size={18} />
               </div>
               <div>
-                <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-                  24x7 Hours Customer Support
+                <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontWeight: 500 }}>
+                  24x7 Customer Support
                 </div>
                 <a href="tel:+918680085737" style={{
-                  fontSize: '1.05rem', fontWeight: 800, color: '#ffffff',
-                  textDecoration: 'none', transition: 'color .2s'
-                }} onMouseEnter={e => e.target.style.color = 'var(--accent)'}
-                   onMouseLeave={e => e.target.style.color = '#ffffff'}>
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: 'var(--color-rich-black)',
+                  textDecoration: 'none',
+                  transition: 'color .2s'
+                }} className="footer-tel">
                   +91 8680085737
                 </a>
               </div>
@@ -57,10 +68,18 @@ export default function Footer() {
 
           {/* Address */}
           <div>
-            <h4 style={{ fontSize: '.78rem', fontWeight: 800, letterSpacing: '0.8px', color: '#ffffff', textTransform: 'uppercase', marginBottom: 8 }}>
+            <h4 style={{
+              fontFamily: 'var(--font-pp-neue-montreal)',
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.8px',
+              color: 'var(--color-rich-black)',
+              textTransform: 'uppercase',
+              marginBottom: 8
+            }}>
               Address
             </h4>
-            <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, maxWidth: 300 }}>
+            <p style={{ color: 'var(--color-cool-gray)', lineHeight: 1.6, maxWidth: 300 }}>
               26N, Bharathi Nagar, Near Palayapudur,<br />
               Periyanaickenpalayam, Coimbatore,<br />
               Tamil Nadu - 641020
@@ -96,10 +115,10 @@ export default function Footer() {
           <div>
             <h4 className="footer-title" style={{ marginBottom: 12 }}>Our Social Circle</h4>
             <div style={{ display: 'flex', gap: 10 }}>
-              <a href="#" className="social-btn"><Facebook size={16} /></a>
-              <a href="#" className="social-btn"><Twitter size={16} /></a>
-              <a href="#" className="social-btn"><Instagram size={16} /></a>
-              <a href="#" className="social-btn"><Youtube size={16} /></a>
+              <a href="#" className="social-btn"><Facebook size={15} /></a>
+              <a href="#" className="social-btn"><Twitter size={15} /></a>
+              <a href="#" className="social-btn"><Instagram size={15} /></a>
+              <a href="#" className="social-btn"><Youtube size={15} /></a>
             </div>
           </div>
 
@@ -111,7 +130,7 @@ export default function Footer() {
                 href="https://play.google.com/store/apps/details?id=io.vanigan.ai&pcampaignid=web_share" 
                 target="_blank" 
                 rel="noreferrer" 
-                style={{ display: 'inline-block', borderRadius: 6, overflow: 'hidden', height: 38, border: '1px solid rgba(255,255,255,0.15)' }}
+                style={{ display: 'inline-block', borderRadius: 4, overflow: 'hidden', height: 32, border: '1px solid var(--border)' }}
               >
                 <img 
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
@@ -121,7 +140,7 @@ export default function Footer() {
               </a>
               <a 
                 href="#" 
-                style={{ display: 'inline-block', borderRadius: 6, overflow: 'hidden', height: 38, border: '1px solid rgba(255,255,255,0.15)' }}
+                style={{ display: 'inline-block', borderRadius: 4, overflow: 'hidden', height: 32, border: '1px solid var(--border)' }}
               >
                 <img 
                   src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
@@ -151,10 +170,11 @@ export default function Footer() {
           gap: 40px;
         }
         .footer-title {
-          font-size: .8rem;
-          font-weight: 800;
-          letter-spacing: '0.8px';
-          color: #ffffff;
+          font-family: var(--font-pp-neue-montreal);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.8px;
+          color: var(--color-rich-black);
           text-transform: uppercase;
           margin-bottom: 18px;
         }
@@ -170,23 +190,28 @@ export default function Footer() {
           background: none;
           border: none;
           padding: 0;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--color-cool-gray);
           cursor: pointer;
-          font-size: .83rem;
-          font-family: inherit;
+          font-size: 13px;
+          line-height: 1.43;
+          font-family: var(--font-pp-neue-montreal);
           text-align: left;
           transition: all 0.2s;
         }
         .footer-links button:hover {
-          color: var(--accent);
+          color: var(--color-rich-black);
           transform: translateX(2px);
         }
+        .footer-tel:hover {
+          color: var(--color-deep-fern-green) !important;
+        }
         .social-btn {
-          width: 34px;
-          height: 34px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.08);
-          color: #ffffff;
+          background: var(--color-canvas-white);
+          border: 1px solid var(--color-subtle-ash);
+          color: var(--color-cool-gray);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -194,9 +219,10 @@ export default function Footer() {
           transition: all 0.2s;
         }
         .social-btn:hover {
-          background: var(--accent);
+          background: var(--color-rich-black);
+          color: var(--color-canvas-white);
+          border-color: var(--color-rich-black);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 149, 246, 0.25);
         }
         @media (max-width: 1024px) {
           .footer-grid {

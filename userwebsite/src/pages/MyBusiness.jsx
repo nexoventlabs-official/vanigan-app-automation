@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Phone, RefreshCw, Store, Trash2, ExternalLink,
+  Phone, RefreshCw, Store, LogOut, ExternalLink,
   Globe, MapPin, Mail, Clock, Tag, Map, Star, Edit3, X, Plus,
   ChevronDown, ChevronUp, Save, Camera,
 } from 'lucide-react';
+
 
 /* Proper WhatsApp brand SVG icon */
 function WhatsAppIcon({ size = 14, style }) {
@@ -21,7 +22,6 @@ import { useNav } from '../App.jsx';
 
 const LS_KEY       = 'vanigan_my_business';
 const LS_PHONE_KEY = 'vanigan_owner_phone';
-const LS_PIN_KEY   = 'vanigan_owner_pin_ok'; // just flag, not actual PIN
 
 /* ──────────────────────────────────────────────────────────
    PinInput — 4 separate digit boxes
@@ -63,12 +63,12 @@ function PinInput({ value, onChange, disabled }) {
           onPaste={handlePaste}
           disabled={disabled}
           style={{
-            width: 52, height: 60, border: '2px solid var(--border)', borderRadius: 12,
-            background: '#fff', fontSize: '1.6rem', fontWeight: 900, textAlign: 'center',
-            color: 'var(--text)', outline: 'none', transition: 'border-color .15s',
+            width: 52, height: 60, border: '1px solid var(--color-subtle-ash)', borderRadius: 12,
+            background: 'var(--color-subtle-ash)', fontSize: '1.6rem', fontWeight: 700, textAlign: 'center',
+            color: 'var(--color-rich-black)', outline: 'none', transition: 'border-color .15s',
           }}
-          onFocus={e => (e.target.style.borderColor = 'var(--accent)')}
-          onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+          onFocus={e => (e.target.style.borderColor = 'var(--color-deep-fern-green)')}
+          onBlur={e => (e.target.style.borderColor = 'var(--color-subtle-ash)')}
         />
       ))}
     </div>
@@ -77,9 +77,6 @@ function PinInput({ value, onChange, disabled }) {
 
 /* ──────────────────────────────────────────────────────────
    Main export — multi-step flow
-   Step 1: enter phone
-   Step 2: enter PIN (or no-pin message)
-   Step 3: business view (with edit)
 ────────────────────────────────────────────────────────── */
 export default function MyBusiness() {
   const { navigate } = useNav();
@@ -110,7 +107,7 @@ export default function MyBusiness() {
     }
   }, []);
 
-  /* ── Step 1: Find business by phone ── */
+  /* Find business by phone */
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     const digits = phone.replace(/\D/g, '');
@@ -132,7 +129,7 @@ export default function MyBusiness() {
     } finally { setLoading(false); }
   };
 
-  /* ── Step 2: Verify PIN ── */
+  /* Verify PIN */
   const handlePinSubmit = async (e) => {
     e.preventDefault();
     if (pin.replace(/\D/g, '').length < 4) { setPinError('Enter your 4-digit PIN'); return; }
@@ -170,7 +167,7 @@ export default function MyBusiness() {
     localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_PHONE_KEY);
   };
 
-  /* ── Render steps ── */
+  /* Render steps */
   if (step === 'view' && biz) {
     if (editing) return (
       <EditBusiness
@@ -186,85 +183,85 @@ export default function MyBusiness() {
   }
 
   return (
-    <div className="container section" style={{ maxWidth: 480 }}>
-      <button onClick={() => navigate('home')}
-        style={{ background:'none',border:'none',color:'var(--muted)',cursor:'pointer',fontSize:'.85rem',marginBottom:20 }}>
-        ← Back
-      </button>
-
-      <div style={{ width:64,height:64,borderRadius:12,background:'var(--bg2)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:20 }}>
-        <Store size={28} style={{ color:'var(--text)' }} />
+    <div className="container section" style={{ maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
+        <button onClick={() => navigate('home')}
+          style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',fontSize:'14px',fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:4 }}>
+          ← Back to Home
+        </button>
       </div>
 
-      <h1 style={{ fontSize:'1.8rem',fontWeight:700,letterSpacing:'-0.02em',marginBottom:8 }}>My Business</h1>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ width:56,height:56,borderRadius:'12px',background:'var(--color-rich-black)',display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:16 }}>
+          <Store size={24} style={{ color:'var(--color-canvas-white)' }} />
+        </div>
+        <h1 style={{ fontSize:'32px',fontFamily:'var(--font-pp-neue-montreal)',fontWeight:700,letterSpacing:'-0.015em',color:'var(--color-rich-black)',marginBottom:8 }}>My Business</h1>
+        <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',lineHeight:1.5 }}>
+          Merchant Dashboard & Management Portal
+        </p>
+      </div>
 
-      {/* ── Step 1: Phone ── */}
+      {/* Step 1: Phone */}
       {step === 'phone' && (
         <>
-          <p style={{ color:'var(--muted)',marginBottom:32 }}>
-            Enter your registered WhatsApp number to access your business listing.
-          </p>
-          <div className="card" style={{ padding:24 }}>
-            <div style={{ fontWeight:600,marginBottom:4 }}>Find Your Business</div>
-            <p style={{ fontSize:'.82rem',color:'var(--muted)',marginBottom:16 }}>Use the same number you registered with.</p>
+          <div className="card" style={{ padding:32,background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
+            <div style={{ fontFamily:'var(--font-pp-neue-montreal)',fontWeight:600,color:'var(--color-rich-black)',fontSize:'16px',marginBottom:4 }}>Find Your Listing</div>
+            <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'13px',color:'var(--color-cool-gray)',marginBottom:24 }}>Enter your registered WhatsApp number to verify ownership.</p>
             <form onSubmit={handlePhoneSubmit}>
-              <div className="field" style={{ marginBottom:14 }}>
-                <label className="label"><Phone size={12} style={{ display:'inline',marginRight:4 }} />Registered Phone Number</label>
+              <div className="field" style={{ marginBottom:20 }}>
+                <label className="label" style={{ display:'flex',alignItems:'center',gap:4,fontWeight:600,color:'var(--color-cool-gray)',fontFamily:'var(--font-pp-neue-montreal)' }}><Phone size={12} /> Registered Phone Number</label>
                 <input className="input" type="tel" value={phone}
                   onChange={e => { setPhone(e.target.value); setPhoneError(''); }}
-                  placeholder="10-digit mobile number" maxLength={15} inputMode="numeric" />
-                {phoneError && <p style={{ color:'#f87171',fontSize:'.78rem',marginTop:4 }}>{phoneError}</p>}
+                  placeholder="10-digit mobile number" maxLength={15} inputMode="numeric" style={{ height: 42, borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }} />
+                {phoneError && <p style={{ color:'#ef4444',fontSize:'12px',marginTop:6,fontFamily:'var(--font-pp-neue-montreal)' }}>{phoneError}</p>}
               </div>
-              <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+              <button type="submit" className="btn btn-primary btn-full" disabled={loading} style={{ borderRadius:'12px',height:42,fontSize:'14px',fontWeight:500 }}>
                 {loading ? 'Searching…' : 'Continue'}
               </button>
             </form>
           </div>
-          <div style={{ textAlign:'center',marginTop:24 }}>
-            <p style={{ color:'var(--muted)',fontSize:'.85rem',marginBottom:8 }}>Don't have a listing yet?</p>
-            <button onClick={() => navigate('add')} className="btn btn-outline btn-sm">Add Your Business</button>
+          <div style={{ textAlign:'center',marginTop:24,fontFamily:'var(--font-pp-neue-montreal)' }}>
+            <p style={{ color:'var(--color-rich-black)',fontSize:'14px',marginBottom:12 }}>Don't have a listing yet?</p>
+            <button onClick={() => navigate('add')} className="btn btn-outline btn-sm" style={{ paddingInline:20, borderRadius: '12px' }}>Add Your Business</button>
           </div>
         </>
       )}
 
-      {/* ── Step 2: PIN ── */}
+      {/* Step 2: PIN */}
       {step === 'pin' && (
         <>
-          <p style={{ color:'var(--muted)',marginBottom:32 }}>
-            {bizName ? <>Business found: <strong style={{ color:'var(--text)' }}>{bizName}</strong>. Enter your 4-digit PIN to continue.</> : 'Enter your 4-digit security PIN.'}
-          </p>
           {!hasPin ? (
-            <div className="card" style={{ padding:24,textAlign:'center' }}>
-              <div style={{ fontSize:'2rem',marginBottom:12 }}>🔐</div>
-              <p style={{ fontWeight:700,marginBottom:8 }}>No PIN Set Yet</p>
-              <p style={{ color:'var(--muted)',fontSize:'.85rem',marginBottom:20 }}>
-                You haven't set a security PIN for this business. Please complete the registration by setting a PIN first.
+            <div className="card" style={{ padding:32,textAlign:'center',background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
+              <div style={{ fontSize:'2.5rem',marginBottom:16 }}>🔐</div>
+              <h2 style={{ fontWeight:700,fontFamily:'var(--font-pp-neue-montreal)',letterSpacing:'-0.01em',color:'var(--color-rich-black)',fontSize:'20px',marginBottom:8 }}>No Security PIN Set Yet</h2>
+              <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',marginBottom:24,lineHeight:1.5 }}>
+                You haven't set a security PIN for <strong style={{ color:'var(--color-rich-black)' }}>{bizName}</strong>. Please complete your registration by setting a 4-digit PIN first.
               </p>
-              <a href={REGISTER_URL(phone.replace(/\D/g,''))} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-full">
+              <a href={REGISTER_URL(phone.replace(/\D/g,''))} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-full" style={{ borderRadius:'12px',height:42,display:'inline-flex',alignItems:'center',justifyContent:'center',textDecoration:'none' }}>
                 Set PIN via Registration Form
               </a>
-              <button onClick={() => { setStep('phone'); setPin(''); setPinError(''); }} style={{ background:'none',border:'none',color:'var(--muted)',cursor:'pointer',marginTop:14,fontSize:'.84rem' }}>
-                ← Back
+              <button onClick={() => { setStep('phone'); setPin(''); setPinError(''); }} style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',marginTop:20,fontSize:'13px',fontFamily:'var(--font-pp-neue-montreal)',textDecoration:'underline' }}>
+                ← Go back to phone number
               </button>
             </div>
           ) : (
-            <div className="card" style={{ padding:24 }}>
-              <div style={{ fontWeight:600,marginBottom:4,textAlign:'center' }}>🔐 Enter Your PIN</div>
-              <p style={{ fontSize:'.82rem',color:'var(--muted)',marginBottom:20,textAlign:'center' }}>
-                Enter the 4-digit PIN you set during registration.
+            <div className="card" style={{ padding:32,background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
+              <div style={{ fontFamily:'var(--font-pp-neue-montreal)',fontWeight:600,color:'var(--color-rich-black)',fontSize:'16px',marginBottom:4,textAlign:'center' }}>🔐 Enter Security PIN</div>
+              <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'13px',color:'var(--color-cool-gray)',marginBottom:24,textAlign:'center',lineHeight:1.4 }}>
+                Enter the 4-digit PIN for <strong style={{ color:'var(--color-rich-black)' }}>{bizName}</strong>.
               </p>
               <form onSubmit={handlePinSubmit}>
-                <div style={{ marginBottom:20 }}>
+                <div style={{ marginBottom:24 }}>
                   <PinInput value={pin} onChange={setPin} disabled={loading} />
-                  {pinError && <p style={{ color:'#f87171',fontSize:'.8rem',marginTop:10,textAlign:'center' }}>{pinError}</p>}
+                  {pinError && <p style={{ color:'#ef4444',fontSize:'13px',marginTop:12,textAlign:'center',fontFamily:'var(--font-pp-neue-montreal)' }}>{pinError}</p>}
                 </div>
-                <button type="submit" className="btn btn-primary btn-full" disabled={loading || pin.replace(/\D/g,'').length < 4}>
-                  {loading ? 'Verifying…' : 'Verify & View My Business'}
+                <button type="submit" className="btn btn-primary btn-full" disabled={loading || pin.replace(/\D/g,'').length < 4} style={{ borderRadius:'12px',height:42,fontSize:'14px',fontWeight:500 }}>
+                  {loading ? 'Verifying…' : 'Access Merchant Dashboard'}
                 </button>
               </form>
               <button onClick={() => { setStep('phone'); setPin(''); setPinError(''); }}
-                style={{ background:'none',border:'none',color:'var(--muted)',cursor:'pointer',marginTop:14,fontSize:'.84rem',width:'100%',textAlign:'center' }}>
-                ← Back
+                style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',marginTop:20,fontSize:'13px',width:'100%',textAlign:'center',fontFamily:'var(--font-pp-neue-montreal)',textDecoration:'underline' }}>
+                ← Go back to phone number
               </button>
             </div>
           )}
@@ -291,71 +288,79 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
         <div className="biz-cover-container">
           {biz.coverImage ? (
             <>
-              <div style={{ position:'absolute',inset:0,backgroundImage:`url(${biz.coverImage})`,backgroundSize:'cover',backgroundPosition:'center',filter:'blur(15px) brightness(0.85)',transform:'scale(1.1)',opacity:0.45,zIndex:1 }} />
+              <div style={{ position:'absolute',inset:0,backgroundImage:`url(${biz.coverImage})`,backgroundSize:'cover',backgroundPosition:'center',filter:'blur(12px) brightness(0.9)',transform:'scale(1.1)',opacity:0.3,zIndex:1 }} />
               <img src={biz.coverImage} alt={biz.name} className="biz-cover-img" />
             </>
           ) : (
-            <div className="biz-cover-placeholder"><Store size={48} style={{ color:'var(--muted)',opacity:0.6 }} /></div>
+            <div className="biz-cover-placeholder"><Store size={48} style={{ color:'var(--color-cool-gray)',opacity:0.6 }} /></div>
           )}
         </div>
         {biz.image && (
-          <img src={biz.image} alt={biz.name} style={{ position:'absolute',bottom:-32,left:24,width:76,height:76,borderRadius:14,objectFit:'cover',border:'3px solid var(--card)',background:'var(--card)',boxShadow:'0 4px 14px rgba(0,0,0,.35)',zIndex:2 }} />
+          <img src={biz.image} alt={biz.name} style={{ position:'absolute',bottom:-32,left:24,width:76,height:76,borderRadius:12,objectFit:'cover',border:'1px solid var(--color-subtle-ash)',background:'var(--color-canvas-white)',boxShadow:'none',zIndex:2 }} />
         )}
       </div>
 
       <div className="container" style={{ paddingTop:0 }}>
         {/* Header */}
-        <div style={{ display:'flex',gap:16,alignItems:'flex-start',padding:'20px 0 20px',paddingTop:biz.image?48:20,borderBottom:'1px solid var(--border)',flexWrap:'wrap' }}>
+        <div style={{ display:'flex',gap:16,alignItems:'flex-start',padding:'24px 0 24px',paddingTop:biz.image?48:24,borderBottom:'1px solid var(--color-subtle-ash)',flexWrap:'wrap' }}>
           <div style={{ flex:1 }}>
             <div style={{ display:'flex',alignItems:'flex-start',gap:10,flexWrap:'wrap' }}>
               <div style={{ flex:1 }}>
-                <h1 style={{ fontSize:'1.4rem',fontWeight:900 }}>{biz.name}</h1>
-                <div style={{ display:'flex',alignItems:'center',gap:6,marginTop:4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'32px',fontWeight:700,letterSpacing:'-0.015em',color:'var(--color-rich-black)',lineHeight:1.2, margin: 0 }}>{biz.name}</h1>
+                  <span className={`badge ${biz.active ? 'badge-green' : 'badge-gray'}`} style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>{biz.active ? 'Active' : 'Pending'}</span>
+                </div>
+                <div style={{ display:'flex',alignItems:'center',gap:6,marginTop:4,fontFamily:'var(--font-pp-neue-montreal)' }}>
                   {biz.rating > 0 ? (
                     <div style={{ display:'flex',alignItems:'center',gap:4 }}>
                       <div style={{ display:'flex',gap:1 }}>
-                        {[1,2,3,4,5].map(star => (<Star key={star} size={12} fill={star<=Math.round(biz.rating)?'#fbbf24':'none'} stroke={star<=Math.round(biz.rating)?'#fbbf24':'#a1a1aa'} />))}
+                        {[1,2,3,4,5].map(star => (<Star key={star} size={12} fill="var(--color-leafy-green)" stroke="var(--color-leafy-green)" />))}
                       </div>
-                      <span style={{ fontSize:'.8rem',fontWeight:700 }}>{biz.rating}</span>
-                      <span style={{ fontSize:'.75rem',color:'var(--muted)' }}>({biz.reviewCount||0} reviews)</span>
+                      <span style={{ fontSize:'13px',fontWeight:600,color:'var(--color-rich-black)' }}>{biz.rating.toFixed(1)}</span>
+                      <span style={{ fontSize:'12px',color:'var(--color-cool-gray)' }}>({biz.reviewCount||0} reviews)</span>
                     </div>
                   ) : (
-                    <span style={{ fontSize:'.75rem',color:'var(--muted)' }}>No ratings yet</span>
+                    <span style={{ fontSize:'12px',color:'var(--color-cool-gray)' }}>No ratings yet</span>
                   )}
                 </div>
-                {biz.category && <div style={{ color:'var(--accent)',fontSize:'.83rem',fontWeight:600,marginTop:6 }}>{biz.category}{biz.subCategory&&` › ${biz.subCategory}`}</div>}
+                {biz.category && <div style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-deep-fern-green)',fontSize:'13px',fontWeight:500,marginTop:6 }}>{biz.category}{biz.subCategory&&` › ${biz.subCategory}`}</div>}
                 {biz.listingCode && <div style={{ marginTop:6 }}><span className="badge badge-blue"># {biz.listingCode}</span></div>}
               </div>
-              <span className={`badge ${biz.active?'badge-green':'badge-gray'}`}>{biz.active?'✅ Active':'⏳ Pending Review'}</span>
             </div>
           </div>
-          <div style={{ display:'flex',gap:8,marginLeft:'auto',alignSelf:'flex-start',marginTop:8,flexWrap:'wrap' }}>
-            <button onClick={onEdit} className="btn btn-outline btn-sm"><Edit3 size={14} /> Edit Business</button>
-            <button onClick={onRefresh} disabled={loading} className="btn btn-ghost btn-sm"><RefreshCw size={14} style={{ animation:loading?'spin 1s linear infinite':'none' }} />{loading?'Updating…':'Refresh'}</button>
-            <button onClick={onClear} className="btn btn-ghost btn-sm" style={{ color:'#f87171' }}><Trash2 size={14} /> Logout</button>
+          <div style={{ display:'flex',gap:8,marginLeft:'auto',alignSelf:'center',flexWrap:'wrap',fontFamily:'var(--font-pp-neue-montreal)' }}>
+            <button onClick={onEdit} className="btn btn-outline btn-sm" style={{ paddingInline: 16, borderRadius: '12px', borderWidth: 1, borderColor: 'var(--color-rich-black)', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}><Edit3 size={12} /> Edit Listing</button>
+            <button onClick={onRefresh} disabled={loading} className="btn btn-outline btn-sm" style={{ paddingInline: 14, borderRadius: '12px', borderColor: 'var(--color-subtle-ash)', fontSize: '12px', color: 'var(--color-cool-gray)', display: 'flex', alignItems: 'center', gap: 6 }}><RefreshCw size={12} style={{ animation:loading?'spin 1s linear infinite':'none' }} />{loading?'Refreshing…':'Refresh'}</button>
+            <button onClick={onClear} className="btn btn-outline btn-sm" style={{ paddingInline: 14, borderRadius: '12px', borderColor: '#fca5a5', background: 'transparent', color: '#dc2626', fontSize: '12px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}><LogOut size={12} /> Logout</button>
           </div>
         </div>
 
         {!biz.active && (
-          <div style={{ background:'rgba(251,146,60,.08)',border:'1px solid rgba(251,146,60,.2)',borderRadius:12,padding:'14px 16px',margin:'20px 0',color:'#fb923c',fontSize:'.88rem' }}>
+          <div style={{ background:'var(--color-melon-tint)',border:'1px solid var(--color-light-peach)',borderRadius:12,padding:'14px 16px',margin:'20px 0',color:'var(--color-terra-cotta)',fontSize:'14px',fontFamily:'var(--font-pp-neue-montreal)',fontWeight:500 }}>
             ⏳ Your business is pending review. Our team will activate it shortly.
           </div>
         )}
 
-        <div style={{ display:'flex',gap:10,flexWrap:'wrap',padding:'16px 0',borderBottom:'1px solid var(--border)' }}>
-          <button onClick={() => navigate('detail', { id: biz._id })} className="btn btn-primary btn-sm"><ExternalLink size={14} /> View Public Listing</button>
-          {phone && <a href={`https://wa.me/91${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm" style={{ color: '#25D366' }}><WhatsAppIcon size={14} /> WhatsApp Preview</a>}
+        <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px', padding: '16px 20px', margin: '24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+          <div>
+            <h4 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-cool-gray)', marginBottom: 2 }}>Public Quick Access</h4>
+            <p style={{ fontSize: '12px', color: 'var(--color-cool-gray)', margin: 0 }}>View your business listing as customers see it or preview on WhatsApp</p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={() => navigate('detail', { id: biz._id })} className="btn btn-primary btn-sm" style={{ paddingInline: 16, borderRadius: '12px' }}><ExternalLink size={13} /> View Public Listing</button>
+            {phone && <a href={`https://wa.me/91${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" style={{ color: 'var(--color-rich-black)', paddingInline: 16, borderColor: 'var(--color-subtle-ash)', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}><WhatsAppIcon size={14} style={{ marginRight:4, color: 'var(--color-deep-fern-green)' }} /> WhatsApp Preview</a>}
+          </div>
         </div>
 
         <div className="biz-detail-grid">
           <div>
-            {biz.description && <InfoSection title="About"><p style={{ color:'var(--muted)',lineHeight:1.7,fontSize:'.9rem' }}>{biz.description}</p></InfoSection>}
+            {biz.description && <InfoSection title="About"><p style={{ color:'var(--color-slate)',lineHeight:1.7,fontSize:'14px',fontFamily:'var(--font-sf-pro-text)' }}>{biz.description}</p></InfoSection>}
             {services.length > 0 && (
               <InfoSection title={`Services (${services.length})`}>
                 <div className="services-grid">
                   {services.map((s,i) => (
                     <div key={i} className="service-card" onClick={() => setSelectedService(s)}>
-                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" />}
+                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" style={{ objectFit: 'cover', background: 'var(--color-fog)' }} />}
                       <div className="service-card-content">
                         <div className="service-card-title">{s.name}</div>
                         {s.price && <div className="service-card-price">₹ {s.price}</div>}
@@ -368,37 +373,54 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
             )}
             {gallery.length > 0 && (
               <InfoSection title={`Gallery (${gallery.length})`}>
-                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(100px,1fr))',gap:8 }}>
-                  {gallery.map((g,i) => (<div key={i} style={{ aspectRatio:'1',borderRadius:8,overflow:'hidden',background:'var(--bg2)' }}><img src={g.url} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} /></div>))}
+                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(100px,1fr))',gap:12 }}>
+                  {gallery.map((g,i) => (<div key={i} style={{ aspectRatio:'1',borderRadius:'var(--radius-cards)',overflow:'hidden',background:'var(--color-snow)',border:'1px solid var(--border)' }}><img src={g.url} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} /></div>))}
                 </div>
               </InfoSection>
             )}
             {biz.infoQuestion && (
               <InfoSection title="FAQ">
-                <div style={{ background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14 }}>
-                  <div style={{ fontWeight:700,marginBottom:6 }}><span style={{ color:'var(--accent)' }}>Q.</span> {biz.infoQuestion}</div>
-                  {biz.infoAnswer && <div style={{ color:'var(--muted)',fontSize:'.9rem' }}><span style={{ color:'var(--green)' }}>A.</span> {biz.infoAnswer}</div>}
+                <div style={{ background:'var(--color-canvas-white)',border:'1px solid var(--color-subtle-ash)',borderRadius:'12px',padding:20,fontFamily:'var(--font-pp-neue-montreal)' }}>
+                  <div style={{ fontWeight:600,marginBottom:6,fontSize:'15px',color:'var(--color-rich-black)' }}><span style={{ color:'var(--color-rich-black)',fontWeight:700 }}>Q.</span> {biz.infoQuestion}</div>
+                  {biz.infoAnswer && <div style={{ color:'var(--color-cool-gray)',fontSize:'14px' }}><span style={{ color:'var(--color-deep-fern-green)',fontWeight:700 }}>A.</span> {biz.infoAnswer}</div>}
                 </div>
               </InfoSection>
             )}
             <InfoSection title={`Customer Reviews (${(biz.reviews||[]).length})`}>
-              {!biz.reviews||biz.reviews.length===0 ? (
-                <p style={{ fontSize:'.85rem',color:'var(--muted)',fontStyle:'italic',padding:'12px 0' }}>No reviews yet. Share your listing to get ratings!</p>
-              ) : biz.reviews.map(rev => (
-                <div key={rev._id} style={{ background:'var(--bg)',border:'1px solid var(--border)',borderRadius:12,padding:16,marginBottom:12 }}>
-                  <div style={{ display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:8 }}>
-                    <div><div style={{ fontWeight:700,fontSize:'.9rem' }}>{rev.reviewerName||'Anonymous'}</div>
-                      <div style={{ display:'flex',gap:1,marginTop:4 }}>{[1,2,3,4,5].map(s=><Star key={s} size={12} fill={s<=rev.rating?'#fbbf24':'none'} stroke={s<=rev.rating?'#fbbf24':'#d4d4d8'} />)}</div>
-                    </div>
-                    <span style={{ fontSize:'.75rem',color:'var(--muted2)' }}>{new Date(rev.createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}</span>
-                  </div>
-                  {rev.text && <p style={{ fontSize:'.85rem',color:'var(--muted)',lineHeight:1.5,marginTop:8 }}>{rev.text}</p>}
+              {!biz.reviews || biz.reviews.length === 0 ? (
+                <div style={{ background: 'var(--color-canvas-white)', border: '1px dashed var(--color-subtle-ash)', borderRadius: '12px', padding: '24px', textAlign: 'center', fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)', fontSize: '13px' }}>
+                  No reviews yet. Share your listing link to get ratings!
                 </div>
-              ))}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {biz.reviews.map(rev => (
+                    <div key={rev._id} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderLeft: '4px solid var(--color-deep-fern-green)', borderRadius: 12, padding: 20, fontFamily: 'var(--font-pp-neue-montreal)', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-rich-black)' }}>{rev.reviewerName||'Anonymous'}</div>
+                          <div style={{ display: 'flex', gap: 2, marginTop: 4 }}>
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} size={11} fill="var(--color-leafy-green)" stroke="var(--color-leafy-green)" />
+                            ))}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                          {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      {rev.text && (
+                        <p style={{ fontSize: '14px', color: 'var(--color-cool-gray)', lineHeight: 1.6, fontStyle: 'italic', fontFamily: 'var(--font-pp-neue-montreal)', margin: 0, paddingLeft: 4 }}>
+                          “{rev.text}”
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </InfoSection>
           </div>
 
-          <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+          <div style={{ display:'flex',flexDirection:'column',gap:24 }}>
             <SideCard title="Contact Info">
               {[phone&&{icon:Phone,label:'Phone',value:phone},biz.whatsappNo&&{icon:WhatsAppIcon,label:'WhatsApp',value:biz.whatsappNo},biz.landline&&{icon:Phone,label:'Landline',value:biz.landline},biz.email&&{icon:Mail,label:'Email',value:biz.email},biz.website&&{icon:Globe,label:'Website',value:biz.website}].filter(Boolean).map((r,i)=><InfoRow key={i} {...r} />)}
             </SideCard>
@@ -406,25 +428,41 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
               {[biz.address&&{icon:MapPin,label:'Address',value:biz.address},biz.city&&{icon:MapPin,label:'City',value:biz.city},biz.pincode&&{icon:MapPin,label:'Pincode',value:biz.pincode},biz.serviceLocations&&{icon:Tag,label:'Service Areas',value:biz.serviceLocations}].filter(Boolean).map((r,i)=><InfoRow key={i} {...r} />)}
             </SideCard>
             {(days.length > 0 || biz.openTime) && (
-              <SideCard title="Business Hours">
-                {days.length > 0 && <div style={{ display:'flex',flexWrap:'wrap',gap:4,marginBottom:10 }}>
-                  {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (<span key={d} style={{ padding:'3px 8px',borderRadius:5,fontSize:'.72rem',fontWeight:600,background:days.includes(d)?'var(--accent)':'var(--bg2)',color:days.includes(d)?'#fff':'var(--muted)',border:`1px solid ${days.includes(d)?'var(--accent)':'var(--border)'}` }}>{d}</span>))}
-                </div>}
-                {(biz.openTime||biz.closeTime) && <div style={{ color:'var(--muted)',fontSize:'.85rem' }}><Clock size={12} style={{ display:'inline',marginRight:4 }} />{biz.openTime||'—'} – {biz.closeTime||'—'}</div>}
+              <SideCard title="Operating Hours">
+                {days.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 16, textAlign: 'center', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => {
+                      const isActive = days.includes(d);
+                      return (
+                        <div key={d} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: isActive ? 'var(--color-rich-black)' : 'var(--color-cool-gray)', textTransform: 'uppercase', marginBottom: 4 }}>{d[0]}</span>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? 'var(--color-deep-fern-green)' : 'transparent', border: isActive ? 'none' : '1px solid var(--color-subtle-ash)' }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {(biz.openTime || biz.closeTime) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-subtle-ash)', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--color-subtle-ash)', fontSize: '13px', color: 'var(--color-rich-black)', fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 500 }}>
+                    <Clock size={13} style={{ color: 'var(--color-cool-gray)' }} />
+                    <span>{biz.openTime || '—'} – {biz.closeTime || '—'}</span>
+                  </div>
+                )}
               </SideCard>
             )}
           </div>
         </div>
+
       </div>
 
       {selectedService && (
         <div className="dialog-overlay" onClick={() => setSelectedService(null)}>
-          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-snow)', borderRadius: 'var(--radius-cards)' }}>
             <button className="dialog-close" onClick={() => setSelectedService(null)}>✕</button>
             <div className="dialog-body">
-              {selectedService.image && <div className="dialog-img-wrap"><img src={selectedService.image} alt={selectedService.name} className="dialog-img" /></div>}
-              <div className="dialog-info">
-                <h3 className="dialog-title">{selectedService.name}</h3>
+              {selectedService.image && <div className="dialog-img-wrap" style={{ background: 'var(--color-snow)', borderBottom: '1px solid var(--border)' }}><img src={selectedService.image} alt={selectedService.name} className="dialog-img" /></div>}
+              <div className="dialog-info" style={{ fontFamily: 'var(--font-sf-pro-text)' }}>
+                <h3 className="dialog-title" style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '20px', fontWeight: 700 }}>{selectedService.name}</h3>
                 {selectedService.price && <div className="dialog-price">₹ {selectedService.price}</div>}
                 {selectedService.detail && <p className="dialog-desc">{selectedService.detail}</p>}
               </div>
@@ -581,148 +619,200 @@ function EditBusiness({ biz, ownerPhone, pin, onSave, onCancel }) {
     } finally { setSaving(false); }
   };
 
-  const inputStyle = { width:'100%',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',fontSize:'.88rem',fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box' };
-  const labelStyle = { display:'block',fontSize:'.72rem',fontWeight:700,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:5 };
-  const fieldStyle = { marginBottom:16 };
-  const sectionStyle = { fontWeight:800,fontSize:'.8rem',color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.07em',margin:'24px 0 12px',paddingBottom:8,borderBottom:'2px solid var(--border)' };
+  const inputStyle = { width:'100%',padding:'10px 14px',border:'1px solid var(--color-subtle-ash)',borderRadius:12,color:'var(--color-rich-black)',fontSize:'14px',fontFamily:'var(--font-pp-neue-montreal)',outline:'none',background:'var(--color-canvas-white)',boxSizing:'border-box',transition:'border-color 0.15s ease, background-color 0.15s ease' };
+  const labelStyle = { display:'block',fontSize:'12px',fontWeight:600,color:'var(--color-cool-gray)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:5,fontFamily:'var(--font-pp-neue-montreal)' };
+  const fieldStyle = { marginBottom:20 };
+  const sectionStyle = { fontFamily: 'var(--font-pp-neue-montreal)', fontWeight:700,fontSize:'20px',color:'var(--color-rich-black)',margin:'32px 0 16px',paddingBottom:8,borderBottom:'1px solid var(--color-subtle-ash)' };
 
   return (
-    <div className="container section" style={{ maxWidth:600 }}>
-      <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:24 }}>
-        <button onClick={onCancel} style={{ background:'none',border:'none',color:'var(--muted)',cursor:'pointer',fontSize:'.85rem',display:'flex',alignItems:'center',gap:4 }}>← Back</button>
-        <h1 style={{ fontSize:'1.5rem',fontWeight:900,flex:1 }}>Edit Business</h1>
+    <div className="container section" style={{ maxWidth: 640 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+        <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--color-graphite)', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-sf-pro-text)' }}>← Cancel</button>
+        <h1 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '28px', fontWeight: 700, letterSpacing: 'var(--tracking-heading-sm)', color: 'var(--color-ink)', flex: 1 }}>Edit Business</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="card" style={{ padding:24 }}>
-          <p style={sectionStyle}>Basic Info</p>
+        {/* Card 1: Basic Info */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 1 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Basic Info</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Modify your business name, category and description</p>
+          </div>
           <div style={fieldStyle}><label style={labelStyle}>Business Name *</label><input style={inputStyle} value={form.name} onChange={e => setField('name', e.target.value)} required /></div>
           <div style={fieldStyle}><label style={labelStyle}>Category</label>
             <select style={inputStyle} value={form.category} onChange={e => setField('category', e.target.value)}>
-              <option value="">— Select —</option>
+              <option value="">— Select Category —</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div style={fieldStyle}><label style={labelStyle}>Sub-Category</label><input style={inputStyle} value={form.subCategory} onChange={e => setField('subCategory', e.target.value)} placeholder="Sub-category if applicable" /></div>
-          <div style={fieldStyle}><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle,resize:'vertical' }} rows={3} value={form.description} onChange={e => setField('description', e.target.value)} /></div>
+          <div style={fieldStyle}><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={form.description} onChange={e => setField('description', e.target.value)} /></div>
+        </div>
 
-          <p style={sectionStyle}>Location</p>
-          <div style={fieldStyle}><label style={labelStyle}>Address *</label><textarea style={{ ...inputStyle,resize:'vertical' }} rows={2} value={form.address} onChange={e => setField('address', e.target.value)} /></div>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16 }}>
+        {/* Card 2: Location */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 2 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Location &amp; Address</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Update your physical location details</p>
+          </div>
+          <div style={fieldStyle}><label style={labelStyle}>Address *</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={form.address} onChange={e => setField('address', e.target.value)} required /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             <div><label style={labelStyle}>City</label><input style={inputStyle} value={form.city} onChange={e => setField('city', e.target.value)} /></div>
             <div><label style={labelStyle}>Pincode</label><input style={inputStyle} value={form.pincode} onChange={e => setField('pincode', e.target.value)} maxLength={6} inputMode="numeric" /></div>
           </div>
           <div style={fieldStyle}><label style={labelStyle}>Landmark</label><input style={inputStyle} value={form.landmark} onChange={e => setField('landmark', e.target.value)} /></div>
           <div style={fieldStyle}><label style={labelStyle}>Service Locations</label><input style={inputStyle} value={form.serviceLocations} onChange={e => setField('serviceLocations', e.target.value)} /></div>
+        </div>
 
-          <p style={sectionStyle}>Contact</p>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16 }}>
-            <div><label style={labelStyle}>Primary Phone</label><input style={inputStyle} value={form.phone} onChange={e => setField('phone', e.target.value)} type="tel" /></div>
+        {/* Card 3: Contact Info */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 3 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Contact Details</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Update phone numbers, email, and website</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            <div><label style={labelStyle}>Primary Phone</label><input style={{ ...inputStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed', borderColor: '#e5e7eb' }} value={form.phone} readOnly type="tel" /></div>
             <div><label style={labelStyle}>WhatsApp No</label><input style={inputStyle} value={form.whatsappNo} onChange={e => setField('whatsappNo', e.target.value)} type="tel" /></div>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             <div><label style={labelStyle}>Landline</label><input style={inputStyle} value={form.landline} onChange={e => setField('landline', e.target.value)} /></div>
             <div><label style={labelStyle}>Alt Phone</label><input style={inputStyle} value={form.phone2} onChange={e => setField('phone2', e.target.value)} type="tel" /></div>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             <div><label style={labelStyle}>Email</label><input style={inputStyle} value={form.email} onChange={e => setField('email', e.target.value)} type="email" /></div>
             <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={e => setField('website', e.target.value)} type="url" /></div>
           </div>
+        </div>
 
-          <p style={sectionStyle}>Social Media</p>
-          {[['fbLink','Facebook'],['twitterLink','Twitter / X'],['instaLink','Instagram'],['googleMap','Google Maps'],['videoUrl','YouTube']].map(([k,l]) => (
+        {/* Card 4: Social Links */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 4 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Social Links</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Add links to your social media profiles</p>
+          </div>
+          {[['fbLink', 'Facebook'], ['twitterLink', 'Twitter / X'], ['instaLink', 'Instagram'], ['googleMap', 'Google Maps'], ['videoUrl', 'YouTube']].map(([k, l]) => (
             <div key={k} style={fieldStyle}><label style={labelStyle}>{l}</label><input style={inputStyle} value={form[k]} onChange={e => setField(k, e.target.value)} type="url" placeholder="https://..." /></div>
           ))}
+        </div>
 
-          <p style={sectionStyle}>Hours</p>
-          <div style={{ marginBottom:16 }}>
+        {/* Card 5: Hours */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 5 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Operating Hours</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Specify opening days and timing schedules</p>
+          </div>
+          <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Opening Days</label>
-            <div style={{ display:'flex',flexWrap:'wrap',gap:6,marginTop:4 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, fontFamily: 'var(--font-sf-pro-text)' }}>
               {DAYS.map(d => (
-                <button key={d} type="button" onClick={() => toggleDay(d)} style={{ padding:'5px 12px',borderRadius:20,fontSize:'.78rem',fontWeight:600,border:`1px solid ${openDays.includes(d)?'var(--accent)':'var(--border)'}`,background:openDays.includes(d)?'var(--accent)':'transparent',color:openDays.includes(d)?'#fff':'var(--muted)',cursor:'pointer',transition:'all .15s' }}>{d}</button>
+                <button key={d} type="button" onClick={() => toggleDay(d)} style={{ padding: '5px 12px', borderRadius: 'var(--radius-buttons)', fontSize: '12px', fontWeight: 500, border: `1px solid ${openDays.includes(d) ? 'var(--color-ink)' : 'var(--border)'}`, background: openDays.includes(d) ? 'var(--color-ink)' : 'transparent', color: openDays.includes(d) ? 'var(--color-snow)' : 'var(--color-graphite)', cursor: 'pointer', transition: 'all .15s' }}>{d}</button>
               ))}
             </div>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             <div><label style={labelStyle}>Open Time</label><input style={inputStyle} type="time" value={form.openTime} onChange={e => setField('openTime', e.target.value)} /></div>
             <div><label style={labelStyle}>Close Time</label><input style={inputStyle} type="time" value={form.closeTime} onChange={e => setField('closeTime', e.target.value)} /></div>
           </div>
+        </div>
 
-          <p style={sectionStyle}>FAQ</p>
-          <div style={fieldStyle}><label style={labelStyle}>Question</label><input style={inputStyle} value={form.infoQuestion} onChange={e => setField('infoQuestion', e.target.value)} /></div>
-          <div style={fieldStyle}><label style={labelStyle}>Answer</label><textarea style={{ ...inputStyle,resize:'vertical' }} rows={2} value={form.infoAnswer} onChange={e => setField('infoAnswer', e.target.value)} /></div>
-
-          <p style={sectionStyle}>Images</p>
-          {/* Profile photo */}
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Profile Photo</label>
-            {profilePreview && <img src={profilePreview} alt="profile" style={{ width:80,height:80,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)',marginBottom:8,display:'block' }} />}
-            <label style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',border:'1.5px dashed var(--border)',borderRadius:8,cursor:'pointer',fontSize:'.83rem',color:'var(--muted)' }}>
-              <Camera size={14} /> {profilePreview ? 'Change Photo' : 'Upload Photo'}
-              <input type="file" accept="image/*" onChange={handleProfileChange} style={{ display:'none' }} />
-            </label>
+        {/* Card 6: Services */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 6 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Services &amp; Products</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>List key services/products offered (max 6)</p>
           </div>
-          {/* Cover image */}
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Cover / Banner Image</label>
-            {coverPreview && <img src={coverPreview} alt="cover" style={{ width:'100%',height:100,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)',marginBottom:8,display:'block' }} />}
-            <label style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',border:'1.5px dashed var(--border)',borderRadius:8,cursor:'pointer',fontSize:'.83rem',color:'var(--muted)' }}>
-              <Camera size={14} /> {coverPreview ? 'Change Cover' : 'Upload Cover'}
-              <input type="file" accept="image/*" onChange={handleCoverChange} style={{ display:'none' }} />
-            </label>
-          </div>
-          {/* Gallery */}
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Gallery Images</label>
-            <div style={{ display:'flex',flexWrap:'wrap',gap:8,marginBottom:8 }}>
-              {existingGallery.map(g => (
-                <div key={g.publicId} style={{ position:'relative' }}>
-                  <img src={g.url} alt="" style={{ width:72,height:72,objectFit:'cover',borderRadius:8,border:'1px solid var(--border)' }} />
-                  <button type="button" onClick={() => removeExistingGallery(g.publicId)} style={{ position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:'50%',background:'#ef4444',border:'none',color:'#fff',cursor:'pointer',fontSize:'.7rem',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={10} /></button>
-                </div>
-              ))}
-              {galleryPreviews.map((p,i) => (<img key={i} src={p} alt="" style={{ width:72,height:72,objectFit:'cover',borderRadius:8,border:'1px solid var(--border)' }} />))}
-            </div>
-            <label style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',border:'1.5px dashed var(--border)',borderRadius:8,cursor:'pointer',fontSize:'.83rem',color:'var(--muted)' }}>
-              <Plus size={14} /> Add Gallery Photos
-              <input type="file" accept="image/*" multiple onChange={handleGalleryChange} style={{ display:'none' }} />
-            </label>
-          </div>
-
-          <p style={sectionStyle}>Services / Products</p>
           {services.map((s, i) => (
-            <div key={i} style={{ background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,padding:16,marginBottom:12 }}>
-              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
-                <span style={{ fontWeight:700,fontSize:'.82rem' }}>Service {i+1}</span>
-                <button type="button" onClick={() => removeService(i)} style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:'.75rem',fontWeight:700 }}>✕ Remove</button>
+            <div key={i} style={{ background: 'var(--color-fog)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, fontFamily: 'var(--font-sf-pro-text)' }}>
+                <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-ink)' }}>Service {i + 1}</span>
+                <button type="button" onClick={() => removeService(i)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>✕ Remove</button>
               </div>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10 }}>
-                <div><label style={labelStyle}>Name</label><input style={inputStyle} value={s.name} onChange={e => updateService(i,'name',e.target.value)} /></div>
-                <div><label style={labelStyle}>Price (₹)</label><input style={inputStyle} value={s.price} onChange={e => updateService(i,'price',e.target.value)} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <div><label style={labelStyle}>Name</label><input style={inputStyle} value={s.name} onChange={e => updateService(i, 'name', e.target.value)} /></div>
+                <div><label style={labelStyle}>Price (₹)</label><input style={inputStyle} value={s.price} onChange={e => updateService(i, 'price', e.target.value)} /></div>
               </div>
-              <div style={{ marginBottom:10 }}><label style={labelStyle}>Details</label><textarea style={{ ...inputStyle,resize:'vertical' }} rows={2} value={s.detail} onChange={e => updateService(i,'detail',e.target.value)} /></div>
+              <div style={{ marginBottom: 10 }}><label style={labelStyle}>Details</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={s.detail} onChange={e => updateService(i, 'detail', e.target.value)} /></div>
               <div>
                 <label style={labelStyle}>Service Photo</label>
-                {s.newImagePreview && <img src={s.newImagePreview} alt="" style={{ width:60,height:60,objectFit:'cover',borderRadius:8,border:'1px solid var(--border)',marginBottom:6,display:'block' }} />}
-                <label style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',border:'1.5px dashed var(--border)',borderRadius:8,cursor:'pointer',fontSize:'.8rem',color:'var(--muted)' }}>
-                  <Camera size={12} /> {s.newImagePreview ? 'Change' : 'Upload'}
-                  <input type="file" accept="image/*" onChange={e => handleServiceImage(i, e)} style={{ display:'none' }} />
+                {s.newImagePreview && <img src={s.newImagePreview} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 6, display: 'block' }} />}
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 14px', border: '1px dashed var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: '12px', color: 'var(--color-graphite)', fontFamily: 'var(--font-sf-pro-text)' }}>
+                  <Camera size={12} /> {s.newImagePreview ? 'Change Photo' : 'Upload Photo'}
+                  <input type="file" accept="image/*" onChange={e => handleServiceImage(i, e)} style={{ display: 'none' }} />
                 </label>
               </div>
             </div>
           ))}
           {services.length < 6 && (
-            <button type="button" onClick={addService} style={{ width:'100%',padding:10,border:'1.5px dashed var(--border)',borderRadius:10,background:'transparent',color:'var(--muted)',cursor:'pointer',fontSize:'.85rem',display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
-              <Plus size={14} /> Add Service
+            <button type="button" onClick={addService} style={{ width: '100%', padding: 12, border: '1px dashed var(--border)', borderRadius: 12, background: 'transparent', color: 'var(--color-graphite)', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-sf-pro-text)' }}>
+              <Plus size={14} /> Add Service / Product
             </button>
           )}
+        </div>
 
-          {error && <div style={{ background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,padding:'12px 16px',color:'#ef4444',fontSize:'.85rem',marginTop:16 }}>{error}</div>}
+        {/* Card 7: Media */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 24, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 7 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>Business Media</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Manage logos, wide banners, and photos</p>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Profile Photo (Logo)</label>
+            {profilePreview && <img src={profilePreview} alt="profile" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 8, display: 'block' }} />}
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px dashed var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: '13px', color: 'var(--color-graphite)', fontFamily: 'var(--font-sf-pro-text)' }}>
+              <Camera size={14} /> {profilePreview ? 'Change Photo' : 'Upload Photo'}
+              <input type="file" accept="image/*" onChange={handleProfileChange} style={{ display: 'none' }} />
+            </label>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Cover / Banner Image</label>
+            {coverPreview && <img src={coverPreview} alt="cover" style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 8, display: 'block' }} />}
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px dashed var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: '13px', color: 'var(--color-graphite)', fontFamily: 'var(--font-sf-pro-text)' }}>
+              <Camera size={14} /> {coverPreview ? 'Change Cover' : 'Upload Cover'}
+              <input type="file" accept="image/*" onChange={handleCoverChange} style={{ display: 'none' }} />
+            </label>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Gallery Images</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+              {existingGallery.map(g => (
+                <div key={g.publicId} style={{ position: 'relative' }}>
+                  <img src={g.url} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
+                  <button type="button" onClick={() => removeExistingGallery(g.publicId)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#ef4444', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={10} /></button>
+                </div>
+              ))}
+              {galleryPreviews.map((p, i) => (<img key={i} src={p} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />))}
+            </div>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px dashed var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: '13px', color: 'var(--color-graphite)', fontFamily: 'var(--font-sf-pro-text)' }}>
+              <Plus size={14} /> Add Gallery Photos
+              <input type="file" accept="image/*" multiple onChange={handleGalleryChange} style={{ display: 'none' }} />
+            </label>
+          </div>
+        </div>
 
-          <div style={{ display:'flex',gap:10,marginTop:24 }}>
-            <button type="button" onClick={onCancel} className="btn btn-outline" style={{ flex:1 }}>Cancel</button>
-            <button type="submit" className="btn btn-primary" style={{ flex:2 }} disabled={saving}>
-              <Save size={15} /> {saving ? 'Saving…' : 'Save Changes'}
+        {/* Card 8: FAQ & Submission */}
+        {/* Card 8: FAQ & Submission */}
+        <div className="card" style={{ padding: 32, background: 'var(--color-snow)', marginBottom: 32, borderRadius: 'var(--radius-cards)', border: '1px solid var(--border)' }}>
+          <div className="card-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 700, color: 'var(--color-azure)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Section 8 of 8</span>
+            <h2 style={{ fontFamily: 'var(--font-sf-pro-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>FAQ &amp; Submission</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-graphite)', margin: 0 }}>Answer a custom FAQ and save all modifications</p>
+          </div>
+          <div style={fieldStyle}><label style={labelStyle}>Question</label><input style={inputStyle} value={form.infoQuestion} onChange={e => setField('infoQuestion', e.target.value)} /></div>
+          <div style={{ ...fieldStyle, marginBottom: 28 }}><label style={labelStyle}>Answer</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={form.infoAnswer} onChange={e => setField('infoAnswer', e.target.value)} /></div>
+
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 12, padding: '12px 16px', color: '#ef4444', fontSize: '13px', marginBottom: 20, fontFamily: 'var(--font-sf-pro-text)' }}>{error}</div>}
+
+          <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--font-sf-pro-text)' }}>
+            <button type="button" onClick={onCancel} className="btn btn-outline" style={{ flex: 1, borderRadius: 'var(--radius-buttons)', height: 42 }}>Cancel</button>
+            <button type="submit" className="btn btn-primary" style={{ flex: 2, borderRadius: 'var(--radius-buttons)', height: 42 }} disabled={saving}>
+              <Save size={15} style={{ marginRight: 4 }} /> {saving ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -734,8 +824,20 @@ function EditBusiness({ biz, ownerPhone, pin, onSave, onCancel }) {
 /* ── Shared helper components ── */
 function InfoSection({ title, children }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h3 style={{ fontWeight:800,fontSize:'.95rem',marginBottom:12,paddingBottom:8,borderBottom:'1px solid var(--border)' }}>{title}</h3>
+    <div style={{ marginBottom: 36 }}>
+      <h3 style={{
+        fontFamily: 'var(--font-pp-neue-montreal)',
+        fontWeight: 600,
+        fontSize: '22px',
+        letterSpacing: '-0.015em',
+        color: 'var(--color-rich-black)',
+        marginBottom: 20,
+        paddingBottom: 10,
+        borderBottom: '1px solid var(--color-subtle-ash)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>{title}</h3>
       {children}
     </div>
   );
@@ -743,9 +845,23 @@ function InfoSection({ title, children }) {
 
 function SideCard({ title, children }) {
   return (
-    <div className="card" style={{ padding:14 }}>
-      <div style={{ fontWeight:800,fontSize:'.88rem',marginBottom:12 }}>{title}</div>
-      {children}
+    <div className="card" style={{ padding: 24, background: 'var(--color-canvas-white)', marginBottom: 24, border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+      <div style={{
+        fontFamily: 'var(--font-pp-neue-montreal)',
+        fontWeight: 700,
+        fontSize: '11px',
+        color: 'var(--color-cool-gray)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        marginBottom: 16,
+        paddingBottom: 8,
+        borderBottom: '1px solid var(--color-subtle-ash)'
+      }}>
+        {title}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -753,12 +869,31 @@ function SideCard({ title, children }) {
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
-    <div className="info-row">
-      <Icon size={14} className="info-icon" />
-      <div>
-        <div className="info-label">{label}</div>
-        <div className="info-value" style={{ fontSize:'.83rem' }}>{value}</div>
+    <div style={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 12,
+      padding: '12px 0',
+      borderBottom: '1px solid var(--color-subtle-ash)',
+    }} className="info-row-item">
+      <div style={{
+        width: 28,
+        height: 28,
+        borderRadius: '12px',
+        background: 'var(--color-subtle-ash)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        marginTop: 2
+      }}>
+        <Icon size={13} style={{ color: 'var(--color-rich-black)' }} />
+      </div>
+      <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-cool-gray)', fontWeight: 600, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', fontWeight: 500, wordBreak: 'break-all', whiteSpace: 'normal', lineHeight: 1.4 }}>{value}</div>
       </div>
     </div>
   );
 }
+

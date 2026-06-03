@@ -714,7 +714,69 @@ router.get('/:id', async (req, res) => {
     </div>
   </div>`;
 
+  /* Is this the owner viewing their own listing? */
+  const isOwner = userPhone && biz.ownerPhone &&
+    String(userPhone).replace(/\D/g,'') === String(biz.ownerPhone).replace(/\D/g,'');
+
+  const ownerBanner = isOwner ? `
+  <div style="background:rgba(var(--accent-rgb),0.06);border:1px solid rgba(var(--accent-rgb),0.2);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.72rem;font-weight:900;color:var(--accent-color);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">🏪 Your Business</div>
+      <div style="font-size:.82rem;color:var(--text-muted)">You are viewing your own listing.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <a href="/public/dir/${esc(req.params.id)}/edit?phone=${esc(userPhone)}"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent-color);color:rgba(0,0,0,0.9);border-radius:10px;font-size:.8rem;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:.04em;transition:all .15s">
+        ✏️ Edit
+      </a>
+      <button onclick="confirmDelete()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:10px;font-size:.8rem;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;transition:all .15s">
+        🗑️ Delete
+      </button>
+    </div>
+  </div>
+  <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:999;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;padding:28px 24px;max-width:380px;width:100%;text-align:center">
+      <div style="font-size:2rem;margin-bottom:12px">⚠️</div>
+      <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:8px;color:var(--text-main)">Delete Listing?</h2>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:20px">This will permanently remove <strong style="color:var(--text-main)">${esc(biz.name)}</strong> from Vanigan. This cannot be undone.</p>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:14px">Enter your 4-digit PIN to confirm:</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px" id="delPinWrap">
+        <input type="password" maxlength="1" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-size:1.5rem;font-weight:900;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(0,0,0,0.3);color:#fff;outline:none" oninput="moveFocus(this,1)" onkeydown="backFocus(this,event,0)">
+        <input type="password" maxlength="1" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-size:1.5rem;font-weight:900;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(0,0,0,0.3);color:#fff;outline:none" oninput="moveFocus(this,2)" onkeydown="backFocus(this,event,1)">
+        <input type="password" maxlength="1" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-size:1.5rem;font-weight:900;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(0,0,0,0.3);color:#fff;outline:none" oninput="moveFocus(this,3)" onkeydown="backFocus(this,event,2)">
+        <input type="password" maxlength="1" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-size:1.5rem;font-weight:900;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(0,0,0,0.3);color:#fff;outline:none" oninput="moveFocus(this,4)" onkeydown="backFocus(this,event,3)">
+      </div>
+      <div id="delErr" style="color:#f87171;font-size:.8rem;margin-bottom:12px;min-height:18px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeDelete()" style="flex:1;padding:10px;border:1px solid var(--card-border);background:transparent;color:var(--text-main);border-radius:10px;font-weight:700;cursor:pointer">Cancel</button>
+        <button id="delConfirmBtn" onclick="submitDelete()" style="flex:1;padding:10px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function confirmDelete() { document.getElementById('deleteModal').style.display='flex'; document.querySelectorAll('#delPinWrap input')[0].focus(); }
+    function closeDelete()   { document.getElementById('deleteModal').style.display='none'; document.querySelectorAll('#delPinWrap input').forEach(i=>i.value=''); document.getElementById('delErr').textContent=''; }
+    function moveFocus(el,next){ el.value=el.value.replace(/\\D/g,'').slice(-1); if(el.value){const inputs=document.querySelectorAll('#delPinWrap input');if(inputs[next])inputs[next].focus();} }
+    function backFocus(el,e,prev){ if(e.key==='Backspace'&&!el.value){const inputs=document.querySelectorAll('#delPinWrap input');if(inputs[prev])inputs[prev].focus();} }
+    async function submitDelete(){
+      const inputs=document.querySelectorAll('#delPinWrap input');
+      const pin=Array.from(inputs).map(i=>i.value).join('');
+      if(pin.length<4){document.getElementById('delErr').textContent='Enter your 4-digit PIN';return;}
+      const btn=document.getElementById('delConfirmBtn');
+      btn.textContent='Deleting…';btn.disabled=true;
+      try{
+        const r=await fetch('/public/dir/${esc(req.params.id)}/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:'${esc(userPhone)}',pin})});
+        const d=await r.json();
+        if(!r.ok){document.getElementById('delErr').textContent=d.error||'Failed';btn.textContent='Delete';btn.disabled=false;return;}
+        window.location.href='/public/dir?deleted=1';
+      }catch(e){document.getElementById('delErr').textContent='Connection error';btn.textContent='Delete';btn.disabled=false;}
+    }
+  </script>
+  ` : '';
+
   const body = `<div class="wrap">
+  ${ownerBanner}
   ${submitted ? `<div class="toast"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> Your review was submitted. Thank you!</div>` : ''}
   ${heroHtml}
   ${biz.description ? `<div class="section"><p style="font-size:.87rem;color:var(--text-bright);line-height:1.6">${esc(biz.description)}</p></div>` : ''}
@@ -829,6 +891,169 @@ router.post('/:id/review', async (req, res) => {
     }
   }
   res.redirect(`/public/dir/${req.params.id}${listQ}&submitted=1`);
+});
+
+/* ── POST /public/dir/:id/delete  (PIN-verified owner delete) ── */
+router.post('/:id/delete', express.json(), async (req, res) => {
+  const { phone, pin } = req.body || {};
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits || !/^\d{4}$/.test(String(pin || ''))) {
+    return res.status(400).json({ error: 'Phone and 4-digit PIN required.' });
+  }
+  let biz;
+  try { biz = await Business.findById(req.params.id); } catch { biz = null; }
+  if (!biz) return res.status(404).json({ error: 'Not found' });
+  if (String(biz.ownerPhone).replace(/\D/g,'') !== digits) {
+    return res.status(403).json({ error: 'Phone does not match this listing.' });
+  }
+  if (!biz.ownerPin) return res.status(403).json({ error: 'No PIN set for this listing.' });
+  const bcrypt = require('bcryptjs');
+  const ok = await bcrypt.compare(String(pin), biz.ownerPin);
+  if (!ok) return res.status(403).json({ error: 'Incorrect PIN.' });
+  await biz.deleteOne();
+  res.json({ ok: true });
+});
+
+/* ── GET /public/dir/:id/edit  (owner edit form) ── */
+router.get('/:id/edit', async (req, res) => {
+  const { phone: userPhone = '' } = req.query;
+  const digits = String(userPhone).replace(/\D/g, '');
+  let biz;
+  try { biz = await Business.findById(req.params.id).lean(); } catch { biz = null; }
+  if (!biz) return res.status(404).send(shell('Not Found', '<div class="wrap"><div class="empty"><p>Business not found.</p></div></div>', '', false));
+  if (!digits || String(biz.ownerPhone).replace(/\D/g,'') !== digits) {
+    return res.status(403).send(shell('Forbidden', '<div class="wrap"><div class="empty"><p>You do not have permission to edit this listing.</p></div></div>', '', false));
+  }
+  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+  const CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'];
+  const val = (k) => esc(biz[k] || '');
+  const catOpts = CATEGORIES.map(c => `<option value="${esc(c)}"${biz.category===c?' selected':''}>${esc(c)}</option>`).join('');
+  const DAYS_ALL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const activeDays = biz.openDays ? biz.openDays.split(',').map(d=>d.trim()) : [];
+  const daysChecks = DAYS_ALL.map(d => `<label style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid ${activeDays.includes(d)?'var(--accent-color)':'var(--card-border)'};border-radius:20px;cursor:pointer;font-size:.8rem;margin:3px;background:${activeDays.includes(d)?'rgba(var(--accent-rgb),0.1)':'transparent'};color:${activeDays.includes(d)?'var(--accent-color)':'var(--text-muted)'}"><input type="checkbox" name="openDays" value="${d}" style="width:auto;accent-color:var(--accent-color)"${activeDays.includes(d)?' checked':''}> ${d}</label>`).join('');
+
+  const pinBoxes = `<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:4px">
+    ${[0,1,2,3].map(i=>`<input type="password" maxlength="1" inputmode="numeric" name="pin_${i}" required style="width:48px;height:54px;text-align:center;font-size:1.4rem;font-weight:900;border:2px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text-main);outline:none" oninput="this.value=this.value.replace(/\\D/g,'').slice(-1);${i<3?`document.querySelectorAll('.pin-box')[${i+1}].focus()`:''}" onkeydown="if(event.key==='Backspace'&&!this.value&&${i}>0)document.querySelectorAll('.pin-box')[${i-1}].focus()" class="pin-box">`).join('')}
+  </div>`;
+
+  const body = `<div class="wrap">
+  <div class="section">
+    <div class="sec-head">✏️ Edit Business</div>
+    <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:20px">Update your business details below. Enter your PIN to confirm changes.</div>
+    <form id="editForm" method="POST" action="/public/dir/${esc(req.params.id)}/edit?phone=${esc(userPhone)}" enctype="multipart/form-data">
+
+      <label>Business Name *</label>
+      <input type="text" name="name" value="${val('name')}" required placeholder="Business name">
+
+      <label>Category</label>
+      <select name="category"><option value="">— Select —</option>${catOpts}</select>
+
+      <label>Sub-Category</label>
+      <input type="text" name="subCategory" value="${val('subCategory')}" placeholder="Sub-category">
+
+      <label>Description</label>
+      <textarea name="description" rows="3">${val('description')}</textarea>
+
+      <label>Address *</label>
+      <textarea name="address" rows="2" required>${val('address')}</textarea>
+
+      <label>Landmark</label>
+      <input type="text" name="landmark" value="${val('landmark')}">
+
+      <label>City</label>
+      <input type="text" name="city" value="${val('city')}">
+
+      <label>Pincode</label>
+      <input type="text" name="pincode" value="${val('pincode')}" maxlength="6" inputmode="numeric">
+
+      <label>Service Areas</label>
+      <input type="text" name="serviceLocations" value="${val('serviceLocations')}" placeholder="Areas you serve">
+
+      <label>Primary Phone</label>
+      <input type="tel" name="phone" value="${val('phone')}">
+
+      <label>WhatsApp No</label>
+      <input type="tel" name="whatsappNo" value="${val('whatsappNo')}">
+
+      <label>Landline</label>
+      <input type="tel" name="landline" value="${val('landline')}">
+
+      <label>Email</label>
+      <input type="email" name="email" value="${val('email')}">
+
+      <label>Website</label>
+      <input type="url" name="website" value="${val('website')}">
+
+      <label>Opening Days</label>
+      <div style="margin-bottom:14px">${daysChecks}</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label>Open Time</label><input type="time" name="openTime" value="${val('openTime')}"></div>
+        <div><label>Close Time</label><input type="time" name="closeTime" value="${val('closeTime')}"></div>
+      </div>
+
+      <label>FAQ Question</label>
+      <input type="text" name="infoQuestion" value="${val('infoQuestion')}">
+
+      <label>FAQ Answer</label>
+      <textarea name="infoAnswer" rows="2">${val('infoAnswer')}</textarea>
+
+      <div style="border-top:1px solid var(--card-border);margin:20px 0;padding-top:20px">
+        <div style="font-size:.72rem;font-weight:900;color:var(--accent-color);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">🔐 Confirm with your PIN</div>
+        ${pinBoxes}
+        <div id="editErr" style="color:#f87171;font-size:.8rem;margin-top:8px;min-height:18px"></div>
+      </div>
+
+      <input type="hidden" name="pin" id="pinHidden">
+      <button type="submit" class="submit-btn" id="saveBtn">Save Changes</button>
+    </form>
+  </div>
+</div>
+<script>
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    const boxes = document.querySelectorAll('.pin-box');
+    const pin = Array.from(boxes).map(b=>b.value).join('');
+    if (pin.length < 4) { e.preventDefault(); document.getElementById('editErr').textContent='Enter your 4-digit PIN to save'; return; }
+    document.getElementById('pinHidden').value = pin;
+    document.getElementById('saveBtn').textContent = 'Saving…';
+    document.getElementById('saveBtn').disabled = true;
+  });
+</script>`;
+
+  res.setHeader('Content-Type','text/html; charset=utf-8');
+  res.send(shell(`Edit — ${biz.name}`, body, `/public/dir/${req.params.id}?phone=${encodeURIComponent(userPhone)}`, false));
+});
+
+/* ── POST /public/dir/:id/edit  (owner save edit) ── */
+router.post('/:id/edit', async (req, res) => {
+  const { phone: userPhone = '' } = req.query;
+  const digits = String(userPhone).replace(/\D/g, '');
+  let biz;
+  try { biz = await Business.findById(req.params.id); } catch { biz = null; }
+  if (!biz) return res.status(404).send('Not found');
+  if (!digits || String(biz.ownerPhone).replace(/\D/g,'') !== digits) {
+    return res.status(403).send('Forbidden');
+  }
+  const pin = String(req.body.pin || '').replace(/\D/g,'');
+  if (!/^\d{4}$/.test(pin)) {
+    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=pin`);
+  }
+  if (!biz.ownerPin) {
+    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=nopin`);
+  }
+  const bcrypt = require('bcryptjs');
+  const ok = await bcrypt.compare(pin, biz.ownerPin);
+  if (!ok) {
+    return res.redirect(`/public/dir/${req.params.id}/edit?phone=${encodeURIComponent(userPhone)}&err=wrongpin`);
+  }
+  const TEXT_FIELDS = ['name','description','category','subCategory','address','landmark','serviceLocations','city','pincode','phone','whatsappNo','landline','phone2','email','website','openTime','closeTime','infoQuestion','infoAnswer'];
+  for (const f of TEXT_FIELDS) {
+    if (req.body[f] !== undefined) biz[f] = String(req.body[f]).trim();
+  }
+  const rawDays = req.body.openDays;
+  biz.openDays = Array.isArray(rawDays) ? rawDays.join(',') : (rawDays || '');
+  await biz.save();
+  res.redirect(`/public/dir/${req.params.id}?phone=${encodeURIComponent(userPhone)}&saved=1`);
 });
 
 module.exports = router;

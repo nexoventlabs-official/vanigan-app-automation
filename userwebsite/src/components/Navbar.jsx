@@ -17,15 +17,23 @@ export default function Navbar() {
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: '#ffffff',
-      borderBottom: 'none',
-      height: 64, display: 'flex', alignItems: 'center',
+      background: 'var(--color-canvas-white)',
+      borderBottom: '1px solid var(--color-subtle-ash)',
+      height: 52, display: 'flex', alignItems: 'center',
     }}>
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         {/* Logo */}
         <button onClick={() => go('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style={{ height: 36 }} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)' }}>Vanigan</span>
+          <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style={{ height: 32 }} />
+          <span style={{
+            fontFamily: 'var(--font-pp-neue-montreal)',
+            fontWeight: 700,
+            fontSize: '18px',
+            color: 'var(--color-rich-black)',
+            letterSpacing: '-0.5px'
+          }}>
+            Vanigan
+          </span>
         </button>
 
         {/* Desktop links */}
@@ -36,12 +44,23 @@ export default function Navbar() {
               onClick={() => go(page)}
               className={`nav-link ${current.name === page ? 'active' : ''}`}
             >
-              <Icon size={16} />
+              <Icon size={14} />
               {label}
             </button>
           ))}
-          <button onClick={() => go('add')} className="btn btn-primary btn-sm" style={{ marginLeft: 12 }}>
-            <Plus size={15} /> Add Business
+          {/* Pill Accent Button */}
+          <button 
+            onClick={() => go('add')} 
+            className="btn btn-primary btn-sm" 
+            style={{
+              fontWeight: 500,
+              marginLeft: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <Plus size={14} /> Add Business
           </button>
         </div>
 
@@ -55,9 +74,9 @@ export default function Navbar() {
       {/* Mobile drawer */}
       {open && (
         <div style={{
-          position: 'fixed', top: 64, left: 0, right: 0,
-          background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid var(--border)',
+          position: 'fixed', top: 52, left: 0, right: 0,
+          background: 'var(--color-canvas-white)',
+          borderBottom: '1px solid var(--color-subtle-ash)',
           padding: '16px', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 99,
         }}>
           {links.map(({ label, page, icon: Icon }) => (
@@ -66,10 +85,21 @@ export default function Navbar() {
               onClick={() => go(page)}
               className={`mobile-nav-link ${current.name === page ? 'active' : ''}`}
             >
-              <Icon size={18} /> {label}
+              <Icon size={16} /> {label}
             </button>
           ))}
-          <button onClick={() => go('add')} className="btn btn-primary btn-full" style={{ marginTop: 4 }}>
+          <button 
+            onClick={() => go('add')} 
+            className="btn btn-primary btn-full" 
+            style={{
+              fontWeight: 500,
+              marginTop: 4,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
             <Plus size={16} /> Add Business
           </button>
         </div>
@@ -83,21 +113,23 @@ export default function Navbar() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 14px;
-          font-size: 0.92rem;
-          font-weight: 600;
-          color: var(--muted);
-          border-radius: 8px;
+          padding: 6px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--color-cool-gray);
+          border-radius: var(--radius-buttons);
           transition: all 0.2s ease;
           outline: none;
+          font-family: var(--font-pp-neue-montreal);
         }
         .nav-link:hover {
-          color: var(--text);
-          background-color: var(--bg2);
+          color: var(--color-rich-black);
+          background-color: var(--color-subtle-ash);
         }
         .nav-link.active {
-          color: var(--text) !important;
-          background-color: var(--bg2);
+          color: var(--color-rich-black) !important;
+          background-color: var(--color-subtle-ash);
+          font-weight: 600;
         }
         
         .mobile-nav-link {
@@ -107,23 +139,24 @@ export default function Navbar() {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px 16px;
-          font-size: 0.98rem;
-          font-weight: 600;
-          color: var(--muted);
+          padding: 10px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--color-cool-gray);
           border-radius: 8px;
           width: 100%;
           text-align: left;
           transition: all 0.2s ease;
           outline: none;
+          font-family: var(--font-pp-neue-montreal);
         }
         .mobile-nav-link:hover, .mobile-nav-link:active {
-          color: var(--text);
-          background-color: var(--bg2);
+          color: var(--color-rich-black);
+          background-color: var(--color-subtle-ash);
         }
         .mobile-nav-link.active {
-          color: var(--text) !important;
-          background-color: var(--bg2);
+          color: var(--color-rich-black) !important;
+          font-weight: 600;
         }
 
         @media (max-width: 640px) {

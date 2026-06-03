@@ -179,7 +179,15 @@ function kindBannerKey(kind) {
   return '';
 }
 
-async function buildServiceList(images) {
+async function buildServiceList(images, phone = '') {
+  // Check if this phone already has a registered business (any status)
+  let hasBusiness = false;
+  if (phone) {
+    try {
+      hasBusiness = !!(await Business.findOne({ ownerPhone: phone }).select('_id').lean());
+    } catch { hasBusiness = false; }
+  }
+
   const list = [
     withImage(
       { id: 'business', title: 'Business List', description: 'Local businesses by district' },
@@ -193,15 +201,21 @@ async function buildServiceList(images) {
       { id: 'member', title: 'Members List', description: 'Vanigan members directory' },
       images.icon_member_list
     ),
-    withImage(
+  ];
+
+  // Only show "Add Your Business" if the user hasn't registered one yet
+  if (!hasBusiness) {
+    list.push(withImage(
       { id: 'add_business', title: 'Add Your Business', description: 'Register your business' },
       images.icon_add_business
-    ),
-    withImage(
-      { id: 'my_business', title: 'My Business', description: 'View your listings' },
-      images.icon_my_business
-    ),
-  ];
+    ));
+  }
+
+  list.push(withImage(
+    { id: 'my_business', title: 'My Business', description: 'View your listings' },
+    images.icon_my_business
+  ));
+
   return list;
 }
 
@@ -379,8 +393,9 @@ function sendResponse(res, obj, aesKeyBuffer, ivBuffer) {
 
 /* ───────── INIT ───────── */
 async function handleInit(flow_token) {
+  const phone = phoneFromToken(flow_token);
   const images = await loadImagesB64();
-  const services = await buildServiceList(images);
+  const services = await buildServiceList(images, phone);
 
   return {
     screen: 'SERVICE_SELECT',
@@ -420,8 +435,9 @@ async function handleDataExchange({ screen, data, flow_token }) {
     }
 
     if (sel === 'my_business') {
+      // Include pending (active:false) businesses so owner can see their listing even before activation
       const myBusinesses = phone
-        ? await Business.find({ ownerPhone: phone, active: true }).sort({ name: 1 }).limit(20).lean()
+        ? await Business.find({ ownerPhone: phone }).sort({ name: 1 }).limit(20).lean()
         : [];
 
       if (!myBusinesses.length) {
@@ -429,7 +445,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
           screen: 'INFO',
           data: {
             info_title: 'No Businesses Found',
-            info_body: 'You have not registered any active businesses yet.\n\nChoose *Add Your Business* to get started! 🏪',
+            info_body: 'You have not registered any businesses yet.\n\nChoose *Add Your Business* to get listed on Vanigan! 🏪',
           },
         };
       }
@@ -634,7 +650,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
     };
   }
 
-  // ─── MY_BUSINESS_LIST → ITEM_DETAILS (same logic as ITEM_LIST) ───
+  // ─── MY_BUSINESS_LIST → send rich CTA message then close flow ───
   if (screen === 'MY_BUSINESS_LIST') {
     const kind = 'business';
     const itemId = data?.selected_item;
@@ -646,59 +662,53 @@ async function handleDataExchange({ screen, data, flow_token }) {
     if (!doc) {
       return { screen: 'INFO', data: { info_title: 'Not available', info_body: 'This listing is no longer available.' } };
     }
-    let imgB64 = '';
-    if (doc.image) {
-      imgB64 = await urlToBase64(doc.image, { width: 1000, height: 600, crop: 'fill', quality: 75, format: 'jpg' });
-    }
-    const subtitle = [doc.assembly, doc.district].filter(Boolean).join(', ');
-    const lines = [];
-    if (doc.description) { lines.push(doc.description); lines.push(''); }
-    const cat = [doc.category, doc.subCategory].filter(Boolean).join(' › ');
-    if (cat) lines.push(`🏷️ ${cat}`);
+
+    // Build the public dir URL with edit/delete access (phone in query for owner recognition)
+    const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+    const bizUrl = `${backend}/public/dir/${itemId}?phone=${encodeURIComponent(phone)}`;
+
+    // Build a rich body text with key business details
+    const statusLine = doc.active ? '✅ Active' : '⏳ Pending Review — our team will activate it shortly';
+    const lines = [
+      `🏪 *${doc.name}*`,
+      statusLine,
+      '',
+    ];
+    if (doc.category) lines.push(`🏷️ ${doc.category}${doc.subCategory ? ` › ${doc.subCategory}` : ''}`);
+    if (doc.listingCode) lines.push(`📋 Code: ${doc.listingCode}`);
     if (doc.address) lines.push(`📍 ${doc.address}`);
-    if (doc.landmark) lines.push(`   📌 ${doc.landmark}`);
-    if (doc.city || doc.pincode) lines.push(`   ${[doc.city, doc.pincode].filter(Boolean).join(' – ')}`);
-    if (doc.serviceLocations) lines.push(`🗺️ Serves: ${doc.serviceLocations}`);
-    if (doc.phone) lines.push(`📞 ${doc.phone}`);
-    if (doc.whatsappNo) lines.push(`💬 WA: ${doc.whatsappNo}`);
-    if (doc.landline) lines.push(`☎️ ${doc.landline}`);
-    if (doc.phone2) lines.push(`📱 Alt: ${doc.phone2}`);
-    if (doc.email) lines.push(`✉️ ${doc.email}`);
-    if (doc.website) lines.push(`🌐 ${doc.website}`);
-    if (doc.fbLink) lines.push(`📘 FB: ${doc.fbLink}`);
-    if (doc.googleMap) lines.push(`🗺️ Maps: ${doc.googleMap}`);
-    if (doc.openDays || doc.openTime || doc.closeTime) {
+    if (doc.city) lines.push(`🏙️ ${doc.city}${doc.pincode ? ` – ${doc.pincode}` : ''}`);
+    if (doc.phone || doc.whatsappNo) lines.push(`📞 ${doc.phone || doc.whatsappNo}`);
+    if (doc.openDays) {
       const timeStr = [doc.openTime, doc.closeTime].filter(Boolean).join(' – ');
       lines.push(`🕐 ${[doc.openDays, timeStr].filter(Boolean).join('  |  ')}`);
     }
-    const validSvcs = (doc.services || []).filter(s => s.name);
-    if (validSvcs.length) {
-      lines.push(''); lines.push('🛍️ Services:');
-      validSvcs.forEach(s => {
-        const pr = s.price ? ` — ₹${s.price}` : '';
-        lines.push(`  • ${s.name}${pr}`);
-        if (s.detail) lines.push(`    ${s.detail}`);
-      });
-    }
-    if (doc.infoQuestion) {
-      lines.push('');
-      lines.push(`❓ ${doc.infoQuestion}`);
-      if (doc.infoAnswer) lines.push(`   ${doc.infoAnswer}`);
-    }
-    const description = lines.join('\n').trim();
-    const { meta: revMetaMb, recent: recentMb } = await reviewSummary(kind, itemId);
+    lines.push('');
+    lines.push('Tap the button below to view your full listing, edit details, or manage your business.');
+
+    const bodyText = lines.join('\n');
+
+    // Send async — don't wait so flow closes fast
+    setImmediate(async () => {
+      try {
+        await meta.sendCtaUrlMessage(phone, {
+          headerImageUrl: doc.coverImage || doc.image || undefined,
+          bodyText,
+          footerText: 'Vanigan Directory',
+          buttonText: '🏪 View & Manage My Business',
+          url: bizUrl,
+        });
+      } catch (err) {
+        console.error('[flowEndpoint] my_business CTA send failed:', err.message);
+      }
+    });
+
+    // Close the flow immediately
     return {
-      screen: 'ITEM_DETAILS',
+      screen: 'INFO',
       data: {
-        item_image: imgB64,
-        has_item_image: !!imgB64,
-        item_title: doc.name || 'Business',
-        item_subtitle: subtitle,
-        item_description: description || ' ',
-        item_meta: revMetaMb,
-        recent_reviews: recentMb,
-        kind,
-        item_id: itemId,
+        info_title: `${doc.name}`,
+        info_body: `Your business details are being sent to you on WhatsApp now.\n\nTap the link in the message to view, edit, or manage your listing. 🏪`,
       },
     };
   }

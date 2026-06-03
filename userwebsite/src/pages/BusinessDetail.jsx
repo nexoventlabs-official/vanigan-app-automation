@@ -41,7 +41,6 @@ export default function BusinessDetail({ params = {} }) {
       .then(r => {
         setBiz(r.data);
         setReviews(r.data.reviews || []);
-        /* Check localStorage: has this user already reviewed this business? */
         if (getReviewed().includes(r.data._id?.toString())) setAlreadyReviewed(true);
       })
       .catch(() => setBiz(null))
@@ -92,9 +91,9 @@ export default function BusinessDetail({ params = {} }) {
     <div className="container section">
       <div className="empty">
         <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <Store size={48} style={{ color: 'var(--muted2)' }} />
+          <Store size={48} style={{ color: 'var(--color-subtle-ash)' }} />
         </div>
-        <h3>Business not found</h3>
+        <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700 }}>Business not found</h3>
         <button onClick={() => navigate('home')} className="btn btn-primary" style={{ marginTop: 16 }}>Go Home</button>
       </div>
     </div>
@@ -129,9 +128,9 @@ export default function BusinessDetail({ params = {} }) {
                 backgroundImage: `url(${biz.coverImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'blur(15px) brightness(0.85)',
+                filter: 'blur(12px) brightness(0.9)',
                 transform: 'scale(1.1)',
-                opacity: 0.45,
+                opacity: 0.3,
                 zIndex: 1,
               }} />
               {/* Crisp foreground banner showing full view */}
@@ -143,26 +142,26 @@ export default function BusinessDetail({ params = {} }) {
             </>
           ) : (
             <div className="biz-cover-placeholder">
-              <Store size={48} style={{ color: 'var(--muted)', opacity: 0.6 }} />
+              <Store size={48} style={{ color: 'var(--color-cool-gray)', opacity: 0.6 }} />
             </div>
           )}
           {/* Back button */}
           <button onClick={() => window.history.length > 1 ? window.history.back() : navigate('list', {})} style={{
             position: 'absolute', top: 16, left: 16,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            border: 'none', color: '#fff', cursor: 'pointer',
-            borderRadius: 10, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: '.85rem', fontWeight: 600,
+            background: 'var(--color-canvas-white)',
+            border: '1px solid var(--color-subtle-ash)', color: 'var(--color-rich-black)', cursor: 'pointer',
+            borderRadius: '12px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: '13px', fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 500,
             zIndex: 10,
           }}>
-            <ChevronLeft size={16} /> Back
+            <ChevronLeft size={15} /> Back
           </button>
           {/* Share */}
           <button onClick={share} style={{
             position: 'absolute', top: 16, right: 16,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            border: 'none', color: '#fff', cursor: 'pointer',
-            borderRadius: 10, padding: '8px', display: 'flex', alignItems: 'center',
+            background: 'var(--color-canvas-white)',
+            border: '1px solid var(--color-subtle-ash)', color: 'var(--color-rich-black)', cursor: 'pointer',
+            borderRadius: '12px', padding: '8px', display: 'flex', alignItems: 'center',
             zIndex: 10,
           }}>
             <Share2 size={16} />
@@ -171,9 +170,9 @@ export default function BusinessDetail({ params = {} }) {
         {biz.image && (
           <img src={biz.image} alt={biz.name} style={{
             position: 'absolute', bottom: -36, left: 24, zIndex: 2,
-            width: 80, height: 80, borderRadius: 14, objectFit: 'cover',
-            border: '3px solid var(--card)', background: 'var(--card)',
-            boxShadow: '0 4px 16px rgba(0,0,0,.35)',
+            width: 80, height: 80, borderRadius: 12, objectFit: 'cover',
+            border: '2px solid var(--color-canvas-white)', background: 'var(--color-canvas-white)',
+            boxShadow: 'none',
           }} />
         )}
       </div>
@@ -182,18 +181,20 @@ export default function BusinessDetail({ params = {} }) {
         {/* Profile + identity */}
         <div style={{
           display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap',
-          padding: '20px 0 24px', paddingTop: biz.image ? 52 : 20, borderBottom: '1px solid var(--border)',
+          padding: '24px 0 24px', paddingTop: biz.image ? 52 : 24, borderBottom: '1px solid var(--color-subtle-ash)',
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 900, lineHeight: 1.2, flex: 1 }}>{biz.name}</h1>
-              <span className={`badge ${biz.active ? 'badge-green' : 'badge-gray'}`}>
-                {biz.active ? '✅ Active' : '⏳ Pending'}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+              <h1 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '32px', fontWeight: 700, letterSpacing: '-0.015em', color: 'var(--color-rich-black)', lineHeight: 1.2, flex: 1 }}>
+                {biz.name}
+              </h1>
+              <span className={`badge ${biz.active ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 6 }}>
+                {biz.active ? 'Active' : 'Pending'}
               </span>
             </div>
 
             {/* Ratings Summary */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontFamily: 'var(--font-pp-neue-montreal)' }}>
               {biz.rating > 0 ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ display: 'flex', gap: 1 }}>
@@ -201,13 +202,13 @@ export default function BusinessDetail({ params = {} }) {
                       <Star
                         key={star}
                         size={14}
-                        fill={star <= Math.round(biz.rating) ? '#fbbf24' : 'none'}
-                        stroke={star <= Math.round(biz.rating) ? '#fbbf24' : '#a1a1aa'}
+                        fill={star <= Math.round(biz.rating) ? 'var(--color-leafy-green)' : 'none'}
+                        stroke={star <= Math.round(biz.rating) ? 'var(--color-leafy-green)' : 'var(--color-subtle-ash)'}
                       />
                     ))}
                   </div>
-                  <span style={{ fontSize: '.88rem', fontWeight: 700, color: 'var(--text)' }}>{biz.rating}</span>
-                  <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>({biz.reviewCount || 0} reviews)</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-rich-black)' }}>{biz.rating.toFixed(1)}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--color-cool-gray)' }}>({biz.reviewCount || 0} reviews)</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -217,26 +218,26 @@ export default function BusinessDetail({ params = {} }) {
                         key={star}
                         size={14}
                         fill="none"
-                        stroke="#e4e4e7"
+                        stroke="var(--color-subtle-ash)"
                       />
                     ))}
                   </div>
-                  <span style={{ fontSize: '.8rem', color: 'var(--muted)' }}>No ratings yet</span>
+                  <span style={{ fontSize: '13px', color: 'var(--color-cool-gray)' }}>No ratings yet</span>
                 </div>
               )}
             </div>
 
             {biz.category && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '.85rem', color: 'var(--accent)', fontWeight: 600 }}>{biz.category}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, flexWrap: 'wrap', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                <span style={{ fontSize: '14px', color: 'var(--color-deep-fern-green)', fontWeight: 500 }}>{biz.category}</span>
                 {biz.subCategory && <>
-                  <span style={{ color: 'var(--muted2)' }}>›</span>
-                  <span style={{ fontSize: '.82rem', color: 'var(--muted)', fontWeight: 500 }}>{biz.subCategory}</span>
+                  <span style={{ color: 'var(--color-subtle-ash)' }}>›</span>
+                  <span style={{ fontSize: '13px', color: 'var(--color-cool-gray)', fontWeight: 400 }}>{biz.subCategory}</span>
                 </>}
               </div>
             )}
             {biz.listingCode && (
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 10 }}>
                 <span className="badge badge-blue"># {biz.listingCode}</span>
               </div>
             )}
@@ -244,27 +245,27 @@ export default function BusinessDetail({ params = {} }) {
         </div>
 
         {/* CTA buttons */}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '20px 0', borderBottom: '1px solid var(--color-subtle-ash)' }}>
           {(biz.whatsappNo || phone) && (
             <a href={`https://wa.me/91${(biz.whatsappNo || phone).replace(/\D/g,'')}`}
               target="_blank" rel="noreferrer"
-              className="btn btn-primary" style={{ background: '#25D366', borderColor: '#25D366' }}>
+              className="btn btn-primary" style={{ paddingInline: 20 }}>
               <WhatsAppIcon size={16} /> WhatsApp
             </a>
           )}
           {phone && (
-            <a href={`tel:${phone}`} className="btn btn-outline">
-              <Phone size={16} /> Call
+            <a href={`tel:${phone}`} className="btn btn-outline" style={{ paddingInline: 20 }}>
+              <Phone size={15} /> Call
             </a>
           )}
           {biz.website && (
-            <a href={biz.website} target="_blank" rel="noreferrer" className="btn btn-ghost">
-              <Globe size={16} /> Website
+            <a href={biz.website} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm" style={{ paddingInline: 16 }}>
+              <Globe size={15} /> Website
             </a>
           )}
           {(biz.lat && biz.lng) && (
-            <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
-              <Map size={16} /> Directions
+            <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm" style={{ paddingInline: 16 }}>
+              <Map size={15} /> Directions
             </a>
           )}
         </div>
@@ -274,7 +275,7 @@ export default function BusinessDetail({ params = {} }) {
             {/* Description */}
             {biz.description && (
               <Section title="About">
-                <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '.9rem' }}>{biz.description}</p>
+                <p style={{ color: 'var(--color-cool-gray)', lineHeight: 1.7, fontSize: '15px', fontFamily: 'var(--font-pp-neue-montreal)' }}>{biz.description}</p>
               </Section>
             )}
 
@@ -283,8 +284,8 @@ export default function BusinessDetail({ params = {} }) {
               <Section title="Services & Pricing">
                 <div className="services-grid">
                   {services.map((s, i) => (
-                    <div key={i} className="service-card" onClick={() => setSelectedService(s)}>
-                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" />}
+                    <div key={i} className="service-card" onClick={() => setSelectedService(s)} style={{ borderRadius: '12px' }}>
+                      {s.image && <img src={s.image} alt={s.name} className="service-card-img" style={{ borderRadius: '12px 12px 0 0' }} />}
                       <div className="service-card-content">
                         <div className="service-card-title">{s.name}</div>
                         {s.price && <div className="service-card-price">₹ {s.price}</div>}
@@ -299,12 +300,12 @@ export default function BusinessDetail({ params = {} }) {
             {/* Gallery */}
             {gallery.length > 0 && (
               <Section title={`Gallery (${gallery.length})`}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
                   {gallery.map((g, i) => (
                     <div key={i} onClick={() => { setGalIdx(i); setGalOpen(true); }}
-                      style={{ aspectRatio: '1', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: 'var(--bg2)' }}>
+                      style={{ aspectRatio: '1', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}>
                       <img src={g.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .2s' }}
-                        onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                        onMouseEnter={e => e.target.style.transform = 'scale(1.02)'}
                         onMouseLeave={e => e.target.style.transform = 'scale(1)'} />
                     </div>
                   ))}
@@ -315,14 +316,14 @@ export default function BusinessDetail({ params = {} }) {
             {/* FAQ */}
             {biz.infoQuestion && (
               <Section title="FAQ">
-                <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px' }}>
-                  <div style={{ fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ color: 'var(--accent)', fontWeight: 900, fontSize: '1.1rem' }}>Q.</span>
+                <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px', padding: '24px', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--color-rich-black)', fontSize: '15px', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <span style={{ color: 'var(--color-rich-black)', fontWeight: 700 }}>Q.</span>
                     {biz.infoQuestion}
                   </div>
                   {biz.infoAnswer && (
-                    <div style={{ color: 'var(--muted)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                      <span style={{ color: 'var(--green)', fontWeight: 900, fontSize: '1.1rem' }}>A.</span>
+                    <div style={{ color: 'var(--color-cool-gray)', fontSize: '14px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <span style={{ color: 'var(--color-deep-fern-green)', fontWeight: 700 }}>A.</span>
                       {biz.infoAnswer}
                     </div>
                   )}
@@ -332,126 +333,125 @@ export default function BusinessDetail({ params = {} }) {
 
             {/* Reviews & Ratings Section */}
             <Section title="Reviews & Ratings">
-              {/* Write a Review Form — hidden if already reviewed */}
+              {/* Write a Review Form */}
               {alreadyReviewed ? (
-                <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, color: '#4ade80', fontSize: '.88rem', fontWeight: 600 }}>
-                  ✅ You have already reviewed this business. Thank you!
+                <div style={{ background: 'var(--color-mint-green-glow)', border: '1px solid var(--color-muted-sage)', borderRadius: '12px', padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-deep-fern-green)', fontSize: '14px', fontWeight: 500, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                  ✓ You have already reviewed this business. Thank you!
                 </div>
               ) : (
-              <div className="card" style={{ padding: 24, marginBottom: 24 }}>
-                <h4 style={{ fontWeight: 600, fontSize: '0.98rem', marginBottom: 6 }}>Write a Review</h4>
-                <p style={{ fontSize: '.82rem', color: 'var(--muted)', marginBottom: 16 }}>Share your experience with this business. Your review helps others make better decisions.</p>
-                
-                {submitSuccess && (
-                  <div className="badge badge-green" style={{ display: 'flex', padding: '10px 14px', borderRadius: 8, fontSize: '.85rem', width: '100%', marginBottom: 16, justifyContent: 'flex-start', lineHeight: 1.4 }}>
-                    ✓ Review submitted successfully! Thank you.
-                  </div>
-                )}
-                
-                {submitError && (
-                  <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '10px 14px', borderRadius: 8, fontSize: '.82rem', marginBottom: 16 }}>
-                    ⚠ {submitError}
-                  </div>
-                )}
-
-                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div className="field">
-                    <label className="label">Your Name *</label>
-                    <input
-                      className="input"
-                      type="text"
-                      required
-                      placeholder="e.g. John Doe"
-                      value={reviewerName}
-                      onChange={e => setReviewerName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="label">Rating *</label>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setFormRating(star)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 2,
-                            display: 'inline-flex',
-                            transition: 'transform 0.1s'
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                          <Star
-                            size={22}
-                            fill={star <= formRating ? '#fbbf24' : 'none'}
-                            stroke={star <= formRating ? '#fbbf24' : '#a1a1aa'}
-                          />
-                        </button>
-                      ))}
-                      <span style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--muted)', marginLeft: 8 }}>
-                        {formRating ? `${formRating} Star${formRating !== 1 ? 's' : ''}` : 'Select rating'}
-                      </span>
+                <div className="card" style={{ padding: 24, marginBottom: 28, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+                  <h4 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '16px', color: 'var(--color-rich-black)', marginBottom: 6 }}>Write a Review</h4>
+                  <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)', marginBottom: 20 }}>Share your experience with this business. Your review helps others make better decisions.</p>
+                  
+                  {submitSuccess && (
+                    <div className="badge badge-green" style={{ display: 'flex', padding: '10px 14px', borderRadius: 12, fontSize: '14px', width: '100%', marginBottom: 16, justifyContent: 'flex-start', lineHeight: 1.4 }}>
+                      ✓ Review submitted successfully! Thank you.
                     </div>
-                  </div>
+                  )}
+                  
+                  {submitError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444', padding: '10px 14px', borderRadius: 12, fontSize: '13px', marginBottom: 16, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                      ⚠ {submitError}
+                    </div>
+                  )}
 
-                  <div className="field">
-                    <label className="label">Review Text (Optional)</label>
-                    <textarea
-                      className="input"
-                      rows={3}
-                      placeholder="Tell us what you liked or how they can improve..."
-                      value={formText}
-                      onChange={e => setFormText(e.target.value)}
-                      style={{ resize: 'vertical', minHeight: 80, fontFamily: 'inherit' }}
-                    />
-                  </div>
+                  <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div className="field">
+                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Your Name *</label>
+                      <input
+                        className="input"
+                        type="text"
+                        required
+                        placeholder="e.g. John Doe"
+                        value={reviewerName}
+                        onChange={e => setReviewerName(e.target.value)}
+                        style={{ borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}
+                      />
+                    </div>
 
-                  <div className="field">
-                    <label className="label">Your Phone (Optional — prevents duplicate review)</label>
-                    <input
-                      className="input"
-                      type="tel"
-                      placeholder="e.g. 9876543210"
-                      value={reviewPhone}
-                      onChange={e => setReviewPhone(e.target.value)}
-                      maxLength={15}
-                      inputMode="numeric"
-                    />
-                  </div>
+                    <div className="field">
+                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Rating *</label>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setFormRating(star)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: 2,
+                              display: 'inline-flex',
+                            }}
+                          >
+                            <Star
+                              size={24}
+                              fill={star <= formRating ? 'var(--color-leafy-green)' : 'none'}
+                              stroke={star <= formRating ? 'var(--color-leafy-green)' : 'var(--color-subtle-ash)'}
+                            />
+                          </button>
+                        ))}
+                        <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginLeft: 8 }}>
+                          {formRating ? `${formRating} Star${formRating !== 1 ? 's' : ''}` : 'Select rating'}
+                        </span>
+                      </div>
+                    </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={submitting}
-                    style={{ alignSelf: 'flex-start', marginTop: 4 }}
-                  >
-                    {submitting ? 'Submitting…' : 'Submit Review'}
-                  </button>
-                </form>
-              </div>
+                    <div className="field">
+                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Review Text (Optional)</label>
+                      <textarea
+                        className="input"
+                        rows={3}
+                        placeholder="Tell us what you liked or how they can improve..."
+                        value={formText}
+                        onChange={e => setFormText(e.target.value)}
+                        style={{ resize: 'vertical', minHeight: 90, fontFamily: 'var(--font-pp-neue-montreal)', borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', padding: '10px 14px' }}
+                      />
+                    </div>
+
+                    <div className="field">
+                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Your Phone (Optional — prevents duplicate review)</label>
+                      <input
+                        className="input"
+                        type="tel"
+                        placeholder="e.g. 9876543210"
+                        value={reviewPhone}
+                        onChange={e => setReviewPhone(e.target.value)}
+                        maxLength={15}
+                        inputMode="numeric"
+                        style={{ borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={submitting}
+                      style={{ alignSelf: 'flex-start', marginTop: 4, borderRadius: '12px', paddingInline: 24 }}
+                    >
+                      {submitting ? 'Submitting…' : 'Submit Review'}
+                    </button>
+                  </form>
+                </div>
               )}
 
               {/* Reviews List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <h4 style={{ fontWeight: 600, fontSize: '0.98rem', borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px' }}>
+                <h4 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '15px', borderBottom: '1px solid var(--color-subtle-ash)', paddingBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px', color: 'var(--color-rich-black)' }}>
                   <span>Recent Reviews</span>
-                  <span style={{ fontSize: '.82rem', color: 'var(--muted)', fontWeight: 500 }}>{reviews.length} total</span>
+                  <span style={{ fontSize: '13px', color: 'var(--color-cool-gray)', fontWeight: 400 }}>{reviews.length} total</span>
                 </h4>
 
                 {reviews.length === 0 ? (
-                  <p style={{ fontSize: '.85rem', color: 'var(--muted)', fontStyle: 'italic', padding: '12px 0' }}>
+                  <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '14px', color: 'var(--color-cool-gray)', fontStyle: 'italic', padding: '12px 0' }}>
                     No reviews yet. Be the first to write a review!
                   </p>
                 ) : (
                   reviews.map((rev) => (
                     <div key={rev._id} style={{
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
+                      background: 'var(--color-canvas-white)',
+                      border: '1px solid var(--color-subtle-ash)',
                       borderRadius: 12,
                       padding: 16,
                       display: 'flex',
@@ -460,7 +460,7 @@ export default function BusinessDetail({ params = {} }) {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--text)' }}>
+                          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '14px', color: 'var(--color-rich-black)' }}>
                             {rev.reviewerName || 'Anonymous'}
                           </div>
                           <div style={{ display: 'flex', gap: 1, marginTop: 4 }}>
@@ -468,18 +468,18 @@ export default function BusinessDetail({ params = {} }) {
                               <Star
                                 key={star}
                                 size={12}
-                                fill={star <= rev.rating ? '#fbbf24' : 'none'}
-                                stroke={star <= rev.rating ? '#fbbf24' : '#d4d4d8'}
+                                fill={star <= rev.rating ? 'var(--color-leafy-green)' : 'none'}
+                                stroke={star <= rev.rating ? 'var(--color-leafy-green)' : 'var(--color-subtle-ash)'}
                               />
                             ))}
                           </div>
                         </div>
-                        <span style={{ fontSize: '.75rem', color: 'var(--muted2)', fontWeight: 500 }}>
+                        <span style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '12px', color: 'var(--color-cool-gray)' }}>
                           {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                         </span>
                       </div>
                       {rev.text && (
-                        <p style={{ fontSize: '.85rem', color: 'var(--muted)', lineHeight: 1.5, marginTop: 2 }}>
+                        <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '14px', color: 'var(--color-cool-gray)', lineHeight: 1.5, marginTop: 2 }}>
                           {rev.text}
                         </p>
                       )}
@@ -491,10 +491,10 @@ export default function BusinessDetail({ params = {} }) {
           </div>
 
           {/* Right sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Contact */}
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 14 }}>Contact Info</div>
+            <div className="card" style={{ padding: 20, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+              <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '15px', color: 'var(--color-rich-black)', marginBottom: 14 }}>Contact Info</div>
               {[
                 phone && { icon: Phone, label: 'Phone', value: phone, href: `tel:${phone}` },
                 biz.whatsappNo && { icon: WhatsAppIcon, label: 'WhatsApp', value: biz.whatsappNo, href: `https://wa.me/91${biz.whatsappNo.replace(/\D/g,'')}` },
@@ -505,17 +505,17 @@ export default function BusinessDetail({ params = {} }) {
               ].filter(Boolean).map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <div key={i} className="info-row">
-                    <Icon size={15} className="info-icon" />
-                    <div>
+                  <div key={i} className="info-row" style={{ borderColor: 'var(--color-subtle-ash)' }}>
+                    <Icon size={14} className="info-icon" style={{ color: 'var(--color-cool-gray)' }} />
+                    <div style={{ fontFamily: 'var(--font-pp-neue-montreal)' }}>
                       <div className="info-label">{item.label}</div>
                       {item.href ? (
                         <a href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined}
-                          rel="noreferrer" style={{ color: 'var(--accent)', fontSize: '.88rem', textDecoration: 'none', wordBreak: 'break-all' }}>
+                          rel="noreferrer" style={{ color: 'var(--color-rich-black)', fontSize: '13px', textDecoration: 'none', wordBreak: 'break-all', fontWeight: 500 }}>
                           {item.value}
                         </a>
                       ) : (
-                        <div className="info-value">{item.value}</div>
+                        <div className="info-value" style={{ fontSize: '13px', color: 'var(--color-rich-black)' }}>{item.value}</div>
                       )}
                     </div>
                   </div>
@@ -524,8 +524,8 @@ export default function BusinessDetail({ params = {} }) {
             </div>
 
             {/* Location */}
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 14 }}>Location</div>
+            <div className="card" style={{ padding: 20, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+              <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '15px', color: 'var(--color-rich-black)', marginBottom: 14 }}>Location</div>
               {[
                 biz.address          && { icon: MapPin, label: 'Address',     value: biz.address },
                 biz.landmark         && { icon: MapPin, label: 'Landmark',    value: biz.landmark },
@@ -537,18 +537,18 @@ export default function BusinessDetail({ params = {} }) {
               ].filter(Boolean).map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <div key={i} className="info-row">
-                    <Icon size={15} className="info-icon" />
-                    <div>
+                  <div key={i} className="info-row" style={{ borderColor: 'var(--color-subtle-ash)' }}>
+                    <Icon size={14} className="info-icon" style={{ color: 'var(--color-cool-gray)' }} />
+                    <div style={{ fontFamily: 'var(--font-pp-neue-montreal)' }}>
                       <div className="info-label">{item.label}</div>
-                      <div className="info-value" style={{ fontSize: '.85rem' }}>{item.value}</div>
+                      <div className="info-value" style={{ fontSize: '13px', color: 'var(--color-rich-black)' }}>{item.value}</div>
                     </div>
                   </div>
                 );
               })}
               {biz.lat && biz.lng && (
                 <a href={`https://maps.google.com/?q=${biz.lat},${biz.lng}`} target="_blank" rel="noreferrer"
-                  className="btn btn-outline btn-sm btn-full" style={{ marginTop: 10 }}>
+                  className="btn btn-outline btn-sm btn-full" style={{ marginTop: 12, borderRadius: '12px' }}>
                   <Map size={13} /> Open in Maps
                 </a>
               )}
@@ -560,7 +560,7 @@ export default function BusinessDetail({ params = {} }) {
                     : '';
                 return src ? (
                   <iframe src={src} title="Business Location" width="100%" height="220"
-                    style={{ border: 0, borderRadius: 10, marginTop: 12, display: 'block' }}
+                    style={{ borderRadius: 12, marginTop: 14, display: 'block', border: '1px solid var(--color-subtle-ash)' }}
                     allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
                 ) : null;
               })()}
@@ -568,32 +568,32 @@ export default function BusinessDetail({ params = {} }) {
 
             {/* Hours */}
             {(days.length > 0 || biz.openTime || biz.closeTime) && (
-              <div className="card" style={{ padding: 16 }}>
-                <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 14 }}>
-                  <Clock size={14} style={{ display: 'inline', marginRight: 6, color: 'var(--accent)' }} />
+              <div className="card" style={{ padding: 20, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '15px', color: 'var(--color-rich-black)', marginBottom: 14 }}>
+                  <Clock size={14} style={{ display: 'inline', marginRight: 6, color: 'var(--color-rich-black)' }} />
                   Business Hours
                 </div>
                 {days.length > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <div className="info-label" style={{ marginBottom: 6 }}>Open Days</div>
+                  <div style={{ marginBottom: 14, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                    <div className="info-label" style={{ marginBottom: 8 }}>Open Days</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
                         <span key={d} style={{
-                          padding: '3px 8px', borderRadius: 5, fontSize: '.72rem', fontWeight: 600,
-                          background: days.includes(d) ? 'var(--accent)' : 'var(--bg2)',
-                          color: days.includes(d) ? '#ffffff' : 'var(--muted)',
-                          border: `1px solid ${days.includes(d) ? 'var(--accent)' : 'var(--border)'}`,
+                          padding: '3px 8px', borderRadius: 4, fontSize: '11px', fontWeight: 500,
+                          background: days.includes(d) ? 'var(--color-rich-black)' : 'var(--color-subtle-ash)',
+                          color: days.includes(d) ? 'var(--color-canvas-white)' : 'var(--color-cool-gray)',
+                          border: `1px solid ${days.includes(d) ? 'var(--color-rich-black)' : 'var(--color-subtle-ash)'}`,
                         }}>{d}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {(biz.openTime || biz.closeTime) && (
-                  <div className="info-row">
-                    <Clock size={15} className="info-icon" />
+                  <div className="info-row" style={{ borderColor: 'var(--color-subtle-ash)', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                    <Clock size={14} className="info-icon" style={{ color: 'var(--color-cool-gray)' }} />
                     <div>
                       <div className="info-label">Timings</div>
-                      <div className="info-value">{biz.openTime || '—'} – {biz.closeTime || '—'}</div>
+                      <div className="info-value" style={{ fontSize: '13px', color: 'var(--color-rich-black)' }}>{biz.openTime || '—'} – {biz.closeTime || '—'}</div>
                     </div>
                   </div>
                 )}
@@ -602,8 +602,8 @@ export default function BusinessDetail({ params = {} }) {
 
             {/* Social */}
             {(biz.fbLink || biz.twitterLink || biz.instaLink || biz.videoUrl || biz.googleMap) && (
-              <div className="card" style={{ padding: 16 }}>
-                <div style={{ fontWeight: 800, fontSize: '.95rem', marginBottom: 14 }}>Social & Media</div>
+              <div className="card" style={{ padding: 20, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '15px', color: 'var(--color-rich-black)', marginBottom: 14 }}>Social & Media</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {biz.fbLink      && <SocialBtn href={biz.fbLink}     icon={Facebook}   label="Facebook" />}
                   {biz.twitterLink && <SocialBtn href={biz.twitterLink} icon={Twitter}   label="Twitter" />}
@@ -621,19 +621,19 @@ export default function BusinessDetail({ params = {} }) {
       {galOpen && gallery.length > 0 && (
         <div onClick={() => setGalOpen(false)} style={{
           position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(25,25,25,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <button onClick={e => { e.stopPropagation(); setGalIdx(i => (i - 1 + gallery.length) % gallery.length); }}
             style={{ position: 'absolute', left: 16, background: 'rgba(255,255,255,.1)', border: 'none', color: '#fff', borderRadius: '50%', width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <PrevIcon size={22} />
           </button>
           <img src={gallery[galIdx]?.url} alt="" onClick={e => e.stopPropagation()}
-            style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: 12, objectFit: 'contain' }} />
+            style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: 4, objectFit: 'contain' }} />
           <button onClick={e => { e.stopPropagation(); setGalIdx(i => (i + 1) % gallery.length); }}
             style={{ position: 'absolute', right: 16, background: 'rgba(255,255,255,.1)', border: 'none', color: '#fff', borderRadius: '50%', width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ChevronRight size={22} />
           </button>
-          <div style={{ position: 'absolute', bottom: 20, color: 'rgba(255,255,255,.6)', fontSize: '.85rem' }}>
+          <div style={{ position: 'absolute', bottom: 20, color: 'rgba(255,255,255,.6)', fontSize: '13px', fontFamily: 'var(--font-pp-neue-montreal)' }}>
             {galIdx + 1} / {gallery.length}
           </div>
         </div>
@@ -642,18 +642,18 @@ export default function BusinessDetail({ params = {} }) {
       {/* Service Details Modal */}
       {selectedService && (
         <div className="dialog-overlay" onClick={() => setSelectedService(null)}>
-          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-canvas-white)', borderRadius: '12px' }}>
             <button className="dialog-close" onClick={() => setSelectedService(null)}>
               ✕
             </button>
             <div className="dialog-body">
               {selectedService.image && (
-                <div className="dialog-img-wrap">
+                <div className="dialog-img-wrap" style={{ background: 'var(--color-canvas-white)', borderBottom: '1px solid var(--color-subtle-ash)' }}>
                   <img src={selectedService.image} alt={selectedService.name} className="dialog-img" />
                 </div>
               )}
-              <div className="dialog-info">
-                <h3 className="dialog-title">{selectedService.name}</h3>
+              <div className="dialog-info" style={{ fontFamily: 'var(--font-pp-neue-montreal)' }}>
+                <h3 className="dialog-title" style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '20px', fontWeight: 700 }}>{selectedService.name}</h3>
                 {selectedService.price && <div className="dialog-price">₹ {selectedService.price}</div>}
                 {selectedService.detail && <p className="dialog-desc">{selectedService.detail}</p>}
               </div>
@@ -667,8 +667,8 @@ export default function BusinessDetail({ params = {} }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontWeight: 800, fontSize: '1rem', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+    <div style={{ marginBottom: 36 }}>
+      <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '22px', letterSpacing: '-0.015em', color: 'var(--color-rich-black)', marginBottom: 16, paddingBottom: 10, borderBottom: '1px solid var(--color-subtle-ash)' }}>
         {title}
       </h3>
       {children}
@@ -678,8 +678,8 @@ function Section({ title, children }) {
 
 function SocialBtn({ href, icon: Icon, label }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm" title={label}>
-      <Icon size={14} /> {label}
+    <a href={href} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--color-subtle-ash)', borderRadius: '12px', background: 'var(--color-canvas-white)', color: 'var(--color-rich-black)', paddingInline: 14 }} title={label}>
+      <Icon size={13} style={{ marginRight: 4 }} /> {label}
     </a>
   );
 }
