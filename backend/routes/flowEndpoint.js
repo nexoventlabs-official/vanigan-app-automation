@@ -153,7 +153,10 @@ function withImage(item, b64) {
 
 function phoneFromToken(token) {
   if (!token) return '';
-  return String(token).replace(/^welcome_/, '').replace(/\D/g, '');
+  let digits = String(token).replace(/^welcome_/, '').replace(/\D/g, '');
+  // Meta sends phone in E.164 (91XXXXXXXXXX = 12 digits). Strip leading 91 country code.
+  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  return digits;
 }
 
 function modelFor(kind) {
@@ -211,10 +214,13 @@ async function buildServiceList(images, phone = '') {
     ));
   }
 
-  list.push(withImage(
-    { id: 'my_business', title: 'My Business', description: 'View your listings' },
-    images.icon_my_business
-  ));
+  // Only show "My Business" if the user already has a registered business
+  if (hasBusiness) {
+    list.push(withImage(
+      { id: 'my_business', title: 'My Business', description: 'View your listings' },
+      images.icon_my_business
+    ));
+  }
 
   return list;
 }
