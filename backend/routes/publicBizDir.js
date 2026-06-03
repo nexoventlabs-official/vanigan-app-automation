@@ -341,21 +341,22 @@ input,textarea,select{
   padding:12px 14px;
   font-size:.88rem;
   outline:none;
-  background:var(--input-bg);
+  background-color:var(--input-bg);
   color:var(--text-main);
   margin-bottom:14px;
   transition:all .25s;
 }
 input:focus,textarea:focus,select:focus{
   border-color:var(--accent-color);
-  background:var(--input-focus-bg);
+  background-color:var(--input-focus-bg);
   box-shadow:0 0 12px rgba(var(--accent-rgb),0.15);
 }
 select{
   appearance: none;
+  -webkit-appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2366ff4c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
   background-position: right 0.75rem center;
-  background-size: 1.25rem;
+  background-size: 1.25rem 1.25rem;
   background-repeat: no-repeat;
   padding-right: 2.5rem;
 }
@@ -927,6 +928,8 @@ router.get('/:id/edit', async (req, res) => {
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
   const CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'];
   const val = (k) => esc(biz[k] || '');
+  const SUB_CATS = require('../utils/subCategories');
+  const SUB_CATS_JSON = JSON.stringify(SUB_CATS);
   const catOpts = CATEGORIES.map(c => `<option value="${esc(c)}"${biz.category===c?' selected':''}>${esc(c)}</option>`).join('');
   const DAYS_ALL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const activeDays = biz.openDays ? biz.openDays.split(',').map(d=>d.trim()) : [];
@@ -980,8 +983,8 @@ router.get('/:id/edit', async (req, res) => {
   ${sec('🏪', 'Basic Info', `
     ${field('Business Name *', inp(`type="text" name="name" value="${val('name')}" required placeholder="e.g. Sri Lakshmi Stores"`))}
     ${row2(
-      field('Category', sel(`name="category"`, `<option value="">— Select —</option>${catOpts}`)),
-      field('Sub-Category', inp(`type="text" name="subCategory" value="${val('subCategory')}" placeholder="Sub-category"`))
+      field('Category', `<select name="category" id="catSel" onchange="refreshSubCat()" style="width:100%;border:1px solid var(--input-border);border-radius:10px;padding:11px 14px;font-size:.88rem;outline:none;background-color:var(--input-bg);color:var(--text-main);appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2366ff4c%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E');background-position:right .75rem center;background-size:1.25rem 1.25rem;background-repeat:no-repeat;padding-right:2.5rem;margin-bottom:0"><option value="">— Select —</option>${catOpts}</select>`),
+      field('Sub-Category', `<select name="subCategory" id="subCatSel" style="width:100%;border:1px solid var(--input-border);border-radius:10px;padding:11px 14px;font-size:.88rem;outline:none;background-color:var(--input-bg);color:var(--text-main);appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2366ff4c%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E');background-position:right .75rem center;background-size:1.25rem 1.25rem;background-repeat:no-repeat;padding-right:2.5rem;margin-bottom:0"><option value="">— Select Sub-Category —</option></select>`)
     )}
     ${field('Description', txta(`name="description" rows="3" placeholder="Brief description of your business"`, val('description')))}
   `)}
@@ -1043,19 +1046,55 @@ router.get('/:id/edit', async (req, res) => {
   `)}
 
   ${sec('🔑', `${biz.ownerPin ? 'Change PIN' : 'Set Security PIN'}`, `
-    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:20px">${biz.ownerPin
-      ? 'To change your PIN, enter your current PIN above, then set a new one below.'
-      : 'Set a 4-digit PIN to protect your listing. Required to access and edit your business.'}</p>
-    ${pinRow('new', 'New PIN')}
-    ${pinRow('confirm', 'Confirm New PIN')}
-    <div id="pinChangeErr" style="color:#f87171;font-size:.82rem;min-height:18px;margin-top:-10px"></div>
+    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:16px">${biz.ownerPin ? 'Change your 4-digit security PIN.' : 'Set a 4-digit PIN to protect your listing.'}</p>
+    <button type="button" id="changePinBtn" onclick="openPinPanel()"
+      style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(var(--accent-rgb),.06);color:var(--accent-color);border:1px solid rgba(var(--accent-rgb),.3);border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s">
+      🔑 ${biz.ownerPin ? 'Change PIN' : 'Set PIN'}
+    </button>
+    <div id="pinPanel" style="display:none;margin-top:20px;background:var(--avg-row-bg);border:1px solid var(--card-border);border-radius:14px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">${biz.ownerPin ? 'Change PIN' : 'Set PIN'}</span>
+        <button type="button" onclick="closePinPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1">✕</button>
+      </div>
+      ${biz.ownerPin ? pinRow('chg_current', 'Current PIN *') : ''}
+      ${pinRow('chg_new', 'New PIN *')}
+      ${pinRow('chg_confirm', 'Confirm New PIN *')}
+      <div id="pinPanelErr" style="color:#f87171;font-size:.82rem;margin-bottom:12px;min-height:18px"></div>
+      <button type="button" id="updatePinBtn" onclick="submitPinChange()"
+        style="width:100%;background:var(--accent-color);color:rgba(0,0,0,.9);font-weight:850;padding:12px;border-radius:10px;border:none;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:all .2s">
+        Update PIN
+      </button>
+    </div>
   `)}
 
   </form>
 </div>
 
 <script>
-  /* Days toggle */
+  const SUB_CATS = ${SUB_CATS_JSON};
+  const CURRENT_SUBCAT = '${esc(biz.subCategory || '')}';
+  const BACKEND_URL = '${backendUrl}';
+  const BIZ_ID = '${esc(req.params.id)}';
+  const OWNER_PHONE = '${esc(userPhone)}';
+
+  /* ── Subcategory dropdown ── */
+  function refreshSubCat(preserveVal) {
+    const cat = document.getElementById('catSel').value;
+    const sub = document.getElementById('subCatSel');
+    const subs = SUB_CATS[cat] || [];
+    sub.innerHTML = '<option value="">— Select Sub-Category —</option>';
+    subs.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      if (s === (preserveVal !== undefined ? preserveVal : CURRENT_SUBCAT)) o.selected = true;
+      sub.appendChild(o);
+    });
+    sub.style.display = subs.length ? '' : 'none';
+  }
+  /* Init on load */
+  refreshSubCat(CURRENT_SUBCAT);
+
+  /* ── Days toggle ── */
   function toggleDay(btn, day) {
     const on = btn.dataset.on === '1';
     btn.dataset.on = on ? '0' : '1';
@@ -1066,7 +1105,7 @@ router.get('/:id/edit', async (req, res) => {
     document.getElementById('openDaysHidden').value = active.join(',');
   }
 
-  /* PIN boxes */
+  /* ── PIN boxes ── */
   function pinInput(el) {
     el.value = el.value.replace(/\\D/g,'').slice(-1);
     const prefix = el.dataset.pin;
@@ -1088,35 +1127,62 @@ router.get('/:id/edit', async (req, res) => {
     return Array.from(document.querySelectorAll('[data-pin="'+prefix+'"]')).map(i=>i.value).join('');
   }
 
+  /* ── Main form submit ── */
   document.getElementById('editForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const currentPin = getPin('current');
-    const newPin     = getPin('new');
-    const confirmPin = getPin('confirm');
-    const editErr    = document.getElementById('editErr');
-    const pinChangeErr = document.getElementById('pinChangeErr');
+    const editErr = document.getElementById('editErr');
     editErr.textContent = '';
-    pinChangeErr.textContent = '';
-
     if (currentPin.length < 4) { editErr.textContent = 'Enter your current 4-digit PIN to save.'; return; }
-
-    /* If user started filling a new PIN, both new + confirm must match */
-    if (newPin || confirmPin) {
-      if (newPin.length < 4)     { pinChangeErr.textContent = 'New PIN must be 4 digits.'; return; }
-      if (confirmPin.length < 4) { pinChangeErr.textContent = 'Please confirm your new PIN.'; return; }
-      if (newPin !== confirmPin) { pinChangeErr.textContent = 'New PINs do not match.'; return; }
-    }
-
     document.getElementById('pinHidden').value = currentPin;
-    if (newPin && newPin === confirmPin) {
-      const np = document.createElement('input');
-      np.type='hidden'; np.name='newPin'; np.value=newPin;
-      this.appendChild(np);
-    }
     document.getElementById('saveBtn').textContent = 'Saving…';
     document.getElementById('saveBtn').disabled = true;
     this.submit();
   });
+
+  /* ── Change PIN panel ── */
+  function openPinPanel()  { document.getElementById('pinPanel').style.display = 'block'; }
+  function closePinPanel() { document.getElementById('pinPanel').style.display = 'none'; clearPinPanel(); }
+  function clearPinPanel() {
+    ['chg_current','chg_new','chg_confirm'].forEach(p => {
+      document.querySelectorAll('[data-pin="'+p+'"]').forEach(i => i.value = '');
+    });
+    document.getElementById('pinPanelErr').textContent = '';
+  }
+
+  async function submitPinChange() {
+    const hasCurrent = document.querySelector('[data-pin="chg_current"]');
+    const currentPin = hasCurrent ? getPin('chg_current') : null;
+    const newPin     = getPin('chg_new');
+    const confirmPin = getPin('chg_confirm');
+    const errEl = document.getElementById('pinPanelErr');
+    errEl.textContent = '';
+
+    if (hasCurrent && currentPin.length < 4) { errEl.textContent = 'Enter your current 4-digit PIN.'; return; }
+    if (newPin.length < 4)     { errEl.textContent = 'New PIN must be 4 digits.'; return; }
+    if (confirmPin.length < 4) { errEl.textContent = 'Please confirm your new PIN.'; return; }
+    if (newPin !== confirmPin) { errEl.textContent = 'New PINs do not match.'; return; }
+
+    const btn = document.getElementById('updatePinBtn');
+    btn.textContent = 'Updating…'; btn.disabled = true;
+
+    try {
+      const body = { ownerPhone: OWNER_PHONE, pin: currentPin || newPin, newPin };
+      const r = await fetch(BACKEND_URL + '/api/public/owner/update/' + BIZ_ID, {
+        method: 'PUT',
+        body: (() => { const fd = new FormData(); Object.entries(body).forEach(([k,v]) => v && fd.append(k,v)); return fd; })()
+      });
+      const d = await r.json();
+      if (!r.ok) { errEl.textContent = d.error || 'Failed to update PIN.'; btn.textContent = 'Update PIN'; btn.disabled = false; return; }
+      closePinPanel();
+      document.getElementById('changePinBtn').textContent = '✅ PIN Updated';
+      document.getElementById('changePinBtn').style.color = 'var(--accent-color)';
+    } catch(e) {
+      errEl.textContent = 'Connection error. Please try again.';
+      btn.textContent = 'Update PIN'; btn.disabled = false;
+    }
+  }
+</script>
 </script>`;
 
   res.setHeader('Content-Type','text/html; charset=utf-8');

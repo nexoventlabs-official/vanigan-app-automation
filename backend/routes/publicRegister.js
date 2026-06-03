@@ -368,7 +368,7 @@ function buildFormHtml(phone) {
       padding: 10px 14px; 
       font-size: .9rem; 
       outline: none; 
-      background: var(--input-bg); 
+      background-color: var(--input-bg); 
       color: var(--text-main); 
       transition: border-color .15s ease;
       font-family: var(--font-sans);
@@ -384,9 +384,10 @@ function buildFormHtml(phone) {
     
     select{
       appearance: none;
+      -webkit-appearance: none;
       background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%235b616b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
       background-position: right 0.75rem center;
-      background-size: 1.25rem;
+      background-size: 1.25rem 1.25rem;
       background-repeat: no-repeat;
       padding-right: 2.5rem;
       cursor: pointer;
