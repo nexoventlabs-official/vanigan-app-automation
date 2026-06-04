@@ -16,9 +16,10 @@ function WhatsAppIcon({ size = 14, style }) {
 }
 import {
   checkOwnerPhone, verifyOwnerPin, updateOwnerBusiness,
-  getBusiness, REGISTER_URL, setStoredPhone,
+  getBusiness, REGISTER_URL, setStoredPhone, webGetMe,
 } from '../api.js';
 import { useNav } from '../App.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const LS_KEY       = 'vanigan_my_business';
 const LS_PHONE_KEY = 'vanigan_owner_phone';
@@ -80,10 +81,11 @@ function PinInput({ value, onChange, disabled }) {
 ────────────────────────────────────────────────────────── */
 export default function MyBusiness() {
   const { navigate } = useNav();
+  const { isLoggedIn, user, business: sessionBiz, updateBusiness, logout } = useAuth();
 
-  /* step: 'phone' | 'pin' | 'view' */
-  const [step, setStep]         = useState('phone');
-  const [phone, setPhone]       = useState('');
+  /* If logged in, skip phone/pin steps entirely — go straight to view */
+  const [step, setStep]         = useState(() => (isLoggedIn && sessionBiz) ? 'view' : isLoggedIn ? 'no_business' : 'phone');
+  const [phone, setPhone]       = useState(user?.phone || '');
   const [bizName, setBizName]   = useState('');
   const [hasPin, setHasPin]     = useState(false);
   const [pin, setPin]           = useState('');
@@ -91,12 +93,26 @@ export default function MyBusiness() {
   const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading]   = useState(false);
   const [biz, setBiz]           = useState(() => {
+    if (isLoggedIn && sessionBiz) return sessionBiz;
     try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; }
   });
   const [editing, setEditing]   = useState(false);
 
-  /* On mount — if cached biz, go straight to PIN step */
+  /* Re-sync when auth session changes */
   useEffect(() => {
+    if (isLoggedIn && sessionBiz) {
+      setBiz(sessionBiz);
+      setPhone(user.phone);
+      setStep('view');
+    } else if (isLoggedIn && !sessionBiz) {
+      setPhone(user.phone);
+      setStep('no_business');
+    }
+  }, [isLoggedIn, sessionBiz]);
+
+  /* On mount — if not logged in but have cached biz, go to PIN step */
+  useEffect(() => {
+    if (isLoggedIn) return; // handled above
     const cachedPhone = localStorage.getItem(LS_PHONE_KEY);
     const cachedBiz   = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; } })();
     if (cachedBiz?._id && cachedPhone) {
@@ -107,7 +123,7 @@ export default function MyBusiness() {
     }
   }, []);
 
-  /* Find business by phone */
+  /* Find business by phone (for non-logged-in users) */
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     const digits = phone.replace(/\D/g, '');
@@ -129,7 +145,7 @@ export default function MyBusiness() {
     } finally { setLoading(false); }
   };
 
-  /* Verify PIN */
+  /* Verify PIN (for non-logged-in users) */
   const handlePinSubmit = async (e) => {
     e.preventDefault();
     if (pin.replace(/\D/g, '').length < 4) { setPinError('Enter your 4-digit PIN'); return; }
@@ -154,34 +170,84 @@ export default function MyBusiness() {
     if (!biz?._id) return;
     setLoading(true);
     try {
-      const r = await getBusiness(biz._id);
-      setBiz(r.data);
-      localStorage.setItem(LS_KEY, JSON.stringify(r.data));
+      if (isLoggedIn && user?.phone) {
+        const r = await webGetMe(user.phone);
+        const freshBiz = r.data.business;
+        if (freshBiz) {
+          setBiz(freshBiz);
+          updateBusiness(freshBiz);
+        }
+      } else {
+        const r = await getBusiness(biz._id);
+        setBiz(r.data);
+        localStorage.setItem(LS_KEY, JSON.stringify(r.data));
+      }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   };
 
   const clear = () => {
-    setBiz(null); setStep('phone'); setPhone(''); setPin('');
-    setBizName(''); setPinError(''); setPhoneError('');
-    localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_PHONE_KEY);
+    if (isLoggedIn) {
+      logout();
+      navigate('home');
+    } else {
+      setBiz(null); setStep('phone'); setPhone(''); setPin('');
+      setBizName(''); setPinError(''); setPhoneError('');
+      localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_PHONE_KEY);
+    }
   };
 
-  /* Render steps */
+  /* ── Render ── */
+
+  /* Logged-in but no business */
+  if (step === 'no_business' || (isLoggedIn && !biz && step !== 'phone' && step !== 'pin')) {
+    return (
+      <div className="container section" style={{ maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '12px', background: 'var(--color-rich-black)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <Store size={24} style={{ color: 'var(--color-canvas-white)' }} />
+          </div>
+          <h1 style={{ fontSize: '28px', fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, letterSpacing: '-0.015em', color: 'var(--color-rich-black)', marginBottom: 8 }}>My Business</h1>
+          <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)', fontSize: '14px' }}>Hi <strong>{user?.name}</strong>, you haven't listed a business yet.</p>
+        </div>
+        <div className="card" style={{ padding: 28, background: 'var(--color-canvas-white)', borderRadius: 12, border: '1px solid var(--color-subtle-ash)', textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: 12 }}>🏪</div>
+          <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '14px', color: 'var(--color-cool-gray)', marginBottom: 24, lineHeight: 1.6 }}>
+            Get your business discovered by customers across Tamil Nadu. List it for free!
+          </p>
+          <button onClick={() => navigate('add')} className="btn btn-primary btn-full" style={{ height: 44, borderRadius: 12, fontSize: '14px', fontWeight: 600 }}>
+            Add Your Business →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* View or Edit */
   if (step === 'view' && biz) {
     if (editing) return (
       <EditBusiness
-        biz={biz} ownerPhone={phone.replace(/\D/g, '')} pin={pin.replace(/\D/g, '')}
-        onSave={(updated) => { setBiz(updated); localStorage.setItem(LS_KEY, JSON.stringify(updated)); setEditing(false); }}
+        biz={biz}
+        ownerPhone={isLoggedIn ? user.phone : phone.replace(/\D/g, '')}
+        pin={pin.replace(/\D/g, '')}
+        isLoggedIn={isLoggedIn}
+        onSave={(updated) => {
+          setBiz(updated);
+          if (isLoggedIn) updateBusiness(updated);
+          else localStorage.setItem(LS_KEY, JSON.stringify(updated));
+          setEditing(false);
+        }}
         onCancel={() => setEditing(false)}
       />
     );
     return (
       <BusinessView biz={biz} navigate={navigate} onRefresh={refresh}
-        onClear={clear} loading={loading} onEdit={() => setEditing(true)} />
+        onClear={clear} loading={loading} onEdit={() => setEditing(true)}
+        isLoggedIn={isLoggedIn} />
     );
   }
 
+  /* Not logged in — Phone + PIN steps */
   return (
     <div className="container section" style={{ maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
@@ -197,76 +263,14 @@ export default function MyBusiness() {
         </div>
         <h1 style={{ fontSize:'32px',fontFamily:'var(--font-pp-neue-montreal)',fontWeight:700,letterSpacing:'-0.015em',color:'var(--color-rich-black)',marginBottom:8 }}>My Business</h1>
         <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',lineHeight:1.5 }}>
-          Merchant Dashboard & Management Portal
+          Please <button onClick={() => navigate('login')} style={{ background:'none',border:'none',color:'var(--color-deep-fern-green)',cursor:'pointer',fontWeight:600,fontSize:'14px',padding:0,textDecoration:'underline' }}>login</button> or <button onClick={() => navigate('signup')} style={{ background:'none',border:'none',color:'var(--color-deep-fern-green)',cursor:'pointer',fontWeight:600,fontSize:'14px',padding:0,textDecoration:'underline' }}>sign up</button> to manage your business.
         </p>
       </div>
 
-      {/* Step 1: Phone */}
-      {step === 'phone' && (
-        <>
-          <div className="card" style={{ padding:32,background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
-            <div style={{ fontFamily:'var(--font-pp-neue-montreal)',fontWeight:600,color:'var(--color-rich-black)',fontSize:'16px',marginBottom:4 }}>Find Your Listing</div>
-            <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'13px',color:'var(--color-cool-gray)',marginBottom:24 }}>Enter your registered WhatsApp number to verify ownership.</p>
-            <form onSubmit={handlePhoneSubmit}>
-              <div className="field" style={{ marginBottom:20 }}>
-                <label className="label" style={{ display:'flex',alignItems:'center',gap:4,fontWeight:600,color:'var(--color-cool-gray)',fontFamily:'var(--font-pp-neue-montreal)' }}><Phone size={12} /> Registered Phone Number</label>
-                <input className="input" type="tel" value={phone}
-                  onChange={e => { setPhone(e.target.value); setPhoneError(''); }}
-                  placeholder="10-digit mobile number" maxLength={15} inputMode="numeric" style={{ height: 42, borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }} />
-                {phoneError && <p style={{ color:'#ef4444',fontSize:'12px',marginTop:6,fontFamily:'var(--font-pp-neue-montreal)' }}>{phoneError}</p>}
-              </div>
-              <button type="submit" className="btn btn-primary btn-full" disabled={loading} style={{ borderRadius:'12px',height:42,fontSize:'14px',fontWeight:500 }}>
-                {loading ? 'Searching…' : 'Continue'}
-              </button>
-            </form>
-          </div>
-          <div style={{ textAlign:'center',marginTop:24,fontFamily:'var(--font-pp-neue-montreal)' }}>
-            <p style={{ color:'var(--color-rich-black)',fontSize:'14px',marginBottom:12 }}>Don't have a listing yet?</p>
-            <button onClick={() => navigate('add')} className="btn btn-outline btn-sm" style={{ paddingInline:20, borderRadius: '12px' }}>Add Your Business</button>
-          </div>
-        </>
-      )}
-
-      {/* Step 2: PIN */}
-      {step === 'pin' && (
-        <>
-          {!hasPin ? (
-            <div className="card" style={{ padding:32,textAlign:'center',background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
-              <div style={{ fontSize:'2.5rem',marginBottom:16 }}>🔐</div>
-              <h2 style={{ fontWeight:700,fontFamily:'var(--font-pp-neue-montreal)',letterSpacing:'-0.01em',color:'var(--color-rich-black)',fontSize:'20px',marginBottom:8 }}>No Security PIN Set Yet</h2>
-              <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',marginBottom:24,lineHeight:1.5 }}>
-                You haven't set a security PIN for <strong style={{ color:'var(--color-rich-black)' }}>{bizName}</strong>. Please complete your registration by setting a 4-digit PIN first.
-              </p>
-              <a href={REGISTER_URL(phone.replace(/\D/g,''))} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-full" style={{ borderRadius:'12px',height:42,display:'inline-flex',alignItems:'center',justifyContent:'center',textDecoration:'none' }}>
-                Set PIN via Registration Form
-              </a>
-              <button onClick={() => { setStep('phone'); setPin(''); setPinError(''); }} style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',marginTop:20,fontSize:'13px',fontFamily:'var(--font-pp-neue-montreal)',textDecoration:'underline' }}>
-                ← Go back to phone number
-              </button>
-            </div>
-          ) : (
-            <div className="card" style={{ padding:32,background:'var(--color-canvas-white)',borderRadius:'12px',border:'1px solid var(--color-subtle-ash)' }}>
-              <div style={{ fontFamily:'var(--font-pp-neue-montreal)',fontWeight:600,color:'var(--color-rich-black)',fontSize:'16px',marginBottom:4,textAlign:'center' }}>🔐 Enter Security PIN</div>
-              <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'13px',color:'var(--color-cool-gray)',marginBottom:24,textAlign:'center',lineHeight:1.4 }}>
-                Enter the 4-digit PIN for <strong style={{ color:'var(--color-rich-black)' }}>{bizName}</strong>.
-              </p>
-              <form onSubmit={handlePinSubmit}>
-                <div style={{ marginBottom:24 }}>
-                  <PinInput value={pin} onChange={setPin} disabled={loading} />
-                  {pinError && <p style={{ color:'#ef4444',fontSize:'13px',marginTop:12,textAlign:'center',fontFamily:'var(--font-pp-neue-montreal)' }}>{pinError}</p>}
-                </div>
-                <button type="submit" className="btn btn-primary btn-full" disabled={loading || pin.replace(/\D/g,'').length < 4} style={{ borderRadius:'12px',height:42,fontSize:'14px',fontWeight:500 }}>
-                  {loading ? 'Verifying…' : 'Access Merchant Dashboard'}
-                </button>
-              </form>
-              <button onClick={() => { setStep('phone'); setPin(''); setPinError(''); }}
-                style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',marginTop:20,fontSize:'13px',width:'100%',textAlign:'center',fontFamily:'var(--font-pp-neue-montreal)',textDecoration:'underline' }}>
-                ← Go back to phone number
-              </button>
-            </div>
-          )}
-        </>
-      )}
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button onClick={() => navigate('login')} className="btn btn-primary" style={{ flex:1, height:44, borderRadius:12, fontSize:'14px', fontWeight:600 }}>Login</button>
+        <button onClick={() => navigate('signup')} className="btn btn-outline" style={{ flex:1, height:44, borderRadius:12, fontSize:'14px', fontWeight:600 }}>Sign Up</button>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { getBusiness, postReview, getStoredPhone, setStoredPhone, getReviewed, markReviewed } from '../api.js';
 import { useNav } from '../App.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 /* Proper WhatsApp brand SVG icon */
 function WhatsAppIcon({ size = 16, style, className }) {
@@ -18,6 +19,7 @@ function WhatsAppIcon({ size = 16, style, className }) {
 
 export default function BusinessDetail({ params = {} }) {
   const { navigate } = useNav();
+  const { isLoggedIn, user } = useAuth();
   const [biz, setBiz]         = useState(null);
   const [loading, setLoading] = useState(true);
   const [galIdx, setGalIdx]   = useState(0);
@@ -25,8 +27,8 @@ export default function BusinessDetail({ params = {} }) {
 
   // Review & Rating State
   const [reviews, setReviews]             = useState([]);
-  const [reviewerName, setReviewerName]   = useState('');
-  const [reviewPhone, setReviewPhone]     = useState(() => getStoredPhone());
+  const [reviewerName, setReviewerName]   = useState(() => isLoggedIn && user?.name ? user.name : '');
+  const [reviewPhone, setReviewPhone]     = useState(() => isLoggedIn && user?.phone ? user.phone : getStoredPhone());
   const [formRating, setFormRating]       = useState(0);
   const [formText, setFormText]           = useState('');
   const [submitting, setSubmitting]       = useState(false);
@@ -334,7 +336,19 @@ export default function BusinessDetail({ params = {} }) {
             {/* Reviews & Ratings Section */}
             <Section title="Reviews & Ratings">
               {/* Write a Review Form */}
-              {alreadyReviewed ? (
+              {!isLoggedIn ? (
+                <div className="card" style={{ padding: 24, marginBottom: 28, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 10 }}>⭐</div>
+                  <h4 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '16px', color: 'var(--color-rich-black)', marginBottom: 6 }}>Write a Review</h4>
+                  <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)', marginBottom: 20 }}>
+                    Please login or sign up to leave a review.
+                  </p>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button onClick={() => navigate('login')} className="btn btn-primary btn-sm" style={{ paddingInline: 24, borderRadius: 10 }}>Login to Review</button>
+                    <button onClick={() => navigate('signup')} className="btn btn-outline btn-sm" style={{ paddingInline: 20, borderRadius: 10 }}>Sign Up Free</button>
+                  </div>
+                </div>
+              ) : alreadyReviewed ? (
                 <div style={{ background: 'var(--color-mint-green-glow)', border: '1px solid var(--color-muted-sage)', borderRadius: '12px', padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-deep-fern-green)', fontSize: '14px', fontWeight: 500, fontFamily: 'var(--font-pp-neue-montreal)' }}>
                   ✓ You have already reviewed this business. Thank you!
                 </div>
@@ -359,13 +373,12 @@ export default function BusinessDetail({ params = {} }) {
                     <div className="field">
                       <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Your Name *</label>
                       <input
-                        className="input"
-                        type="text"
-                        required
+                        className="input" type="text" required
                         placeholder="e.g. John Doe"
                         value={reviewerName}
                         onChange={e => setReviewerName(e.target.value)}
-                        style={{ borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}
+                        readOnly={isLoggedIn && !!user?.name}
+                        style={{ borderRadius: 12, background: isLoggedIn && user?.name ? '#f3f4f6' : 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', color: isLoggedIn && user?.name ? '#6b7280' : 'var(--color-rich-black)', cursor: isLoggedIn && user?.name ? 'not-allowed' : 'text' }}
                       />
                     </div>
 
@@ -411,17 +424,17 @@ export default function BusinessDetail({ params = {} }) {
                     </div>
 
                     <div className="field">
-                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Your Phone (Optional — prevents duplicate review)</label>
+                      <label className="label" style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)' }}>Your Phone {isLoggedIn ? '' : '(Optional — prevents duplicate review)'}</label>
                       <input
-                        className="input"
-                        type="tel"
+                        className="input" type="tel"
                         placeholder="e.g. 9876543210"
                         value={reviewPhone}
                         onChange={e => setReviewPhone(e.target.value)}
-                        maxLength={15}
-                        inputMode="numeric"
-                        style={{ borderRadius: 12, background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)' }}
+                        maxLength={15} inputMode="numeric"
+                        readOnly={isLoggedIn}
+                        style={{ borderRadius: 12, background: isLoggedIn ? '#f3f4f6' : 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', color: isLoggedIn ? '#6b7280' : 'var(--color-rich-black)', cursor: isLoggedIn ? 'not-allowed' : 'text' }}
                       />
+                      {isLoggedIn && <p style={{ fontSize: '11px', color: 'var(--color-cool-gray)', marginTop: 4, fontFamily: 'var(--font-pp-neue-montreal)' }}>Auto-filled from your account</p>}
                     </div>
 
                     <button
