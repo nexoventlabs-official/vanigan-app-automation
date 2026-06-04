@@ -234,6 +234,9 @@ export default function Signup() {
         payload.bizCategory = bizCategory;
         payload.bizSubCat   = bizSubCat;
       }
+      /* Always save category/district regardless of whether bizName was entered */
+      if (bizCategory)  payload.bizCategory = bizCategory;
+      if (bizSubCat)    payload.bizSubCat   = bizSubCat;
       const r = await webSignup(payload);
       login(r.data);
       navigate('home');

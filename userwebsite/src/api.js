@@ -31,8 +31,17 @@ export const webLinkBusiness = (phone, businessId) =>
   api.post('/api/web-auth/link-business', { phone, businessId });
 
 /* ── Public business register URL ── */
-export const REGISTER_URL = (phone = '') =>
-  `${BASE}/public/register${phone ? `?phone=${encodeURIComponent(phone)}` : ''}`;
+export const REGISTER_URL = (phone = '', opts = {}) => {
+  const base = BASE.replace(/\/+$/, '');
+  const params = new URLSearchParams();
+  if (phone) params.set('phone', phone);
+  if (opts.category)    params.set('category', opts.category);
+  if (opts.subCategory) params.set('subCategory', opts.subCategory);
+  if (opts.district)    params.set('district', opts.district);
+  if (opts.assembly)    params.set('assembly', opts.assembly);
+  const qs = params.toString();
+  return `${base}/public/register${qs ? `?${qs}` : ''}`;
+};
 
 /* ── localStorage ── */
 export const LS_PHONE    = 'vanigan_phone';

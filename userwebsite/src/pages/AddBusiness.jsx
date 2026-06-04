@@ -75,6 +75,14 @@ export default function AddBusiness() {
 
   const userPhone = isLoggedIn ? user.phone : '';
 
+  /* Build pre-fill options from logged-in user's profile */
+  const prefillOpts = isLoggedIn ? {
+    category:    user.bizCategory  || '',
+    subCategory: user.bizSubCat    || '',
+    district:    user.district     || '',
+    assembly:    user.assembly     || '',
+  } : {};
+
   /* Non-logged-in: open registration form in new tab */
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -85,9 +93,9 @@ export default function AddBusiness() {
     setRegSent(true);
   };
 
-  /* Logged-in: open registration form pre-filled with user's phone */
+  /* Logged-in: open registration form pre-filled with user's phone + profile data */
   const handleLoggedInRegister = () => {
-    window.open(REGISTER_URL(userPhone), '_blank', 'noopener,noreferrer');
+    window.open(REGISTER_URL(userPhone, prefillOpts), '_blank', 'noopener,noreferrer');
     setShowPinConfirm(true);
   };
 
@@ -194,9 +202,11 @@ export default function AddBusiness() {
 
         {/* Pre-fill info */}
         <div style={{ background: 'var(--color-mint-green-glow)', border: '1px solid var(--color-muted-sage)', borderRadius: 12, padding: '14px 16px', marginBottom: 24, fontFamily: 'var(--font-pp-neue-montreal)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-deep-fern-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Pre-filled Info</div>
-          <div style={{ fontSize: '13px', color: 'var(--color-rich-black)' }}>📱 WhatsApp: <strong>{userPhone}</strong></div>
-          {user?.name && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginTop: 2 }}>👤 Name: <strong>{user.name}</strong></div>}
+          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-deep-fern-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Pre-filled Info</div>
+          <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>📱 WhatsApp: <strong>{userPhone}</strong></div>
+          {user?.name && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>👤 Name: <strong>{user.name}</strong></div>}
+          {user?.district && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>📍 Location: <strong>{user.district}{user.assembly ? `, ${user.assembly}` : ''}</strong></div>}
+          {user?.bizCategory && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>🏷️ Category: <strong>{user.bizCategory}{user.bizSubCat ? ` → ${user.bizSubCat}` : ''}</strong></div>}
         </div>
 
         {/* Benefits */}

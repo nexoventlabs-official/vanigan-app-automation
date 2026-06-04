@@ -18,7 +18,7 @@ router.post('/signup', async (req, res) => {
   try {
     const {
       phone, pin, confirmPin, name,
-      district, assembly,
+      district, assembly, bizCategory, bizSubCat,
     } = req.body;
 
     const digits = String(phone || '').replace(/\D/g, '');
@@ -33,11 +33,13 @@ router.post('/signup', async (req, res) => {
     const pinHash = await bcrypt.hash(String(pin), 10);
 
     const user = await VaniganUser.create({
-      phone:    digits,
-      name:     String(name).trim(),
+      phone:       digits,
+      name:        String(name).trim(),
       pinHash,
-      district: String(district || '').trim(),
-      assembly: String(assembly || '').trim(),
+      district:    String(district || '').trim(),
+      assembly:    String(assembly || '').trim(),
+      bizCategory: String(bizCategory || '').trim(),
+      bizSubCat:   String(bizSubCat || '').trim(),
     });
 
     // Check if business already exists for this phone (from WhatsApp registration)

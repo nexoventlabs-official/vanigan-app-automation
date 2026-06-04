@@ -197,7 +197,24 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
         { $set: { pendingAction: '' } }
       );
       const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
-      const regUrl = `${backend}/public/register?phone=${encodeURIComponent(normalizedPhone)}`;
+
+      // Look up VaniganUser for pre-fill data they may have saved during web signup
+      let webUser = null;
+      try {
+        const VaniganUser = require('../models/VaniganUser');
+        webUser = await VaniganUser.findOne({ phone: normalizedPhone })
+          .select('district assembly bizCategory bizSubCat')
+          .lean();
+      } catch {}
+
+      const regParams = new URLSearchParams();
+      regParams.set('phone', normalizedPhone);
+      if (webUser?.district)    regParams.set('district',    webUser.district);
+      if (webUser?.assembly)    regParams.set('assembly',    webUser.assembly);
+      if (webUser?.bizCategory) regParams.set('category',    webUser.bizCategory);
+      if (webUser?.bizSubCat)   regParams.set('subCategory', webUser.bizSubCat);
+
+      const regUrl = `${backend}/public/register?${regParams.toString()}`;
       const bannerUrl = await flowImages.getUrl('banner_add_business');
       await meta.sendCtaUrlMessage(phone, {
         headerImageUrl: bannerUrl || undefined,

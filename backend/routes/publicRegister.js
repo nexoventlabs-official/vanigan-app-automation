@@ -25,7 +25,11 @@ router.get('/districts', (_req, res) => {
 
 /* ── Registration form HTML ── */
 router.get('/register', async (req, res) => {
-  const phone = String(req.query.phone || '').replace(/\D/g, '');
+  const phone       = String(req.query.phone       || '').replace(/\D/g, '');
+  const category    = String(req.query.category    || '').trim();
+  const subCategory = String(req.query.subCategory || '').trim();
+  const district    = String(req.query.district    || '').trim();
+  const assembly    = String(req.query.assembly    || '').trim();
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
   if (phone) {
@@ -40,7 +44,7 @@ router.get('/register', async (req, res) => {
     }
   }
 
-  res.send(buildFormHtml(phone));
+  res.send(buildFormHtml(phone, { category, subCategory, district, assembly }));
 });
 
 /* ── Handle form submission ── */
@@ -266,7 +270,8 @@ function pageShell(title, bodyContent) {
 </html>`;
 }
 
-function buildFormHtml(phone) {
+function buildFormHtml(phone, prefill = {}) {
+  const { category = '', subCategory = '', district = '', assembly = '' } = prefill;
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
     return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -820,6 +825,10 @@ function buildFormHtml(phone) {
 <script>
   const BACKEND = '${backendUrl}';
   const SUB_CATS = ${SUB_CATEGORIES_JSON};
+  const PREFILL_CATEGORY    = '${escHtml(category)}';
+  const PREFILL_SUBCATEGORY = '${escHtml(subCategory)}';
+  const PREFILL_DISTRICT    = '${escHtml(district)}';
+  const PREFILL_ASSEMBLY    = '${escHtml(assembly)}';
 
   (function () {
     const catSel = document.querySelector('select[name="category"]');
@@ -836,7 +845,17 @@ function buildFormHtml(phone) {
       wrap.style.display = opts.length ? '' : 'none';
     }
     catSel.addEventListener('change', refreshSub);
+
+    /* Pre-select category if provided */
+    if (PREFILL_CATEGORY) {
+      catSel.value = PREFILL_CATEGORY;
+    }
     refreshSub();
+
+    /* Pre-select sub-category after options are built */
+    if (PREFILL_SUBCATEGORY) {
+      subSel.value = PREFILL_SUBCATEGORY;
+    }
   })();
   let districtMap = {};
   let cropper = null;
@@ -853,6 +872,23 @@ function buildFormHtml(phone) {
         o.value = d; o.textContent = d;
         sel.appendChild(o);
       });
+
+      /* Pre-select district if provided */
+      if (PREFILL_DISTRICT && map[PREFILL_DISTRICT]) {
+        sel.value = PREFILL_DISTRICT;
+        /* Populate assemblies for the pre-selected district */
+        const asel = document.getElementById('assemblySel');
+        asel.innerHTML = '<option value="">— Select Assembly —</option>';
+        (map[PREFILL_DISTRICT] || []).forEach(a => {
+          const o = document.createElement('option');
+          o.value = a; o.textContent = a;
+          asel.appendChild(o);
+        });
+        /* Pre-select assembly if provided */
+        if (PREFILL_ASSEMBLY) {
+          asel.value = PREFILL_ASSEMBLY;
+        }
+      }
     })
     .catch(err => {
       const sel = document.getElementById('districtSel');
