@@ -1000,6 +1000,14 @@ function applyCoverCrop() {
   }, 'image/jpeg', 0.88);
 }
 
+// Expose handlers used by inline HTML onclick attributes.
+window.useMyLocation = useMyLocation;
+window.addSvc = addSvc;
+window.closeCrop = closeCrop;
+window.applyCrop = applyCrop;
+window.closeCoverCrop = closeCoverCrop;
+window.applyCoverCrop = applyCoverCrop;
+
 /* ── Gallery preview ── */
 var galleryInput = document.getElementById('galleryInput');
 if (galleryInput) {
