@@ -852,337 +852,398 @@ function buildFormHtml(phone, prefill = {}) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
-  const BACKEND = '${backendUrl}';
-  const SUB_CATS = ${SUB_CATEGORIES_JSON};
+(function() {
+'use strict';
 
-  (function () {
-    const catSel = document.querySelector('select[name="category"]');
-    const wrap   = document.getElementById('subCatWrap');
-    const subSel = document.getElementById('subCatSel');
-    function refreshSub() {
-      const selectedVal = subSel.value; // preserve current selection
-      const opts = SUB_CATS[catSel.value] || [];
-      subSel.innerHTML = '<option value="">\u2014 Select Sub-Category \u2014</option>';
-      opts.forEach(function(s) {
-        const o = document.createElement('option');
-        o.value = s; o.textContent = s;
-        subSel.appendChild(o);
+var BACKEND = '${backendUrl}';
+var SUB_CATS = ${SUB_CATEGORIES_JSON};
+
+/* ── Category / Sub-category ── */
+var catSel  = document.querySelector('select[name="category"]');
+var subWrap = document.getElementById('subCatWrap');
+var subSel  = document.getElementById('subCatSel');
+
+function refreshSub() {
+  if (!catSel || !subSel || !subWrap) return;
+  var val  = catSel.value;
+  var opts = SUB_CATS[val] || [];
+  var prev = subSel.value;
+  subSel.innerHTML = '<option value="">\u2014 Select Sub-Category \u2014</option>';
+  for (var i = 0; i < opts.length; i++) {
+    var o = document.createElement('option');
+    o.value = opts[i]; o.textContent = opts[i];
+    if (opts[i] === prev) o.selected = true;
+    subSel.appendChild(o);
+  }
+  subWrap.style.display = opts.length ? '' : 'none';
+}
+
+if (catSel) catSel.addEventListener('change', refreshSub);
+
+/* ── Districts (for change listener after server-rendered options) ── */
+var districtMap = {};
+var distSel  = document.getElementById('districtSel');
+var assemSel = document.getElementById('assemblySel');
+
+fetch(BACKEND + '/public/districts')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    districtMap = data.map || {};
+    if (distSel && !distSel.value) {
+      distSel.innerHTML = '<option value="">\u2014 Select District \u2014</option>';
+      Object.keys(districtMap).sort().forEach(function(d) {
+        var o = document.createElement('option');
+        o.value = d; o.textContent = d;
+        distSel.appendChild(o);
       });
-      wrap.style.display = opts.length ? '' : 'none';
-      // Restore selection if still valid
-      if (selectedVal && opts.includes(selectedVal)) subSel.value = selectedVal;
     }
-    catSel.addEventListener('change', refreshSub);
-    // Don't call refreshSub on load — sub-category options are already server-rendered
-  })();
-  let districtMap = {};
-  let cropper = null;
+  })
+  .catch(function() {});
 
-  /* ── Load districts into districtMap (for the change listener) ── */
-  /* Districts are already server-rendered as selected options;     */
-  /* we still fetch the map so the district change event works.     */
-  fetch(BACKEND + '/public/districts')
-    .then(r => r.json())
-    .then(({ map }) => {
-      districtMap = map;
-      // If no district was pre-selected, replace the static options with the full map
-      const distSel = document.getElementById('districtSel');
-      if (!distSel.value) {
-        distSel.innerHTML = '<option value="">— Select District —</option>';
-        Object.keys(map).sort().forEach(d => {
-          const o = document.createElement('option');
-          o.value = d; o.textContent = d;
-          distSel.appendChild(o);
-        });
-      }
-    })
-    .catch(() => {});
-
-  document.getElementById('districtSel').addEventListener('change', function () {
-    const asel = document.getElementById('assemblySel');
-    asel.innerHTML = '<option value="">— Select Assembly —</option>';
-    (districtMap[this.value] || []).forEach(a => {
-      const o = document.createElement('option');
+if (distSel) {
+  distSel.addEventListener('change', function() {
+    if (!assemSel) return;
+    assemSel.innerHTML = '<option value="">\u2014 Select Assembly \u2014</option>';
+    var list = districtMap[this.value] || [];
+    list.forEach(function(a) {
+      var o = document.createElement('option');
       o.value = a; o.textContent = a;
-      asel.appendChild(o);
+      assemSel.appendChild(o);
     });
   });
+}
 
-  /* ── Image crop ── */
-  document.getElementById('imageInput').addEventListener('change', function () {
-    const file = this.files[0];
+/* ── Profile image crop ── */
+var cropper = null;
+var imageInput = document.getElementById('imageInput');
+if (imageInput) {
+  imageInput.addEventListener('change', function() {
+    var file = this.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.getElementById('cropImg');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = document.getElementById('cropImg');
       img.src = e.target.result;
       document.getElementById('cropModal').classList.add('active');
       if (cropper) { cropper.destroy(); cropper = null; }
-      cropper = new Cropper(img, {
-        aspectRatio: 1,
-        viewMode: 1,
-        dragMode: 'move',
-        autoCropArea: 1,
-        restore: false,
-        guides: true,
-        center: true,
-        highlight: false,
-        cropBoxMovable: true,
-        cropBoxResizable: true,
-        toggleDragModeOnDblclick: false,
-      });
+      cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 1 });
     };
     reader.readAsDataURL(file);
     this.value = '';
   });
+}
 
-  function closeCrop() {
-    document.getElementById('cropModal').classList.remove('active');
-    if (cropper) { cropper.destroy(); cropper = null; }
-  }
+function closeCrop() {
+  var m = document.getElementById('cropModal');
+  if (m) m.classList.remove('active');
+  if (cropper) { cropper.destroy(); cropper = null; }
+}
 
-  function applyCrop() {
-    if (!cropper) return;
-    const canvas = cropper.getCroppedCanvas({ width: 800, height: 800, imageSmoothingQuality: 'high' });
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      document.getElementById('previewImg').src = url;
-      document.getElementById('previewWrap').style.display = 'block';
+function applyCrop() {
+  if (!cropper) return;
+  cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var prev = document.getElementById('previewImg');
+    var wrap = document.getElementById('previewWrap');
+    if (prev) prev.src = url;
+    if (wrap) wrap.style.display = 'block';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var ci = document.getElementById('croppedImageInput');
+      if (ci) ci.value = e.target.result;
+    };
+    reader.readAsDataURL(blob);
+    closeCrop();
+  }, 'image/jpeg', 0.88);
+}
 
-      /* Convert blob → base64 and store in hidden input for form submission */
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('croppedImageInput').value = e.target.result;
-      };
-      reader.readAsDataURL(blob);
-
-      closeCrop();
-    }, 'image/jpeg', 0.88);
-  }
-
-  /* ── Current location ── */
-  function useMyLocation() {
-    const btn = document.getElementById('locBtn');
-    const status = document.getElementById('locStatus');
-    if (!navigator.geolocation) { status.textContent = 'GPS not supported on this browser.'; return; }
-    btn.textContent = '⏳ Getting location…';
-    btn.disabled = true;
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat = pos.coords.latitude.toFixed(6);
-        const lng = pos.coords.longitude.toFixed(6);
-        document.getElementById('latField').value = lat;
-        document.getElementById('lngField').value = lng;
-        status.textContent = 'GPS: ' + lat + ', ' + lng + ' ✓';
-        status.style.color = 'var(--accent-color)';
-        btn.textContent = '📍 Location Set ✓';
-        /* Reverse geocode via Nominatim */
-        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
-          .then(r => r.json())
-          .then(d => {
-            const addr = d.display_name || '';
-            if (addr && !document.getElementById('addressField').value.trim()) {
-              document.getElementById('addressField').value = addr;
-            }
-          })
-          .catch(() => {});
-      },
-      err => {
-        status.textContent = 'Location denied or unavailable.';
-        status.style.color = '#ef4444';
-        btn.textContent = '📍 Use Current Location';
-        btn.disabled = false;
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  }
-
-  /* ── Dynamic Social Media ── */
-  const SOCIAL_PLATFORMS = [
-    {id:'fbLink',      label:'Facebook',      placeholder:'https://facebook.com/...'},
-    {id:'twitterLink', label:'Twitter / X',   placeholder:'https://twitter.com/...'},
-    {id:'instaLink',   label:'Instagram',     placeholder:'https://instagram.com/...'},
-    {id:'googleMap',   label:'Google Maps',   placeholder:'https://maps.google.com/...'},
-    {id:'videoUrl',    label:'YouTube',       placeholder:'https://youtube.com/...'},
-  ];
-  let shownSocial = [];
-
-  function getSocialAvailable() {
-    return SOCIAL_PLATFORMS.filter(p => !shownSocial.includes(p.id));
-  }
-
-  function addSocialRow() {
-    const avail = getSocialAvailable();
-    if (!avail.length) return;
-    // Show platform picker chips
-    const existing = document.getElementById('socialPicker');
-    if (existing) { existing.remove(); return; }
-    const picker = document.createElement('div');
-    picker.id = 'socialPicker';
-    picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px';
-    avail.forEach(p => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = p.label;
-      btn.style.cssText = 'padding:6px 14px;border:1px solid var(--accent-color);color:var(--accent-color);background:transparent;border-radius:12px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all 0.2s';
-      btn.onmouseenter = () => btn.style.background = 'rgba(11,116,67,0.03)';
-      btn.onmouseleave = () => btn.style.background = 'transparent';
-      btn.onclick = () => { picker.remove(); _addSocialPlatform(p); };
-      picker.appendChild(btn);
-    });
-    document.getElementById('socialRows').appendChild(picker);
-  }
-
-  function _addSocialPlatform(p) {
-    shownSocial.push(p.id);
-    const row = document.createElement('div');
-    row.className = 'social-item';
-    row.id = 'srow_' + p.id;
-    row.innerHTML = '<span class="s-label">' + p.label + '</span><input type="url" name="' + p.id + '" placeholder="' + p.placeholder + '"><button type="button" class="rm-btn" onclick="removeSocialRow(\\'' + p.id + '\\')">×</button>';
-    document.getElementById('socialRows').appendChild(row);
-    if (!getSocialAvailable().length) document.getElementById('addSocialBtn').style.display = 'none';
-    else document.getElementById('addSocialBtn').style.display = '';
-  }
-
-  function removeSocialRow(id) {
-    shownSocial = shownSocial.filter(x => x !== id);
-    const row = document.getElementById('srow_' + id);
-    if (row) row.remove();
-    document.getElementById('addSocialBtn').style.display = '';
-  }
-
-  document.getElementById('addSocialBtn').addEventListener('click', addSocialRow);
-
-  /* ── Dynamic Services ── */
-  let svcCount = 0;
-
-  function addSvc() {
-    if (svcCount >= 6) return;
-    svcCount++;
-    const n = svcCount;
-    const card = document.createElement('div');
-    card.className = 'svc-card';
-    card.dataset.svcn = n;
-    card.innerHTML =
-      '<div class="svc-num"><span class="svc-title">Service ' + n + '</span><button type="button" class="svc-rm" onclick="removeSvc(this)">✕ Remove</button></div>' +
-      '<div class="row" style="margin-bottom:10px">' +
-        '<div><label>Name</label><input type="text" name="service' + n + 'Name" placeholder="Service / product name"></div>' +
-        '<div><label>Price (₹)</label><input type="text" name="service' + n + 'Price" placeholder="e.g. 500" inputmode="decimal"></div>' +
-      '</div>' +
-      '<div style="margin-bottom:10px"><label>Details</label><textarea name="service' + n + 'Detail" rows="2" placeholder="Brief description"></textarea></div>' +
-      '<div><label>Service Photo <span style="color:#ef4444;font-weight:600">*</span></label>' +
-        '<input type="file" name="service' + n + 'Image" accept="image/*" required style="display:none" onchange="_previewSvc(this)">' +
-        '<button type="button" class="img-upload-btn" style="padding:12px;margin:0;font-size:0.8rem" onclick="this.closest(\'.svc-card\').querySelector(\'input[type=file]\').click()">' +
-          '📸 Upload Service Photo' +
-        '</button>' +
-        '<div style="display:none;margin-top:8px" class="svc-prev-wrap"><img style="width:64px;height:64px;object-fit:cover;border-radius:12px;border:1px solid var(--svc-card-border)" class="svc-prev-img"></div>' +
-      '</div>';
-    document.getElementById('svcContainer').appendChild(card);
-    if (svcCount >= 6) document.getElementById('addSvcBtn').style.display = 'none';
-  }
-
-  function removeSvc(btn) {
-    btn.closest('.svc-card').remove();
-    svcCount--;
-    // Renumber remaining cards
-    document.querySelectorAll('.svc-card').forEach((card, idx) => {
-      const num = idx + 1;
-      card.dataset.svcn = num;
-      card.querySelector('.svc-title').textContent = 'Service ' + num;
-      const inp = card.querySelectorAll('input,textarea');
-      const names = ['Name','Price','Detail','Image'];
-      // Update field names based on position
-      card.querySelector('input[type=text]:nth-of-type(1)') && (card.querySelectorAll('input[type=text]')[0].name = 'service'+num+'Name');
-      card.querySelector('input[type=text]:nth-of-type(2)') && (card.querySelectorAll('input[type=text]')[1].name = 'service'+num+'Price');
-      const ta = card.querySelector('textarea'); if(ta) ta.name = 'service'+num+'Detail';
-      const fi = card.querySelector('input[type=file]'); if(fi) fi.name = 'service'+num+'Image';
-    });
-    document.getElementById('addSvcBtn').style.display = '';
-  }
-
-  function _previewSvc(input) {
-    if (!input.files?.[0]) return;
-    const wrap = input.closest('.svc-card').querySelector('.svc-prev-wrap');
-    const img  = input.closest('.svc-card').querySelector('.svc-prev-img');
-    const reader = new FileReader();
-    reader.onload = e => { img.src = e.target.result; wrap.style.display = 'block'; };
-    reader.readAsDataURL(input.files[0]);
-  }
-
-  /* ── Cover image banner crop (ratio matches h-44 / max-w-4xl = 896/176 ≈ 5.09) ── */
-  const BANNER_RATIO = 896 / 176;
-  let coverCropper = null;
-
-  document.getElementById('coverImageInput').addEventListener('change', function () {
-    if (!this.files?.[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.getElementById('coverCropImg');
+/* ── Cover image crop ── */
+var BANNER_RATIO = 896 / 176;
+var coverCropper = null;
+var coverInput = document.getElementById('coverImageInput');
+if (coverInput) {
+  coverInput.addEventListener('change', function() {
+    if (!this.files || !this.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = document.getElementById('coverCropImg');
       img.src = e.target.result;
       document.getElementById('coverCropModal').classList.add('active');
       if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
-      coverCropper = new Cropper(img, {
-        aspectRatio: BANNER_RATIO,
-        viewMode: 1,
-        autoCropArea: 1,
-        dragMode: 'move',
-      });
+      coverCropper = new Cropper(img, { aspectRatio: BANNER_RATIO, viewMode: 1, autoCropArea: 1, dragMode: 'move' });
     };
     reader.readAsDataURL(this.files[0]);
     this.value = '';
   });
+}
 
-  function closeCoverCrop() {
-    document.getElementById('coverCropModal').classList.remove('active');
-    if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
-  }
+function closeCoverCrop() {
+  var m = document.getElementById('coverCropModal');
+  if (m) m.classList.remove('active');
+  if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
+}
 
-  function applyCoverCrop() {
-    if (!coverCropper) return;
-    coverCropper.getCroppedCanvas({ maxWidth: 1600, imageSmoothingQuality: 'high' }).toBlob(function (blob) {
-      /* Use DataTransfer to set the cropped file on the actual file input */
-      const croppedFile = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
-      const dt = new DataTransfer();
-      dt.items.add(croppedFile);
-      document.getElementById('coverImageInput').files = dt.files;
-      /* Show preview */
-      const url = URL.createObjectURL(blob);
-      document.getElementById('coverPreviewImg').src = url;
-      document.getElementById('coverPreview').style.display = 'block';
-      closeCoverCrop();
-    }, 'image/jpeg', 0.88);
-  }
+function applyCoverCrop() {
+  if (!coverCropper) return;
+  coverCropper.getCroppedCanvas({ maxWidth: 1600 }).toBlob(function(blob) {
+    var file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    var ci = document.getElementById('coverImageInput');
+    if (ci) ci.files = dt.files;
+    var url = URL.createObjectURL(blob);
+    var prev = document.getElementById('coverPreviewImg');
+    var wrap = document.getElementById('coverPreview');
+    if (prev) prev.src = url;
+    if (wrap) wrap.style.display = 'block';
+    closeCoverCrop();
+  }, 'image/jpeg', 0.88);
+}
 
-  /* ── Gallery preview ── */
-  document.getElementById('galleryInput').addEventListener('change', function () {
-    const preview = document.getElementById('galleryPreview');
+/* ── Gallery preview ── */
+var galleryInput = document.getElementById('galleryInput');
+if (galleryInput) {
+  galleryInput.addEventListener('change', function() {
+    var preview = document.getElementById('galleryPreview');
+    if (!preview) return;
     preview.innerHTML = '';
-    Array.from(this.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = document.createElement('img');
+    Array.prototype.forEach.call(this.files, function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = document.createElement('img');
         img.src = e.target.result;
         preview.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
   });
+}
 
-  /* ── Submit ── */
-  document.getElementById('regForm').addEventListener('submit', function (e) {
-    const btn = document.getElementById('submitBtn');
+/* ── Location ── */
+function useMyLocation() {
+  var btn    = document.getElementById('locBtn');
+  var status = document.getElementById('locStatus');
+  if (!navigator.geolocation) { if (status) status.textContent = 'GPS not supported.'; return; }
+  if (btn) { btn.textContent = '\u23f3 Getting location\u2026'; btn.disabled = true; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      var lf = document.getElementById('latField');
+      var lgf = document.getElementById('lngField');
+      var af = document.getElementById('addressField');
+      if (lf) lf.value = lat;
+      if (lgf) lgf.value = lng;
+      if (status) { status.textContent = 'GPS: ' + lat + ', ' + lng + ' \u2713'; status.style.color = 'var(--accent-color)'; }
+      if (btn) btn.textContent = '\uD83D\uDCCD Location Set \u2713';
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.display_name && af && !af.value.trim()) af.value = d.display_name; })
+        .catch(function() {});
+    },
+    function() {
+      if (status) { status.textContent = 'Location denied or unavailable.'; status.style.color = '#ef4444'; }
+      if (btn) { btn.textContent = '\uD83D\uDCCD Use Current Location'; btn.disabled = false; }
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
 
-    /* If a crop was done, remove the file input so only base64 is sent */
-    const cropped = document.getElementById('croppedImageInput').value;
-    if (cropped) {
-      const fileInput = document.getElementById('imageInput');
-      fileInput.disabled = true;
-    }
+/* ── Social Media (dynamic rows) ── */
+var SOCIAL_PLATFORMS = [
+  { id: 'fbLink',      label: 'Facebook',    placeholder: 'https://facebook.com/...' },
+  { id: 'twitterLink', label: 'Twitter / X', placeholder: 'https://twitter.com/...' },
+  { id: 'instaLink',   label: 'Instagram',   placeholder: 'https://instagram.com/...' },
+  { id: 'googleMap',   label: 'Google Maps', placeholder: 'https://maps.google.com/...' },
+  { id: 'videoUrl',    label: 'YouTube',     placeholder: 'https://youtube.com/...' },
+];
+var shownSocial = [];
 
-    btn.textContent = 'Submitting…';
-    btn.disabled = true;
+function addSocialRow() {
+  var avail = SOCIAL_PLATFORMS.filter(function(p) { return shownSocial.indexOf(p.id) === -1; });
+  if (!avail.length) return;
+  var existing = document.getElementById('socialPicker');
+  if (existing) { existing.remove(); return; }
+  var picker = document.createElement('div');
+  picker.id = 'socialPicker';
+  picker.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px';
+  avail.forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = p.label;
+    btn.style.cssText = 'padding:6px 14px;border:1px solid var(--accent-color);color:var(--accent-color);background:transparent;border-radius:12px;font-size:.8rem;font-weight:600;cursor:pointer';
+    btn.onclick = function() { picker.remove(); addSocialPlatform(p); };
+    picker.appendChild(btn);
   });
+  var rows = document.getElementById('socialRows');
+  if (rows) rows.appendChild(picker);
+}
 
+function addSocialPlatform(p) {
+  shownSocial.push(p.id);
+  var row = document.createElement('div');
+  row.className = 'social-item';
+  row.id = 'srow_' + p.id;
+  var span = document.createElement('span');
+  span.className = 's-label';
+  span.textContent = p.label;
+  var inp = document.createElement('input');
+  inp.type = 'url';
+  inp.name = p.id;
+  inp.placeholder = p.placeholder;
+  var rmBtn = document.createElement('button');
+  rmBtn.type = 'button';
+  rmBtn.className = 'rm-btn';
+  rmBtn.textContent = '\u00d7';
+  rmBtn.onclick = function() { removeSocialRow(p.id); };
+  row.appendChild(span);
+  row.appendChild(inp);
+  row.appendChild(rmBtn);
+  var rows = document.getElementById('socialRows');
+  if (rows) rows.appendChild(row);
+  var addBtn = document.getElementById('addSocialBtn');
+  var stillAvail = SOCIAL_PLATFORMS.filter(function(x) { return shownSocial.indexOf(x.id) === -1; });
+  if (addBtn) addBtn.style.display = stillAvail.length ? '' : 'none';
+}
+
+function removeSocialRow(id) {
+  shownSocial = shownSocial.filter(function(x) { return x !== id; });
+  var row = document.getElementById('srow_' + id);
+  if (row) row.remove();
+  var addBtn = document.getElementById('addSocialBtn');
+  if (addBtn) addBtn.style.display = '';
+}
+
+var addSocialBtn = document.getElementById('addSocialBtn');
+if (addSocialBtn) addSocialBtn.addEventListener('click', addSocialRow);
+
+/* ── Services / Products (dynamic cards) ── */
+var svcCount = 0;
+
+function addSvc() {
+  if (svcCount >= 6) return;
+  svcCount++;
+  var n = svcCount;
+  var card = document.createElement('div');
+  card.className = 'svc-card';
+  card.dataset.svcn = n;
+
+  /* Header row */
+  var hdr = document.createElement('div');
+  hdr.className = 'svc-num';
+  var ttl = document.createElement('span');
+  ttl.className = 'svc-title';
+  ttl.textContent = 'Service ' + n;
+  var rmBtn = document.createElement('button');
+  rmBtn.type = 'button';
+  rmBtn.className = 'svc-rm';
+  rmBtn.textContent = '\u2715 Remove';
+  rmBtn.onclick = function() { removeSvc(card); };
+  hdr.appendChild(ttl);
+  hdr.appendChild(rmBtn);
+  card.appendChild(hdr);
+
+  /* Name + Price row */
+  var row = document.createElement('div');
+  row.className = 'row';
+  row.style.marginBottom = '10px';
+  var d1 = document.createElement('div');
+  d1.innerHTML = '<label>Name</label><input type="text" name="service' + n + 'Name" placeholder="Service / product name">';
+  var d2 = document.createElement('div');
+  d2.innerHTML = '<label>Price (\u20b9)</label><input type="text" name="service' + n + 'Price" placeholder="e.g. 500" inputmode="decimal">';
+  row.appendChild(d1);
+  row.appendChild(d2);
+  card.appendChild(row);
+
+  /* Details */
+  var det = document.createElement('div');
+  det.style.marginBottom = '10px';
+  det.innerHTML = '<label>Details</label><textarea name="service' + n + 'Detail" rows="2" placeholder="Brief description"></textarea>';
+  card.appendChild(det);
+
+  /* Photo upload */
+  var photoWrap = document.createElement('div');
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.name = 'service' + n + 'Image';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  fileInput.onchange = function() { previewSvc(fileInput, card); };
+
+  var uploadBtn = document.createElement('button');
+  uploadBtn.type = 'button';
+  uploadBtn.className = 'img-upload-btn';
+  uploadBtn.style.cssText = 'padding:12px;margin:0;font-size:0.8rem';
+  uploadBtn.textContent = '\uD83D\uDCF8 Upload Service Photo';
+  uploadBtn.onclick = function() { fileInput.click(); };
+
+  var prevWrap = document.createElement('div');
+  prevWrap.className = 'svc-prev-wrap';
+  prevWrap.style.display = 'none';
+  prevWrap.style.marginTop = '8px';
+  var prevImg = document.createElement('img');
+  prevImg.className = 'svc-prev-img';
+  prevImg.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:12px';
+  prevWrap.appendChild(prevImg);
+
+  photoWrap.innerHTML = '<label>Service Photo</label>';
+  photoWrap.appendChild(fileInput);
+  photoWrap.appendChild(uploadBtn);
+  photoWrap.appendChild(prevWrap);
+  card.appendChild(photoWrap);
+
+  document.getElementById('svcContainer').appendChild(card);
+  var addBtn = document.getElementById('addSvcBtn');
+  if (svcCount >= 6 && addBtn) addBtn.style.display = 'none';
+}
+
+function removeSvc(card) {
+  card.remove();
+  svcCount--;
+  document.querySelectorAll('.svc-card').forEach(function(c, idx) {
+    var num = idx + 1;
+    c.dataset.svcn = num;
+    var ttl = c.querySelector('.svc-title');
+    if (ttl) ttl.textContent = 'Service ' + num;
+    var texts = c.querySelectorAll('input[type=text]');
+    if (texts[0]) texts[0].name = 'service' + num + 'Name';
+    if (texts[1]) texts[1].name = 'service' + num + 'Price';
+    var ta = c.querySelector('textarea');
+    if (ta) ta.name = 'service' + num + 'Detail';
+    var fi = c.querySelector('input[type=file]');
+    if (fi) fi.name = 'service' + num + 'Image';
+  });
+  var addBtn = document.getElementById('addSvcBtn');
+  if (addBtn) addBtn.style.display = '';
+}
+
+function previewSvc(input, card) {
+  if (!input.files || !input.files[0]) return;
+  var wrap = card.querySelector('.svc-prev-wrap');
+  var img  = card.querySelector('.svc-prev-img');
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    if (img) img.src = e.target.result;
+    if (wrap) wrap.style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+/* ── Form submit ── */
+var regForm = document.getElementById('regForm');
+if (regForm) {
+  regForm.addEventListener('submit', function() {
+    var btn = document.getElementById('submitBtn');
+    var cropped = document.getElementById('croppedImageInput');
+    if (cropped && cropped.value) {
+      var fi = document.getElementById('imageInput');
+      if (fi) fi.disabled = true;
+    }
+    if (btn) { btn.textContent = 'Submitting\u2026'; btn.disabled = true; }
+  });
+}
+
+})(); // end IIFE
 </script>
 </body>
 </html>`;
