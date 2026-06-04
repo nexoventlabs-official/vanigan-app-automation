@@ -77,10 +77,11 @@ export default function AddBusiness() {
 
   /* Build pre-fill options from logged-in user's profile */
   const prefillOpts = isLoggedIn ? {
-    category:    user.bizCategory  || '',
-    subCategory: user.bizSubCat    || '',
-    district:    user.district     || '',
-    assembly:    user.assembly     || '',
+    bizName:     user.bizName     || '',
+    category:    user.bizCategory || '',
+    subCategory: user.bizSubCat   || '',
+    district:    user.district    || '',
+    assembly:    user.assembly    || '',
   } : {};
 
   /* Non-logged-in: open registration form in new tab */

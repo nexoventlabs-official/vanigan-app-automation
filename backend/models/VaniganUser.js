@@ -12,6 +12,7 @@ const VaniganUserSchema = new mongoose.Schema(
     pinHash:     { type: String, required: true },   // bcrypt hash of 4-digit PIN
     district:    { type: String, default: '', trim: true },
     assembly:    { type: String, default: '', trim: true },
+    bizName:     { type: String, default: '', trim: true },
     bizCategory: { type: String, default: '', trim: true },
     bizSubCat:   { type: String, default: '', trim: true },
     businessId:  { type: mongoose.Schema.Types.ObjectId, default: null },

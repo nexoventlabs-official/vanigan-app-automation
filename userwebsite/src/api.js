@@ -34,11 +34,12 @@ export const webLinkBusiness = (phone, businessId) =>
 export const REGISTER_URL = (phone = '', opts = {}) => {
   const base = BASE.replace(/\/+$/, '');
   const params = new URLSearchParams();
-  if (phone) params.set('phone', phone);
-  if (opts.category)    params.set('category', opts.category);
+  if (phone)            params.set('phone',       phone);
+  if (opts.bizName)     params.set('bizName',     opts.bizName);
+  if (opts.category)    params.set('category',    opts.category);
   if (opts.subCategory) params.set('subCategory', opts.subCategory);
-  if (opts.district)    params.set('district', opts.district);
-  if (opts.assembly)    params.set('assembly', opts.assembly);
+  if (opts.district)    params.set('district',    opts.district);
+  if (opts.assembly)    params.set('assembly',    opts.assembly);
   const qs = params.toString();
   return `${base}/public/register${qs ? `?${qs}` : ''}`;
 };

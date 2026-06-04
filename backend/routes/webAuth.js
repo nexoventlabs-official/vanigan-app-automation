@@ -18,7 +18,7 @@ router.post('/signup', async (req, res) => {
   try {
     const {
       phone, pin, confirmPin, name,
-      district, assembly, bizCategory, bizSubCat,
+      district, assembly, bizCategory, bizSubCat, bizName,
     } = req.body;
 
     const digits = String(phone || '').replace(/\D/g, '');
@@ -36,10 +36,11 @@ router.post('/signup', async (req, res) => {
       phone:       digits,
       name:        String(name).trim(),
       pinHash,
-      district:    String(district || '').trim(),
-      assembly:    String(assembly || '').trim(),
+      district:    String(district    || '').trim(),
+      assembly:    String(assembly    || '').trim(),
+      bizName:     String(bizName     || '').trim(),
       bizCategory: String(bizCategory || '').trim(),
-      bizSubCat:   String(bizSubCat || '').trim(),
+      bizSubCat:   String(bizSubCat   || '').trim(),
     });
 
     // Check if business already exists for this phone (from WhatsApp registration)

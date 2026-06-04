@@ -30,6 +30,7 @@ router.get('/register', async (req, res) => {
   const subCategory = String(req.query.subCategory || '').trim();
   const district    = String(req.query.district    || '').trim();
   const assembly    = String(req.query.assembly    || '').trim();
+  const bizName     = String(req.query.bizName     || '').trim();
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
   if (phone) {
@@ -44,7 +45,7 @@ router.get('/register', async (req, res) => {
     }
   }
 
-  res.send(buildFormHtml(phone, { category, subCategory, district, assembly }));
+  res.send(buildFormHtml(phone, { category, subCategory, district, assembly, bizName }));
 });
 
 /* ── Handle form submission ── */
@@ -271,8 +272,33 @@ function pageShell(title, bodyContent) {
 }
 
 function buildFormHtml(phone, prefill = {}) {
-  const { category = '', subCategory = '', district = '', assembly = '' } = prefill;
+  const { category = '', subCategory = '', district = '', assembly = '', bizName = '' } = prefill;
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+
+  /* ── Server-side render: category options with selected ── */
+  const ALL_CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'];
+  const categoryOptionsHtml = ALL_CATEGORIES
+    .map(c => `<option value="${escHtml(c)}"${c === category ? ' selected' : ''}>${escHtml(c)}</option>`)
+    .join('');
+
+  /* ── Server-side render: sub-category options ── */
+  const subCatsForCategory = (SUB_CATEGORIES[category] || []);
+  const subCategoryOptionsHtml = subCatsForCategory
+    .map(s => `<option value="${escHtml(s)}"${s === subCategory ? ' selected' : ''}>${escHtml(s)}</option>`)
+    .join('');
+  const showSubCatWrap = subCatsForCategory.length > 0;
+
+  /* ── Server-side render: district options ── */
+  const allDistricts = districts.getDistricts(); // synchronous
+  const districtOptionsHtml = allDistricts
+    .map(d => `<option value="${escHtml(d)}"${d === district ? ' selected' : ''}>${escHtml(d)}</option>`)
+    .join('');
+
+  /* ── Server-side render: assembly options for pre-selected district ── */
+  const assembliesForDistrict = district ? districts.getAssemblies(district) : [];
+  const assemblyOptionsHtml = assembliesForDistrict.length
+    ? assembliesForDistrict.map(a => `<option value="${escHtml(a)}"${a === assembly ? ' selected' : ''}>${escHtml(a)}</option>`).join('')
+    : '';
     return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -554,7 +580,7 @@ function buildFormHtml(phone, prefill = {}) {
 
       <div class="field">
         <label>Business Name <span class="req">*</span></label>
-        <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores">
+        <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores" value="${escHtml(bizName)}">
       </div>
 
       <div class="row field">
@@ -562,13 +588,14 @@ function buildFormHtml(phone, prefill = {}) {
           <label>Category</label>
           <select name="category">
             <option value="">— Select Category —</option>
-            ${['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'].map(c => `<option value="${c}">${c}</option>`).join('')}
+            ${categoryOptionsHtml}
           </select>
         </div>
-        <div id="subCatWrap" style="display:none">
+        <div id="subCatWrap" style="${showSubCatWrap ? '' : 'display:none'}">
           <label>Sub-Category</label>
           <select id="subCatSel" name="subCategory">
             <option value="">— Select Sub-Category —</option>
+            ${subCategoryOptionsHtml}
           </select>
         </div>
       </div>
@@ -591,13 +618,15 @@ function buildFormHtml(phone, prefill = {}) {
         <div>
           <label>District <span class="req">*</span></label>
           <select name="district" id="districtSel" required>
-            <option value="">Loading…</option>
+            <option value="">— Select District —</option>
+            ${districtOptionsHtml}
           </select>
         </div>
         <div>
           <label>Assembly <span class="req">*</span></label>
           <select name="assembly" id="assemblySel" required>
             <option value="">Select district first</option>
+            ${assemblyOptionsHtml}
           </select>
         </div>
       </div>
@@ -825,16 +854,13 @@ function buildFormHtml(phone, prefill = {}) {
 <script>
   const BACKEND = '${backendUrl}';
   const SUB_CATS = ${SUB_CATEGORIES_JSON};
-  const PREFILL_CATEGORY    = '${escHtml(category)}';
-  const PREFILL_SUBCATEGORY = '${escHtml(subCategory)}';
-  const PREFILL_DISTRICT    = '${escHtml(district)}';
-  const PREFILL_ASSEMBLY    = '${escHtml(assembly)}';
 
   (function () {
     const catSel = document.querySelector('select[name="category"]');
     const wrap   = document.getElementById('subCatWrap');
     const subSel = document.getElementById('subCatSel');
     function refreshSub() {
+      const selectedVal = subSel.value; // preserve current selection
       const opts = SUB_CATS[catSel.value] || [];
       subSel.innerHTML = '<option value="">\u2014 Select Sub-Category \u2014</option>';
       opts.forEach(function(s) {
@@ -843,58 +869,34 @@ function buildFormHtml(phone, prefill = {}) {
         subSel.appendChild(o);
       });
       wrap.style.display = opts.length ? '' : 'none';
+      // Restore selection if still valid
+      if (selectedVal && opts.includes(selectedVal)) subSel.value = selectedVal;
     }
     catSel.addEventListener('change', refreshSub);
-
-    /* Pre-select category if provided */
-    if (PREFILL_CATEGORY) {
-      catSel.value = PREFILL_CATEGORY;
-    }
-    refreshSub();
-
-    /* Pre-select sub-category after options are built */
-    if (PREFILL_SUBCATEGORY) {
-      subSel.value = PREFILL_SUBCATEGORY;
-    }
+    // Don't call refreshSub on load — sub-category options are already server-rendered
   })();
   let districtMap = {};
   let cropper = null;
 
-  /* ── Load districts ── */
+  /* ── Load districts into districtMap (for the change listener) ── */
+  /* Districts are already server-rendered as selected options;     */
+  /* we still fetch the map so the district change event works.     */
   fetch(BACKEND + '/public/districts')
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(r => r.json())
     .then(({ map }) => {
       districtMap = map;
-      const sel = document.getElementById('districtSel');
-      sel.innerHTML = '<option value="">— Select District —</option>';
-      Object.keys(map).sort().forEach(d => {
-        const o = document.createElement('option');
-        o.value = d; o.textContent = d;
-        sel.appendChild(o);
-      });
-
-      /* Pre-select district if provided */
-      if (PREFILL_DISTRICT && map[PREFILL_DISTRICT]) {
-        sel.value = PREFILL_DISTRICT;
-        /* Populate assemblies for the pre-selected district */
-        const asel = document.getElementById('assemblySel');
-        asel.innerHTML = '<option value="">— Select Assembly —</option>';
-        (map[PREFILL_DISTRICT] || []).forEach(a => {
+      // If no district was pre-selected, replace the static options with the full map
+      const distSel = document.getElementById('districtSel');
+      if (!distSel.value) {
+        distSel.innerHTML = '<option value="">— Select District —</option>';
+        Object.keys(map).sort().forEach(d => {
           const o = document.createElement('option');
-          o.value = a; o.textContent = a;
-          asel.appendChild(o);
+          o.value = d; o.textContent = d;
+          distSel.appendChild(o);
         });
-        /* Pre-select assembly if provided */
-        if (PREFILL_ASSEMBLY) {
-          asel.value = PREFILL_ASSEMBLY;
-        }
       }
     })
-    .catch(err => {
-      const sel = document.getElementById('districtSel');
-      sel.innerHTML = '<option value="">Failed to load — refresh</option>';
-      console.error('Districts fetch failed:', err);
-    });
+    .catch(() => {});
 
   document.getElementById('districtSel').addEventListener('change', function () {
     const asel = document.getElementById('assemblySel');

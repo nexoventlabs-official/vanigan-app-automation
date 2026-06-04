@@ -228,15 +228,11 @@ export default function Signup() {
         assembly,
         pin:        cleanPin,
         confirmPin: cleanConfirm,
+        // Always save biz fields — they're used for pre-filling the registration form later
+        bizName:     (!skipBiz && bizName.trim()) ? bizName.trim() : '',
+        bizCategory: bizCategory || '',
+        bizSubCat:   bizSubCat   || '',
       };
-      if (!skipBiz && bizName.trim()) {
-        payload.bizName     = bizName.trim();
-        payload.bizCategory = bizCategory;
-        payload.bizSubCat   = bizSubCat;
-      }
-      /* Always save category/district regardless of whether bizName was entered */
-      if (bizCategory)  payload.bizCategory = bizCategory;
-      if (bizSubCat)    payload.bizSubCat   = bizSubCat;
       const r = await webSignup(payload);
       login(r.data);
       navigate('home');

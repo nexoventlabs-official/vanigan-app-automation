@@ -203,7 +203,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       try {
         const VaniganUser = require('../models/VaniganUser');
         webUser = await VaniganUser.findOne({ phone: normalizedPhone })
-          .select('district assembly bizCategory bizSubCat')
+          .select('district assembly bizCategory bizSubCat bizName')
           .lean();
       } catch {}
 
@@ -213,6 +213,7 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       if (webUser?.assembly)    regParams.set('assembly',    webUser.assembly);
       if (webUser?.bizCategory) regParams.set('category',    webUser.bizCategory);
       if (webUser?.bizSubCat)   regParams.set('subCategory', webUser.bizSubCat);
+      if (webUser?.bizName)     regParams.set('bizName',     webUser.bizName);
 
       const regUrl = `${backend}/public/register?${regParams.toString()}`;
       const bannerUrl = await flowImages.getUrl('banner_add_business');
