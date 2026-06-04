@@ -160,19 +160,28 @@ export default function Signup() {
     } catch { setPhoneCheck(null); }
   };
 
-  /* Fetch assemblies when district changes */
+  /* Fetch full district→assembly map once, then filter locally */
+  const [districtMap, setDistrictMap] = useState({});
+
   useEffect(() => {
-    if (!district) { setAssemblies([]); setAssembly(''); return; }
-    fetch(`${(import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '')}/api/districts?district=${encodeURIComponent(district)}`)
+    const base = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
+    fetch(`${base}/public/districts`)
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setAssemblies(data);
-        else if (data?.assemblies) setAssemblies(data.assemblies);
-        else setAssemblies([]);
-        setAssembly('');
+        // Response is { map: { "Chennai": [...], ... } }
+        if (data?.map && typeof data.map === 'object') {
+          setDistrictMap(data.map);
+        }
       })
-      .catch(() => setAssemblies([]));
-  }, [district]);
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!district) { setAssemblies([]); setAssembly(''); return; }
+    const list = districtMap[district] || [];
+    setAssemblies(list);
+    setAssembly('');
+  }, [district, districtMap]);
 
   /* Validate step 1 */
   const handleStep1 = (e) => {
