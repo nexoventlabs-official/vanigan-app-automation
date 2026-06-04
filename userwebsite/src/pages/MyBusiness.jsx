@@ -311,7 +311,15 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
             <div style={{ display:'flex',alignItems:'flex-start',gap:10,flexWrap:'wrap' }}>
               <div style={{ flex:1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'32px',fontWeight:700,letterSpacing:'-0.015em',color:'var(--color-rich-black)',lineHeight:1.2, margin: 0 }}>{biz.name}</h1>
+                  <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'32px',fontWeight:700,letterSpacing:'-0.015em',color:'var(--color-rich-black)',lineHeight:1.2, margin: 0 }}>
+                    {biz.name}
+                    {biz.active && (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-label="Verified" style={{ marginLeft: 6, verticalAlign: 'middle' }}>
+                        <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.99-3.818-3.99-.48 0-.941.1-1.358.275C14.77 2.515 13.498 1.5 12 1.5s-2.77 1.015-3.412 2.285c-.417-.175-.878-.275-1.358-.275-2.108 0-3.818 1.78-3.818 3.99 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.71 3.99 3.818 3.99.48 0 .941-.1 1.358-.275.642 1.27 1.914 2.285 3.412 2.285s2.77-1.015 3.412-2.285c.417.175.878.275 1.358.275 2.108 0 3.818-1.78 3.818-3.99 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6z" fill="#0095F6"/>
+                        <path d="M9.78 16.72l-3.86-3.86 1.41-1.41 2.45 2.45 6.18-6.18 1.41 1.41-7.59 7.59z" fill="white"/>
+                      </svg>
+                    )}
+                  </h1>
                   <span className={`badge ${biz.active ? 'badge-green' : 'badge-gray'}`} style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>{biz.active ? 'Active' : 'Pending'}</span>
                 </div>
                 <div style={{ display:'flex',alignItems:'center',gap:6,marginTop:4,fontFamily:'var(--font-pp-neue-montreal)' }}>

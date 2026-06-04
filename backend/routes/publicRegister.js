@@ -40,7 +40,7 @@ router.get('/register', async (req, res) => {
         <div class="icon">🏪</div>
         <h1>Already Registered!</h1>
         <p><strong>${escHtml(existing.name)}</strong> is already registered on Vanigan.</p>
-        <p class="sub">Our team will review and activate your listing shortly.<br>You'll receive a WhatsApp confirmation once approved. 🙏</p>
+        <p class="sub">You can manage your listing anytime in the My Business section. 🙏</p>
       `));
     }
   }
@@ -103,7 +103,7 @@ router.post('/register', uploadFields, async (req, res) => {
       infoQuestion:     (infoQuestion || '').trim(),
       infoAnswer:       (infoAnswer || '').trim(),
       ownerPhone:       (ownerPhone || '').trim(),
-      active:           false,
+      active:           true,
     };
 
     /* ── Profile image ── */
@@ -161,7 +161,7 @@ router.post('/register', uploadFields, async (req, res) => {
     if (doc.ownerPhone) {
       meta.sendText(
         doc.ownerPhone,
-        `✅ *${doc.name}* has been submitted for listing on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nPlease set your 4-digit security PIN at the registration link to manage your listing.\n\nOur team will review and activate your business shortly.\n\nThank you 🙏`
+        `✅ *${doc.name}* is now live on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nPlease set your 4-digit security PIN at the registration link to manage your listing.\n\nThank you 🙏`
       ).catch(() => {});
     }
 
@@ -823,7 +823,7 @@ function buildFormHtml(phone, prefill = {}) {
     </div>
   </form>
 
-  <p class="note">Your listing will be reviewed before going live.<br>You'll receive a WhatsApp confirmation once approved. 🙏</p>
+  <p class="note">Your listing goes live right after you submit.<br>You'll receive a WhatsApp confirmation shortly. 🙏</p>
 </div>
 
 <!-- Profile Crop Modal -->
@@ -1435,7 +1435,7 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
   <div class="card">
     <div class="icon">✅</div>
     <h1>Registration Submitted!</h1>
-    <p class="sub"><strong style="color:var(--text)">${escHtml(name)}</strong> has been submitted for listing on Vanigan.<br>Our team will review and activate it shortly.</p>
+    <p class="sub"><strong style="color:var(--text)">${escHtml(name)}</strong> is now live on Vanigan.<br>You can manage your listing anytime using your PIN.</p>
     <div class="code-badge"># ${escHtml(listingCode)}</div>
 
     <hr class="divider">
