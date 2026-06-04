@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Navbar() {
   const { navigate, current } = useNav();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, business, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -17,7 +17,9 @@ export default function Navbar() {
     go('home');
   };
 
-  /* Nav links — only show My Business + Add Business if logged in */
+  const canAddBusiness = isLoggedIn && !business;
+
+  /* Nav links — only show My Business if logged in */
   const links = [
     { label: 'Home',       page: 'home',       icon: Store },
     { label: 'Categories', page: 'categories', icon: Grid3X3 },
@@ -55,11 +57,12 @@ export default function Navbar() {
 
           {isLoggedIn ? (
             <>
-              {/* Add Business button */}
-              <button onClick={() => go('add')} className="btn btn-primary btn-sm"
-                style={{ fontWeight: 500, marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Plus size={14} /> Add Business
-              </button>
+              {canAddBusiness && (
+                <button onClick={() => go('add')} className="btn btn-primary btn-sm"
+                  style={{ fontWeight: 500, marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Plus size={14} /> Add Business
+                </button>
+              )}
               {/* User avatar with dropdown */}
               <div style={{ position: 'relative', marginLeft: 4 }}>
                 <button onClick={() => setShowUserMenu(v => !v)}
@@ -135,10 +138,12 @@ export default function Navbar() {
 
           {isLoggedIn ? (
             <>
-              <button onClick={() => go('add')} className="btn btn-primary btn-full"
-                style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Plus size={16} /> Add Business
-              </button>
+              {canAddBusiness && (
+                <button onClick={() => go('add')} className="btn btn-primary btn-full"
+                  style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Plus size={16} /> Add Business
+                </button>
+              )}
               <div style={{ borderTop: '1px solid var(--color-subtle-ash)', paddingTop: 8, marginTop: 4 }}>
                 <div style={{ padding: '8px 12px', fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)' }}>
                   Logged in as <strong style={{ color: 'var(--color-rich-black)' }}>{user?.name}</strong>

@@ -1,8 +1,11 @@
 import { Headphones, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { useNav } from '../App.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Footer() {
   const { navigate } = useNav();
+  const { isLoggedIn, business } = useAuth();
+  const canAddBusiness = !isLoggedIn || !business;
 
   const go = (page) => {
     navigate(page);
@@ -94,7 +97,7 @@ export default function Footer() {
             <li><button onClick={() => go('home')}>About Us</button></li>
             <li><button onClick={() => go('home')}>Contact Us</button></li>
             <li><button onClick={() => go('categories')}>Categories</button></li>
-            <li><button onClick={() => go('add')}>Request a Listing</button></li>
+            {canAddBusiness && <li><button onClick={() => go('add')}>Request a Listing</button></li>}
           </ul>
         </div>
 
