@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600" width="100%" height="100%" preserveAspectRatio="none">
+  <!-- Top Right Blob -->
+  <path d="M500 0 C500 160, 560 240, 700 280 C800 310, 850 380, 900 480 L900 0 Z" fill="#22c55e" />
+  
+  <!-- Bottom Left Blob -->
+  <path d="M0 1180 C80 1280, 100 1360, 260 1380 C360 1390, 380 1480, 400 1600 L0 1600 Z" fill="#22c55e" />
+</svg>

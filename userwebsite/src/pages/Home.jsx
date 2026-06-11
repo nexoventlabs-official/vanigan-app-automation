@@ -30,32 +30,24 @@ export default function Home() {
 
   return (
     <div>
-      {/* ── Hero Split Section (Medium style) ── */}
-      <section style={{
-        background: 'var(--color-vellum-background)',
-        padding: '96px 0 64px',
+      {/* ── Hero Section (Full View with Corner Blobs) ── */}
+      <section className="hero-section" style={{
+        minHeight: '100vh',
+        marginTop: '-64px',
+        paddingTop: '80px',
+        display: 'flex',
+        alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
         borderBottom: '1px solid var(--border)',
       }}>
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(80,179,58,0.03) 0%, transparent 75%)',
-          pointerEvents: 'none',
-        }} />
-
-        <div className="container" style={{ position: 'relative', zIndex: 5 }}>
+        <div className="container" style={{ position: 'relative', zIndex: 5, width: '100%' }}>
           <div className="hero-split-grid" style={{
             display: 'grid',
             gridTemplateColumns: '1.2fr 0.8fr',
             gap: '40px',
             alignItems: 'center',
           }}>
-            
             {/* Left Content Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'flex-start' }}>
               <h1 style={{
@@ -115,14 +107,7 @@ export default function Home() {
                     }}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{
-                  height: 48,
-                  paddingInline: 24,
-                  borderRadius: 'var(--radius-buttons)',
-                  fontWeight: 400,
-                  fontSize: '15px',
-                  fontFamily: 'var(--font-sohne)'
-                }}>
+                <button type="submit" className="search-hero-btn">
                   Search
                 </button>
               </form>
@@ -167,95 +152,140 @@ export default function Home() {
             </div>
 
             {/* Right Graphic Column */}
-            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }} className="hero-graphic-wrap">
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(80, 179, 58, 0.04) 0%, transparent 70%)',
-                filter: 'blur(30px)',
-                zIndex: 1,
-              }} />
-
-              {/* iOS and Laptop Devices Showcase */}
-              <div className="devices-showcase" style={{ zIndex: 2 }}>
-                
-                {/* Laptop (MacBook Style) */}
-                <div className="laptop-mockup">
-                  <div className="laptop-screen-bezel">
-                    <div className="laptop-screen-display">
-                      <div className="laptop-web-header">
-                        <div className="laptop-web-dot"></div>
-                        <div className="laptop-web-dot"></div>
-                        <div className="laptop-web-dot"></div>
-                        <div className="laptop-web-address"></div>
-                      </div>
-                      <div className="laptop-web-content">
-                        {/* Mock Hero banner */}
-                        <div className="laptop-mock-hero">
-                          <div style={{ fontSize: '0.45rem', fontWeight: 600, letterSpacing: '0.2px', fontFamily: 'var(--font-sohne)' }}>
-                            VANIGAN COMMERCIAL MAP
-                          </div>
-                        </div>
-                        {/* Mock product card row */}
-                        <div className="laptop-mock-card-row">
-                          {[1, 2, 3].map(n => (
-                            <div className="laptop-mock-card" key={n}>
-                              <div className="laptop-mock-card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', overflow: 'hidden' }}>
-                                <img src="/business_illustration.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                              </div>
-                              <div className="laptop-mock-card-text"></div>
-                              <div className="laptop-mock-card-text"></div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="laptop-keyboard-base">
-                    <div className="laptop-keyboard-indent"></div>
-                  </div>
-                </div>
-
-                {/* iOS Phone (iPhone 15 Pro Style) */}
-                <div className="phone-mockup">
-                  <div className="phone-bezel">
-                    <div className="phone-screen">
-                      <div className="phone-dynamic-island"></div>
-                      <div className="phone-app-header">
-                        <div className="phone-app-logo">Vanigan</div>
-                        <div className="phone-app-menu">
-                          <div className="phone-app-bar"></div>
-                          <div className="phone-app-bar"></div>
-                          <div className="phone-app-bar"></div>
-                        </div>
-                      </div>
-                      <div className="phone-app-content">
-                        {/* Mini Phone mockup profile card */}
-                        <div className="phone-mock-profile-card">
-                          <div className="phone-mock-cover"></div>
-                          <img src="/business_illustration.png" className="phone-mock-avatar" alt="" style={{ objectFit: 'contain', background: '#ffffff' }} />
-                          <div className="phone-mock-title"></div>
-                          <div className="phone-mock-subtitle"></div>
-                          <div className="phone-mock-btn-row">
-                            <div className="phone-mock-btn"></div>
-                            <div className="phone-mock-btn phone-mock-btn-green"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} className="hero-graphic-wrap">
+              <img
+                src="/hero.svg"
+                alt="Illustration"
+                style={{
+                  width: '100%',
+                  maxWidth: '460px',
+                  height: 'auto',
+                  objectFit: 'contain',
+                }}
+              />
             </div>
-
           </div>
         </div>
 
         {/* CSS mockup layout */}
         <style>{`
+          /* Category Show All Button from Uiverse */
+          .show-all-uiverse-btn {
+            line-height: 1;
+            text-decoration: none;
+            display: inline-flex;
+            border: none;
+            cursor: pointer;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--clr);
+            color: #fff;
+            border-radius: 10rem;
+            font-weight: 600;
+            padding: 0.5rem 1.1rem;
+            padding-left: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background-color 0.3s;
+            font-family: var(--font-sohne), sans-serif;
+            font-size: 12px;
+            outline: none;
+          }
+
+          .show-all-btn-icon-wrapper {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            position: relative;
+            color: var(--clr);
+            background-color: #fff;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+          }
+
+          .show-all-uiverse-btn:hover {
+            background-color: var(--hover-clr);
+          }
+
+          .show-all-uiverse-btn:hover .show-all-btn-icon-wrapper {
+            color: var(--hover-clr);
+          }
+
+          .show-all-btn-icon-svg--copy {
+            position: absolute;
+            transform: translate(-150%, 150%);
+          }
+
+          .show-all-uiverse-btn:hover .show-all-btn-icon-svg:first-child {
+            transition: transform 0.3s ease-in-out;
+            transform: translate(150%, -150%);
+          }
+
+          .show-all-uiverse-btn:hover .show-all-btn-icon-svg--copy {
+            transition: transform 0.3s ease-in-out 0.1s;
+            transform: translate(0);
+          }
+
+          /* Responsive Background for Hero Section */
+          .hero-section {
+            background-image: url('/hero-bg.svg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+          }
+
+          @media (max-width: 768px) {
+            .hero-section {
+              background-image: url('/hero-bg-mobile.svg') !important;
+            }
+          }
+
+          /* Search Button from Uiverse.io by alexroumi */
+          .search-hero-btn {
+            padding: 15px 25px;
+            border: unset;
+            border-radius: 15px;
+            color: #212121;
+            z-index: 1;
+            background: #e8e8e8;
+            position: relative;
+            font-weight: 1000;
+            font-size: 17px;
+            -webkit-box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+            box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+            transition: all 250ms;
+            overflow: hidden;
+            cursor: pointer;
+            display: inline-block;
+            font-family: var(--font-sohne), sans-serif;
+          }
+
+          .search-hero-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            border-radius: 15px;
+            background-color: #212121;
+            z-index: -1;
+            -webkit-box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+            box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+            transition: all 250ms;
+          }
+
+          .search-hero-btn:hover {
+            color: #e8e8e8;
+          }
+
+          .search-hero-btn:hover::before {
+            width: 100%;
+          }
+
           /* Devices Showcase Layout */
           .devices-showcase {
             position: relative;
@@ -526,6 +556,93 @@ export default function Home() {
               display: none !important;
             }
           }
+
+          /* Marquee Category Showcase */
+          .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            display: flex;
+            position: relative;
+            padding: 24px 0;
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+          }
+
+          .marquee-track {
+            display: flex;
+            gap: 16px;
+            width: max-content;
+            animation: marquee-anim 100s linear infinite;
+          }
+
+          .marquee-container:hover .marquee-track {
+            animation-play-state: paused;
+          }
+
+          @keyframes marquee-anim {
+            0% {
+              transform: translate3d(0, 0, 0);
+            }
+            100% {
+              transform: translate3d(-50%, 0, 0);
+            }
+          }
+
+          .marquee-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: var(--color-parchment-white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+          }
+          
+          .marquee-card:hover {
+            border-color: #22c55e;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.08);
+          }
+
+          /* Category hover button styling */
+          .uiverse-glow-btn {
+            color: var(--color-rich-black);
+            text-decoration: none;
+            font-size: 13px; /* adjusted from 25px to fit the 160px cards perfectly */
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            height: auto;
+            padding: 0;
+            cursor: pointer;
+            position: relative;
+            text-transform: uppercase;
+            line-height: 1.2;
+            display: inline-block;
+            white-space: nowrap;
+          }
+
+          .uiverse-glow-btn::before {
+            margin-left: auto;
+          }
+
+          .uiverse-glow-btn::after, .uiverse-glow-btn::before {
+            content: '';
+            width: 0%;
+            height: 2px;
+            background: #f44336;
+            display: block;
+            transition: 0.5s;
+          }
+
+          .uiverse-glow-btn:hover::after, .uiverse-glow-btn:hover::before,
+          .marquee-card:hover .uiverse-glow-btn::after,
+          .marquee-card:hover .uiverse-glow-btn::before {
+            width: 100%;
+          }
+
           @media (max-width: 480px) {
             .devices-showcase {
               max-width: 320px !important;
@@ -553,26 +670,60 @@ export default function Home() {
               <h2 className="section-title">Browse by Category</h2>
               <p className="section-sub">Find businesses in popular categories</p>
             </div>
-            <button onClick={() => navigate('categories')} className="btn btn-ghost btn-sm">
-              Show All <ArrowRight size={14} />
+            <button
+              onClick={() => navigate('categories')}
+              className="show-all-uiverse-btn"
+              style={{ '--clr': '#000000', '--hover-clr': '#22c55e' }}
+            >
+              <span className="show-all-btn-icon-wrapper">
+                <svg
+                  viewBox="0 0 14 15"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="show-all-btn-icon-svg"
+                  width="8"
+                >
+                  <path
+                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+
+                <svg
+                  viewBox="0 0 14 15"
+                  fill="none"
+                  width="8"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="show-all-btn-icon-svg show-all-btn-icon-svg--copy"
+                >
+                  <path
+                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+              </span>
+              Explore All
             </button>
           </div>
 
           {loading ? (
             <div className="spinner-wrap"><div className="spinner" /></div>
           ) : (
-            <div className="grid-4">
-              {showCats.map(cat => (
-                <CategoryCard key={cat.category} cat={cat} onClick={() => navigate('list', { category: cat.category })} />
-              ))}
+            <div className="marquee-container">
+              <div className="marquee-track">
+                {/* First Set */}
+                {categories.map((cat, idx) => (
+                  <MarqueeCategoryCard key={`c1-${cat.category}-${idx}`} cat={cat} onClick={() => navigate('list', { category: cat.category })} />
+                ))}
+                {/* Second Set (Duplicate for Infinite Loop) */}
+                {categories.map((cat, idx) => (
+                  <MarqueeCategoryCard key={`c2-${cat.category}-${idx}`} cat={cat} onClick={() => navigate('list', { category: cat.category })} />
+                ))}
+              </div>
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <button onClick={() => navigate('categories')} className="btn btn-outline">
-              View All {categories.length} Categories <ArrowRight size={16} />
-            </button>
-          </div>
+
         </div>
       </section>
 
@@ -585,8 +736,39 @@ export default function Home() {
                 <h2 className="section-title">Top Rated Businesses</h2>
                 <p className="section-sub">Highest rated by customers</p>
               </div>
-              <button onClick={() => navigate('list', {})} className="btn btn-ghost btn-sm">
-                View All <ArrowRight size={14} />
+              <button
+                onClick={() => navigate('list', {})}
+                className="show-all-uiverse-btn"
+                style={{ '--clr': '#000000', '--hover-clr': '#22c55e' }}
+              >
+                <span className="show-all-btn-icon-wrapper">
+                  <svg
+                    viewBox="0 0 14 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="show-all-btn-icon-svg"
+                    width="8"
+                  >
+                    <path
+                      d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
+
+                  <svg
+                    viewBox="0 0 14 15"
+                    fill="none"
+                    width="8"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="show-all-btn-icon-svg show-all-btn-icon-svg--copy"
+                  >
+                    <path
+                      d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
+                </span>
+                Explore All
               </button>
             </div>
             <div className="grid-3">
@@ -913,6 +1095,46 @@ export default function Home() {
         `}</style>
       </section>
 
+    </div>
+  );
+}
+
+function MarqueeCategoryCard({ cat, onClick }) {
+  return (
+    <div 
+      className="card card-hover marquee-card" 
+      onClick={onClick} 
+      style={{ 
+        width: '160px', 
+        flexShrink: 0,
+        textAlign: 'center', 
+        background: 'var(--color-parchment-white)',
+        display: 'inline-block',
+        margin: '0 8px'
+      }}
+    >
+      <div style={{
+        height: '100px', 
+        background: 'var(--color-vellum-background)', 
+        overflow: 'hidden',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+      }}>
+        {cat.imageUrl ? (
+          <img src={cat.imageUrl} alt={cat.category} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <Store size={24} style={{ color: 'var(--color-muted-text-gray)' }} />
+        )}
+      </div>
+      <div style={{ padding: '10px 8px', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+        <button 
+          className="uiverse-glow-btn" 
+          style={{ width: '100%' }}
+        >
+          {cat.category}
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -48,7 +48,7 @@
   --gradient-blush: var(--gradient-mint-green-glow);
 
   /* ── Typography — Font Families ── */
-  --font-pp-neue-montreal: 'PP Neue Montreal', 'Inter', Arial, sans-serif;
+  --font-pp-neue-montreal: 'Outfit', 'Inter', sans-serif;
   --font-sf-pro-display: var(--font-pp-neue-montreal);
   --font-sf-pro-text: var(--font-pp-neue-montreal);
 
@@ -79,11 +79,11 @@
   --leading-display: 1.3;
 
   /* Typography — Weights */
-  --font-weight-light: 400;
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  --font-weight-light: 500;
+  --font-weight-regular: 600;
+  --font-weight-medium: 700;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
 
   /* ── Spacing ── */
   --spacing-unit: 4px;
@@ -154,6 +154,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-pp-neue-montreal);
+  font-weight: 600; /* Make complete website text bold by default */
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -165,7 +166,7 @@ body {
 /* ── Typography Hierarchy ── */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
+  font-weight: 800; /* Extra bold headings */
   color: var(--color-rich-black);
   letter-spacing: -0.019em;
   font-feature-settings: "lnum" on, "pnum" on;
