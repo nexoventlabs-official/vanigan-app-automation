@@ -10,6 +10,7 @@ import MyBusiness     from './pages/MyBusiness.jsx';
 import Login          from './pages/Login.jsx';
 import Signup         from './pages/Signup.jsx';
 import Gallery        from './pages/Gallery.jsx';
+import MemberCard     from './pages/MemberCard.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 
 export const NavCtx = createContext(null);
@@ -33,6 +34,7 @@ export default function App() {
     login:      <Login />,
     signup:     <Signup />,
     gallery:    <Gallery />,
+    membercard: <MemberCard />,
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Phone, ArrowRight, CheckCircle2, Store, Lock } from 'lucide-react';
-import { REGISTER_URL, webLinkBusiness, verifyOwnerPin, updateOwnerBusiness } from '../api.js';
+import { REGISTER_URL, webLinkBusiness, memberLinkBusiness, verifyOwnerPin, updateOwnerBusiness } from '../api.js';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -59,7 +59,7 @@ function PinBoxes({ value, onChange, disabled }) {
 
 export default function AddBusiness() {
   const { navigate } = useNav();
-  const { isLoggedIn, user, updateBusiness } = useAuth();
+  const { isLoggedIn, user, updateBusiness, member, updateMemberBusiness } = useAuth();
 
   // For non-logged-in users
   const [phone, setPhone]   = useState('');
@@ -73,15 +73,19 @@ export default function AddBusiness() {
   const [pinLoading, setPinLoading] = useState(false);
   const [pinSuccess, setPinSuccess] = useState(false);
 
-  const userPhone = isLoggedIn ? user.phone : '';
+  // Unified user data — prefer member session, fall back to legacy user
+  const activeUser = member || user;
+  const userPhone = isLoggedIn ? (activeUser?.phone || '') : '';
+  const isMemberUser = !!member;
 
-  /* Build pre-fill options from logged-in user's profile */
+  /* Build pre-fill options — use member data if available */
   const prefillOpts = isLoggedIn ? {
-    bizName:     user.bizName     || '',
-    category:    user.bizCategory || '',
-    subCategory: user.bizSubCat   || '',
-    district:    user.district    || '',
-    assembly:    user.assembly    || '',
+    bizName:     activeUser?.bizName     || '',
+    category:    activeUser?.bizCategory || '',
+    subCategory: activeUser?.bizSubCat   || '',
+    district:    activeUser?.district    || '',
+    assembly:    activeUser?.assemblyName || activeUser?.assembly || '',
+    ownerName:   activeUser?.name        || '',
   } : {};
 
   /* Non-logged-in: open registration form in new tab */
@@ -112,8 +116,13 @@ export default function AddBusiness() {
       const biz = r.data;
       // Link business to user account
       if (biz?._id) {
-        await webLinkBusiness(userPhone, biz._id).catch(() => {});
-        updateBusiness(biz);
+        if (isMemberUser) {
+          await memberLinkBusiness(userPhone, biz._id).catch(() => {});
+          updateMemberBusiness(biz);
+        } else {
+          await webLinkBusiness(userPhone, biz._id).catch(() => {});
+          updateBusiness(biz);
+        }
       }
       setPinSuccess(true);
       setTimeout(() => navigate('my'), 1500);
@@ -197,7 +206,7 @@ export default function AddBusiness() {
             Add Your Business
           </h1>
           <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-            Hi <strong style={{ color: 'var(--color-rich-black)' }}>{user?.name}</strong>! Your WhatsApp number <strong style={{ color: 'var(--color-rich-black)' }}>{userPhone}</strong> is pre-filled. Complete the form and then enter your PIN here to link it to your account.
+            Hi <strong style={{ color: 'var(--color-rich-black)' }}>{activeUser?.name}</strong>! Your WhatsApp number <strong style={{ color: 'var(--color-rich-black)' }}>{userPhone}</strong> is pre-filled. Complete the form and then enter your PIN here to link it to your account.
           </p>
         </div>
 
@@ -205,9 +214,9 @@ export default function AddBusiness() {
         <div style={{ background: 'var(--color-mint-green-glow)', border: '1px solid var(--color-muted-sage)', borderRadius: 12, padding: '14px 16px', marginBottom: 24, fontFamily: 'var(--font-pp-neue-montreal)' }}>
           <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-deep-fern-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Pre-filled Info</div>
           <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>📱 WhatsApp: <strong>{userPhone}</strong></div>
-          {user?.name && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>👤 Name: <strong>{user.name}</strong></div>}
-          {user?.district && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>📍 Location: <strong>{user.district}{user.assembly ? `, ${user.assembly}` : ''}</strong></div>}
-          {user?.bizCategory && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>🏷️ Category: <strong>{user.bizCategory}{user.bizSubCat ? ` → ${user.bizSubCat}` : ''}</strong></div>}
+          {user?.name && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>👤 Name: <strong>{activeUser?.name}</strong></div>}
+          {user?.district && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>📍 Location: <strong>{activeUser?.district}{(activeUser?.assemblyName || activeUser?.assembly) ? `, ${activeUser?.assemblyName || activeUser?.assembly}` : ''}</strong></div>}
+          {user?.bizCategory && <div style={{ fontSize: '13px', color: 'var(--color-rich-black)', marginBottom: 2 }}>🏷️ Category: <strong>{activeUser?.bizCategory}{activeUser?.bizSubCat ? ` → ${activeUser?.bizSubCat}` : ''}</strong></div>}
         </div>
 
         {/* Benefits */}

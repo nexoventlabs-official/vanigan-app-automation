@@ -23,6 +23,7 @@ const categoryImageRoutes = require('./routes/categoryImages');
 const publicApiRoutes     = require('./routes/publicApi');
 const webAuthRoutes       = require('./routes/webAuth');
 const galleryRoutes       = require('./routes/gallery');
+const memberAuthRoutes    = require('./routes/memberAuth');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -84,6 +85,7 @@ app.use('/api/category-images', categoryImageRoutes);
 app.use('/api/public',          publicApiRoutes);
 app.use('/api/web-auth',        webAuthRoutes);
 app.use('/api/gallery',         galleryRoutes);
+app.use('/api/member-auth',     memberAuthRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 
@@ -105,6 +107,17 @@ async function start() {
   } catch (err) {
     console.error('[Mongo] connection failed:', err.message);
     process.exit(1);
+  }
+
+  // Connect member MongoDB (for VaniganMember model) if configured
+  if (process.env.MEMBER_MONGODB_URI) {
+    try {
+      // Warm up the member DB connection early (lazy-init via memberDb.js)
+      const { getConnection } = require('./services/memberDb');
+      getConnection().catch(e => console.warn('[MemberDB] warm-up error:', e.message));
+    } catch (err) {
+      console.warn('[MemberDB] init skipped:', err.message);
+    }
   }
 
   // Seed default admin if none exists

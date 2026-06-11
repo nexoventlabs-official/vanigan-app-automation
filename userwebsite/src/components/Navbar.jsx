@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn, Images } from 'lucide-react';
+import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn, Images, CreditCard } from 'lucide-react';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Navbar() {
   const { navigate, current } = useNav();
-  const { isLoggedIn, user, business, logout } = useAuth();
+  const { isLoggedIn, user, business, logout, member } = useAuth();
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -128,6 +128,15 @@ export default function Navbar() {
                   <Plus size={14} /> Add Business
                 </button>
               )}
+              {/* Membership Card — only for members (new signup) */}
+              {member && (
+                <button onClick={() => go('membercard')} className="btn btn-outline btn-sm"
+                  style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4,
+                    fontWeight: 600, borderColor: 'var(--color-deep-fern-green)',
+                    color: 'var(--color-deep-fern-green)' }}>
+                  <CreditCard size={14} /> My Card
+                </button>
+              )}
               {/* Logout button */}
               <button className="logout-btn" onClick={handleLogout} style={{ marginLeft: 8 }}>
                 <div className="sign">
@@ -166,6 +175,14 @@ export default function Navbar() {
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                       <User size={13} /> My Business
                     </button>
+                    {member && (
+                      <button onClick={() => go('membercard')}
+                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-deep-fern-green)', fontWeight: 600, transition: 'background .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                        <CreditCard size={13} /> My Membership Card
+                      </button>
+                    )}
                     <button onClick={handleLogout}
                       style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: '#dc2626', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
@@ -222,6 +239,12 @@ export default function Navbar() {
                 <div style={{ padding: '8px 12px', fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-cool-gray)' }}>
                   Logged in as <strong style={{ color: 'var(--color-rich-black)' }}>{user?.name}</strong>
                 </div>
+                {member && (
+                  <button onClick={() => go('membercard')} className="mobile-nav-link"
+                    style={{ color: 'var(--color-deep-fern-green)', fontWeight: 600 }}>
+                    <CreditCard size={16} /> My Membership Card
+                  </button>
+                )}
                 <button onClick={handleLogout} className="mobile-nav-link" style={{ color: '#dc2626' }}>
                   <LogOut size={16} /> Logout
                 </button>

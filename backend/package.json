@@ -14,6 +14,9 @@
     "waba:subscribe": "node scripts/subscribe-waba.js",
     "seed:admin": "node scripts/seed-admin.js",
     "seed:plans": "node scripts/seed-default-plans.js",
+    "setup:member-db": "node scripts/setup-member-db.js",
+    "setup:member-cloudinary": "node scripts/setup-member-cloudinary.js",
+    "setup:member-cloudinary-wipe": "node scripts/setup-member-cloudinary.js --wipe",
     "reset:mongo": "node scripts/reset-mongo.js",
     "reset:cloudinary": "node scripts/reset-cloudinary.js"
   },

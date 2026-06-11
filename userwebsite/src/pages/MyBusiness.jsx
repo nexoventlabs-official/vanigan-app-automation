@@ -16,7 +16,7 @@ function WhatsAppIcon({ size = 14, style }) {
 }
 import {
   checkOwnerPhone, verifyOwnerPin, updateOwnerBusiness,
-  getBusiness, REGISTER_URL, setStoredPhone, webGetMe,
+  getBusiness, REGISTER_URL, setStoredPhone, webGetMe, memberGetMe,
 } from '../api.js';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -81,7 +81,7 @@ function PinInput({ value, onChange, disabled }) {
 ────────────────────────────────────────────────────────── */
 export default function MyBusiness() {
   const { navigate } = useNav();
-  const { isLoggedIn, user, business: sessionBiz, updateBusiness, logout } = useAuth();
+  const { isLoggedIn, user, business: sessionBiz, updateBusiness, updateMemberBusiness, isMember, logout } = useAuth();
 
   /* If logged in, skip phone/pin steps entirely — go straight to view */
   const [step, setStep]         = useState(() => (isLoggedIn && sessionBiz) ? 'view' : isLoggedIn ? 'no_business' : 'phone');
@@ -171,11 +171,15 @@ export default function MyBusiness() {
     setLoading(true);
     try {
       if (isLoggedIn && user?.phone) {
-        const r = await webGetMe(user.phone);
+        // Use the right API based on session type
+        const r = isMember
+          ? await memberGetMe(user.phone)
+          : await webGetMe(user.phone);
         const freshBiz = r.data.business;
         if (freshBiz) {
           setBiz(freshBiz);
-          updateBusiness(freshBiz);
+          if (isMember) updateMemberBusiness(freshBiz);
+          else updateBusiness(freshBiz);
         }
       } else {
         const r = await getBusiness(biz._id);

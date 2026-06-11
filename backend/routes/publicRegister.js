@@ -31,6 +31,7 @@ router.get('/register', async (req, res) => {
   const district    = String(req.query.district    || '').trim();
   const assembly    = String(req.query.assembly    || '').trim();
   const bizName     = String(req.query.bizName     || '').trim();
+  const ownerName   = String(req.query.ownerName   || '').trim();
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
   if (phone) {
@@ -45,7 +46,7 @@ router.get('/register', async (req, res) => {
     }
   }
 
-  res.send(buildFormHtml(phone, { category, subCategory, district, assembly, bizName }));
+  res.send(buildFormHtml(phone, { category, subCategory, district, assembly, bizName, ownerName }));
 });
 
 /* ── Handle form submission ── */
@@ -272,7 +273,7 @@ function pageShell(title, bodyContent) {
 }
 
 function buildFormHtml(phone, prefill = {}) {
-  const { category = '', subCategory = '', district = '', assembly = '', bizName = '' } = prefill;
+  const { category = '', subCategory = '', district = '', assembly = '', bizName = '', ownerName = '' } = prefill;
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
 
   /* ── Server-side render: category options with selected ── */
@@ -569,6 +570,7 @@ function buildFormHtml(phone, prefill = {}) {
 
   <form id="regForm" method="POST" action="${backendUrl}/public/register" enctype="multipart/form-data">
     <input type="hidden" name="ownerPhone" value="${escHtml(phone)}">
+    <input type="hidden" name="ownerName"  value="${escHtml(ownerName)}">
 
     <!-- Card 1: Basic Information -->
     <div class="card">

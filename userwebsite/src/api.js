@@ -31,6 +31,19 @@ export const webCheckPhone = (phone) => api.get('/api/web-auth/check-phone', { p
 export const webLinkBusiness = (phone, businessId) =>
   api.post('/api/web-auth/link-business', { phone, businessId });
 
+/* ── Member Auth APIs (new signup with EPIC + OTP + card) ── */
+export const memberCheckPhone   = (phone) => api.get('/api/member-auth/check-phone', { params: { phone } });
+export const memberLookupEpic   = (epic)  => api.post('/api/member-auth/lookup-epic', { epic });
+export const memberSendOtp      = (phone) => api.post('/api/member-auth/send-otp', { phone });
+export const memberVerifyOtp    = (phone, otp) => api.post('/api/member-auth/verify-otp', { phone, otp });
+export const memberUploadPhoto  = (formData) =>
+  api.post('/api/member-auth/upload-photo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const memberSignup       = (data) => api.post('/api/member-auth/signup', data);
+export const memberLogin        = (phone, pin) => api.post('/api/member-auth/login', { phone, pin });
+export const memberGetMe        = (phone) => api.get('/api/member-auth/me', { params: { phone } });
+export const memberLinkBusiness = (phone, businessId) =>
+  api.post('/api/member-auth/link-business', { phone, businessId });
+
 /* ── Public business register URL ── */
 export const REGISTER_URL = (phone = '', opts = {}) => {
   const base = BASE.replace(/\/+$/, '');
@@ -41,6 +54,7 @@ export const REGISTER_URL = (phone = '', opts = {}) => {
   if (opts.subCategory) params.set('subCategory', opts.subCategory);
   if (opts.district)    params.set('district',    opts.district);
   if (opts.assembly)    params.set('assembly',    opts.assembly);
+  if (opts.ownerName)   params.set('ownerName',   opts.ownerName);
   const qs = params.toString();
   return `${base}/public/register${qs ? `?${qs}` : ''}`;
 };
@@ -49,6 +63,7 @@ export const REGISTER_URL = (phone = '', opts = {}) => {
 export const LS_PHONE    = 'vanigan_phone';
 export const LS_REVIEWED = 'vanigan_reviewed';          // JSON array of bizIds
 export const LS_AUTH     = 'vanigan_auth';              // { user, business } after login
+export const LS_MEMBER   = 'vanigan_member_auth';       // { member, business } after member login
 
 export const getStoredPhone = () => localStorage.getItem(LS_PHONE) || '';
 export const setStoredPhone = (p) => { if (p) localStorage.setItem(LS_PHONE, p); };
@@ -64,6 +79,14 @@ export const getAuthSession = () => {
 export const setAuthSession = (data) => {
   if (data) localStorage.setItem(LS_AUTH, JSON.stringify(data));
   else localStorage.removeItem(LS_AUTH);
+};
+
+export const getMemberSession = () => {
+  try { return JSON.parse(localStorage.getItem(LS_MEMBER) || 'null'); } catch { return null; }
+};
+export const setMemberSession = (data) => {
+  if (data) localStorage.setItem(LS_MEMBER, JSON.stringify(data));
+  else localStorage.removeItem(LS_MEMBER);
 };
 
 export default api;
