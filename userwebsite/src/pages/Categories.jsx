@@ -62,56 +62,127 @@ export default function Categories() {
           <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700 }}>No categories found</h3>
         </div>
       ) : (
-        <div className="grid-5">
+        <div className="grid-5" style={{ gap: '24px 20px' }}>
           {filtered.map(cat => (
-            <button
+            <div
               key={cat.category}
               onClick={() => navigate('list', { category: cat.category })}
-              style={{
-                background: 'var(--color-canvas-white)',
-                border: '1px solid var(--color-subtle-ash)',
-                borderRadius: 'var(--radius-cards)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all .2s',
-                padding: 0,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--color-rich-black)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--color-subtle-ash)';
-                e.currentTarget.style.transform = 'none';
-              }}
+              className="category-card-wrapper"
             >
-              <div style={{ aspectRatio: '1', background: 'var(--color-subtle-ash)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* Neomorphic Card with Full-Bleed Image */}
+              <div className="button-container">
                 {cat.imageUrl ? (
-                  <img src={cat.imageUrl} alt={cat.category} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img 
+                    src={cat.imageUrl} 
+                    alt={cat.category} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover', 
+                      display: 'block',
+                      position: 'relative',
+                      zIndex: 0
+                    }} 
+                  />
                 ) : (
-                  <Store size={28} style={{ color: 'var(--color-cool-gray)' }} />
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    height: '100%', 
+                    width: '100%',
+                    background: 'var(--color-subtle-ash)',
+                    position: 'relative',
+                    zIndex: 0
+                  }}>
+                    <Store size={36} style={{ color: 'var(--color-cool-gray)' }} />
+                  </div>
                 )}
               </div>
-              <div style={{ padding: '12px 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, width: '100%' }}>
-                <span style={{
-                  fontFamily: 'var(--font-pp-neue-montreal)',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  color: 'var(--color-rich-black)',
-                  lineHeight: 1.3,
-                  textAlign: 'left'
-                }}>
-                  {cat.category}
-                </span>
-                <ChevronRight size={13} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />
+
+              {/* Category Title Text - Outside at the Bottom */}
+              <div className="category-title-outside">
+                {cat.category}
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
+
+      <style>{`
+        /* Parent Card Wrapper */
+        .category-card-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          background: none;
+          border: none;
+          padding: 0;
+          width: 100%;
+          outline: none;
+          text-decoration: none;
+        }
+
+        /* Button Container with Clean Shadow (No Gloss or White Overlay) */
+        .button-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1;
+          background: var(--color-canvas-white);
+          border-radius: 30px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+          border: 1px solid var(--color-subtle-ash);
+          transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          outline: none;
+        }
+
+        /* Trigger card hover when parent is hovered */
+        .category-card-wrapper:hover .button-container {
+          transform: translateY(-6px);
+          box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Active press state */
+        .category-card-wrapper:active .button-container {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Outside Category Title Style */
+        .category-title-outside {
+          margin-top: 14px;
+          font-family: var(--font-pp-neue-montreal), 'Poppins', sans-serif;
+          font-weight: 700;
+          font-size: 13px;
+          color: var(--color-rich-black);
+          line-height: 1.35;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          text-align: center;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          transition: color 0.2s ease;
+        }
+
+        /* Hover title color shift to branding green */
+        .category-card-wrapper:hover .category-title-outside {
+          color: #22c55e;
+        }
+      `}</style>
     </div>
   );
 }
