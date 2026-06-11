@@ -57,7 +57,7 @@ export default function Navbar() {
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative' }}>
         {/* Logo */}
         <button onClick={() => go('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style={{ height: 32 }} />
+          <img src="/logo.png" alt="Vanigan" style={{ height: 32 }} />
           <span style={{
             fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700,
             fontSize: '18px', color: 'var(--color-rich-black)', letterSpacing: '-0.5px'

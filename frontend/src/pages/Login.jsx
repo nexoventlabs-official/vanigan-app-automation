@@ -30,7 +30,7 @@ export default function Login({ setAuth }) {
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto shadow-md border border-brand-100 p-0.5">
             <img
-              src="https://vanigan.org/front/images/home/tnvslogo.png"
+              src="/logo.png"
               alt="TNVS Logo"
               className="w-full h-full object-contain rounded-full"
             />

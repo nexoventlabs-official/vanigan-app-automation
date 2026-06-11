@@ -55,7 +55,7 @@ export default function Layout({ user, setAuth }) {
           style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}
         >
           <img
-            src="https://vanigan.org/front/images/home/tnvslogo.png"
+            src="/logo.png"
             alt="TNVS Logo"
             className="w-14 h-14 object-contain"
             style={{ filter: 'drop-shadow(0 0 10px rgba(102, 255, 76, 0.35))' }}
