@@ -13,6 +13,7 @@ import Reviews from './pages/Reviews.jsx';
 import FlowImages from './pages/FlowImages.jsx';
 import Users from './pages/Users.jsx';
 import CategoryImages from './pages/CategoryImages.jsx';
+import Gallery from './pages/Gallery.jsx';
 
 function App() {
   const [auth, setAuth] = useState(null);
@@ -60,6 +61,7 @@ function App() {
           <Route path="flow-images" element={<FlowImages />} />
           <Route path="users" element={<Users />} />
           <Route path="category-images" element={<CategoryImages />} />
+          <Route path="gallery" element={<Gallery />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

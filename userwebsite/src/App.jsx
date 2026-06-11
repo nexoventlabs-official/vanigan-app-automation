@@ -9,6 +9,7 @@ import AddBusiness    from './pages/AddBusiness.jsx';
 import MyBusiness     from './pages/MyBusiness.jsx';
 import Login          from './pages/Login.jsx';
 import Signup         from './pages/Signup.jsx';
+import Gallery        from './pages/Gallery.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 
 export const NavCtx = createContext(null);
@@ -31,6 +32,7 @@ export default function App() {
     my:         <MyBusiness />,
     login:      <Login />,
     signup:     <Signup />,
+    gallery:    <Gallery />,
   };
 
   return (

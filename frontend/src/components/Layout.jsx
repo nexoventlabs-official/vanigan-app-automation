@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   LayoutGrid,
+  Images,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -23,6 +24,7 @@ const NAV = [
   { to: '/reviews', label: 'Reviews', icon: Star },
   { to: '/flow-images', label: 'Flow Images', icon: ImageIcon },
   { to: '/category-images', label: 'Category Images', icon: LayoutGrid },
+  { to: '/gallery', label: 'Event Gallery', icon: Images },
   { to: '/users', label: 'WhatsApp Users', icon: ShieldCheck },
 ];
 

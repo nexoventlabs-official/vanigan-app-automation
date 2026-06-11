@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn, Images } from 'lucide-react';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -8,6 +8,20 @@ export default function Navbar() {
   const { isLoggedIn, user, business, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const go = (name, params = {}) => { navigate(name, params); setOpen(false); setShowUserMenu(false); };
 
@@ -23,17 +37,24 @@ export default function Navbar() {
   const links = [
     { label: 'Home',       page: 'home',       icon: Store },
     { label: 'Categories', page: 'categories', icon: Grid3X3 },
+    { label: 'Gallery',    page: 'gallery',    icon: Images },
     ...(isLoggedIn ? [{ label: 'My Business', page: 'my', icon: User }] : []),
   ];
+
+  const isHome = current.name === 'home';
+  const showBg = !isHome || scrolled;
 
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: 'var(--color-canvas-white)',
-      borderBottom: '1px solid var(--color-subtle-ash)',
+      background: showBg ? 'rgba(255, 255, 255, 0.75)' : 'transparent',
+      backdropFilter: showBg ? 'blur(12px)' : 'none',
+      WebkitBackdropFilter: showBg ? 'blur(12px)' : 'none',
+      borderBottom: showBg ? '1px solid var(--color-subtle-ash)' : '1px solid transparent',
+      transition: 'background-color 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease',
       height: 52, display: 'flex', alignItems: 'center',
     }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative' }}>
         {/* Logo */}
         <button onClick={() => go('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="https://vanigan.org/front/images/home/tnvslogo.png" alt="Vanigan" style={{ height: 32 }} />
@@ -45,16 +66,60 @@ export default function Navbar() {
           </span>
         </button>
 
-        {/* Desktop links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="desktop-nav">
-          {links.map(({ label, page, icon: Icon }) => (
-            <button key={page} onClick={() => go(page)}
-              className={`nav-link ${current.name === page ? 'active' : ''}`}>
-              <Icon size={14} />
-              {label}
-            </button>
-          ))}
+        {/* Centered Desktop Navigation */}
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
+        }} className="desktop-nav">
+          <button
+            onClick={() => go('home')}
+            className={`uiverse-nav-btn ${current.name === 'home' ? 'active' : ''}`}
+            style={{ '--clr': current.name === 'home' ? '#22c55e' : '#000000' }}
+          >
+            <span className="uiverse-nav-btn-decor"></span>
+            <div className="uiverse-nav-btn-content">
+              <div className="uiverse-nav-btn-icon">
+                <Store size={16} color="#ffffff" />
+              </div>
+              <span className="uiverse-nav-btn-text">Home</span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => go('categories')}
+            className={`uiverse-nav-btn ${current.name === 'categories' ? 'active' : ''}`}
+            style={{ '--clr': current.name === 'categories' ? '#22c55e' : '#000000' }}
+          >
+            <span className="uiverse-nav-btn-decor"></span>
+            <div className="uiverse-nav-btn-content">
+              <div className="uiverse-nav-btn-icon">
+                <Grid3X3 size={16} color="#ffffff" />
+              </div>
+              <span className="uiverse-nav-btn-text">Categories</span>
+            </div>
+          </button>
 
+          <button
+            onClick={() => go('gallery')}
+            className={`uiverse-nav-btn ${current.name === 'gallery' ? 'active' : ''}`}
+            style={{ '--clr': current.name === 'gallery' ? '#22c55e' : '#000000' }}
+          >
+            <span className="uiverse-nav-btn-decor"></span>
+            <div className="uiverse-nav-btn-content">
+              <div className="uiverse-nav-btn-icon">
+                <Images size={16} color="#ffffff" />
+              </div>
+              <span className="uiverse-nav-btn-text">Gallery</span>
+            </div>
+          </button>
+        </div>
+
+        {/* Right Desktop Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="desktop-nav">
           {isLoggedIn ? (
             <>
               {canAddBusiness && (
@@ -63,8 +128,18 @@ export default function Navbar() {
                   <Plus size={14} /> Add Business
                 </button>
               )}
+              {/* Logout button */}
+              <button className="logout-btn" onClick={handleLogout} style={{ marginLeft: 8 }}>
+                <div className="sign">
+                  <svg viewBox="0 0 512 512">
+                    <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
+                  </svg>
+                </div>
+                <div className="text">Logout</div>
+              </button>
+
               {/* User avatar with dropdown */}
-              <div style={{ position: 'relative', marginLeft: 4 }}>
+              <div style={{ position: 'relative', marginLeft: 8 }}>
                 <button onClick={() => setShowUserMenu(v => !v)}
                   style={{
                     background: 'var(--color-rich-black)', border: 'none', cursor: 'pointer',
@@ -103,11 +178,10 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <button onClick={() => go('login')} className="nav-link" style={{ marginLeft: 8 }}>
+              <button onClick={() => go('login')} className="nav-uiverse-btn" style={{ marginLeft: 8 }}>
                 <LogIn size={14} /> Login
               </button>
-              <button onClick={() => go('signup')} className="btn btn-primary btn-sm"
-                style={{ fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <button onClick={() => go('signup')} className="nav-uiverse-btn" style={{ marginLeft: 8 }}>
                 <User size={14} /> Sign Up
               </button>
             </>
@@ -168,6 +242,111 @@ export default function Navbar() {
       )}
 
       <style>{`
+        .nav-uiverse-btn {
+          background-color: white;
+          color: black;
+          border-radius: 10em;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 6px 16px;
+          cursor: pointer;
+          transition: all 0.25s ease-in-out;
+          border: 1.5px solid black;
+          box-shadow: 0 0 0 0 black;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          outline: none;
+          font-family: var(--font-pp-neue-montreal);
+        }
+
+        .nav-uiverse-btn:hover {
+          transform: translateY(-2px) translateX(-1px);
+          box-shadow: 2px 3px 0 0 black;
+          background-color: white;
+          color: black;
+        }
+
+        .nav-uiverse-btn:active {
+          transform: translateY(1px) translateX(0.5px);
+          box-shadow: 0 0 0 0 black;
+        }
+
+        .uiverse-nav-btn {
+          text-decoration: none;
+          line-height: 1;
+          border-radius: 1.5rem;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 10px 10px 20px rgba(0,0,0,.02);
+          background-color: #fff;
+          color: #121212;
+          border: 1px solid var(--color-subtle-ash);
+          cursor: pointer;
+          font-family: var(--font-pp-neue-montreal);
+          padding: 0;
+          height: 38px;
+          display: inline-flex;
+          align-items: center;
+          transition: border-color 0.3s;
+        }
+
+        .uiverse-nav-btn-decor {
+          position: absolute;
+          inset: 0;
+          background-color: var(--clr);
+          transform: translateX(-100%);
+          transition: transform .3s ease;
+          z-index: 0;
+        }
+
+        .uiverse-nav-btn-content {
+          display: flex;
+          align-items: center;
+          font-weight: 600;
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+          height: 100%;
+        }
+
+        .uiverse-nav-btn-icon {
+          width: 38px;
+          height: 38px;
+          background-color: var(--clr);
+          display: grid;
+          place-items: center;
+          flex-shrink: 0;
+        }
+
+        .uiverse-nav-btn-text {
+          display: inline-block;
+          transition: color .2s;
+          padding: 2px 1.25rem 2px;
+          padding-left: .75rem;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          max-width: 150px;
+          font-size: 13px;
+        }
+
+        .uiverse-nav-btn:hover .uiverse-nav-btn-text {
+          color: #fff;
+        }
+
+        .uiverse-nav-btn:hover .uiverse-nav-btn-decor {
+          transform: translate(0);
+        }
+
+        /* Active styling */
+        .uiverse-nav-btn.active .uiverse-nav-btn-text {
+          color: #fff;
+        }
+        .uiverse-nav-btn.active .uiverse-nav-btn-decor {
+          transform: translate(0);
+        }
+
         .nav-link {
           background: transparent; border: none; cursor: pointer;
           display: inline-flex; align-items: center; gap: 6px;
@@ -188,6 +367,78 @@ export default function Navbar() {
         }
         .mobile-nav-link:hover, .mobile-nav-link:active { color: var(--color-rich-black); background-color: var(--color-subtle-ash); }
         .mobile-nav-link.active { color: var(--color-rich-black) !important; font-weight: 600; }
+
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          width: 34px;
+          height: 34px;
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition-duration: .3s;
+          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+          background-color: rgb(255, 65, 65);
+          padding: 0;
+          outline: none;
+          flex-shrink: 0;
+        }
+
+        .logout-btn .sign {
+          width: 100%;
+          transition-duration: .3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .logout-btn .sign svg {
+          width: 14px;
+        }
+
+        .logout-btn .sign svg path {
+          fill: white;
+        }
+
+        .logout-btn .text {
+          position: absolute;
+          right: 0%;
+          width: 0%;
+          opacity: 0;
+          color: white;
+          font-size: 11px;
+          font-weight: 600;
+          transition-duration: .3s;
+          font-family: var(--font-pp-neue-montreal), sans-serif;
+          white-space: nowrap;
+        }
+
+        .logout-btn:hover {
+          width: 95px;
+          border-radius: 40px;
+          transition-duration: .3s;
+        }
+
+        .logout-btn:hover .sign {
+          width: 30%;
+          transition-duration: .3s;
+          padding-left: 10px;
+        }
+
+        .logout-btn:hover .text {
+          opacity: 1;
+          width: 70%;
+          transition-duration: .3s;
+          padding-right: 8px;
+        }
+
+        .logout-btn:active {
+          transform: translate(1px ,1px);
+        }
+
         @media (max-width: 640px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: flex !important; }
