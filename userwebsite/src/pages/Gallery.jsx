@@ -2,105 +2,188 @@ import { useEffect, useState } from 'react';
 import api from '../api';
 import { CalendarDays, Images, X, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 
-/* ── helpers ── */
 const fmt = (d) =>
-  d
-    ? new Date(d).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      })
-    : '';
+  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
-/* ══════════════════════════════════════════════
-   EVENT DETAIL VIEW
-   ══════════════════════════════════════════════ */
-function EventDetail({ event, onBack }) {
-  const [lightbox, setLightbox] = useState(null); // { idx }
-
-  const openLightbox = (idx) => setLightbox({ idx });
-  const closeLightbox = () => setLightbox(null);
-  const prev = () =>
-    setLightbox((lb) => ({ idx: (lb.idx - 1 + event.images.length) % event.images.length }));
-  const next = () =>
-    setLightbox((lb) => ({ idx: (lb.idx + 1) % event.images.length }));
+/* ══════════════════════════════════════════════════════
+   LIGHTBOX
+   ══════════════════════════════════════════════════════ */
+function Lightbox({ images, startIdx, onClose }) {
+  const [idx, setIdx] = useState(startIdx);
+  const prev = () => setIdx((i) => (i - 1 + images.length) % images.length);
+  const next = () => setIdx((i) => (i + 1) % images.length);
 
   useEffect(() => {
-    if (!lightbox) return;
     const handler = (e) => {
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft')  prev();
-      if (e.key === 'Escape')     closeLightbox();
+      if (e.key === 'Escape')     onClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [lightbox]);
+  }, []);
 
-  // lock body scroll when lightbox open
   useEffect(() => {
-    document.body.style.overflow = lightbox ? 'hidden' : '';
+    document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
-  }, [lightbox]);
+  }, []);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-canvas-white)' }}>
-      {/* ── Top banner ── */}
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.95)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+      role="dialog" aria-modal="true"
+    >
+      {/* Close */}
+      <button onClick={onClose} aria-label="Close"
+        style={{
+          position: 'absolute', top: 16, right: 16,
+          width: 42, height: 42, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', zIndex: 10,
+        }}>
+        <X size={20} />
+      </button>
+
+      {/* Prev */}
+      {images.length > 1 && (
+        <button onClick={(e) => { e.stopPropagation(); prev(); }} aria-label="Previous"
+          style={{
+            position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+            width: 46, height: 46, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', zIndex: 10,
+          }}>
+          <ChevronLeft size={24} />
+        </button>
+      )}
+
+      {/* Image — full contain, no crop */}
+      <img
+        src={images[idx].url}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: 'min(92vw, 1100px)',
+          maxHeight: '90vh',
+          objectFit: 'contain',
+          borderRadius: 6,
+          userSelect: 'none',
+          display: 'block',
+        }}
+      />
+
+      {/* Next */}
+      {images.length > 1 && (
+        <button onClick={(e) => { e.stopPropagation(); next(); }} aria-label="Next"
+          style={{
+            position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+            width: 46, height: 46, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', zIndex: 10,
+          }}>
+          <ChevronRight size={24} />
+        </button>
+      )}
+
+      {/* Counter */}
+      {images.length > 1 && (
+        <div style={{
+          position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 20, padding: '4px 16px',
+          color: '#fff', fontSize: 13, fontWeight: 700,
+        }}>
+          {idx + 1} / {images.length}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   EVENT DETAIL PAGE
+   ══════════════════════════════════════════════════════ */
+function EventDetail({ event, onBack }) {
+  const [lightbox, setLightbox] = useState(null); // idx
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#fafafa' }}>
+      {/* ── Header bar ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%)',
+        background: '#fff',
         borderBottom: '1px solid var(--color-subtle-ash)',
-        padding: '36px 0 28px',
+        padding: '20px 0',
+        position: 'sticky', top: 52, zIndex: 50,
       }}>
-        <div className="container">
-          {/* Back button */}
+        <div className="container" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <button
             onClick={onBack}
             style={{
               all: 'unset', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 6,
               fontSize: 13, fontWeight: 700, color: 'var(--color-deep-fern-green)',
-              marginBottom: 16,
-              transition: 'opacity .15s',
+              padding: '6px 12px 6px 8px',
+              border: '1.5px solid var(--color-deep-fern-green)',
+              borderRadius: 8,
+              transition: 'background .15s',
+              flexShrink: 0,
             }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '.7'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
-            <ArrowLeft size={15} /> Back to Gallery
+            <ArrowLeft size={14} /> Gallery
           </button>
 
-          <h1 style={{
-            fontFamily: 'var(--font-pp-neue-montreal)',
-            fontSize: 'clamp(22px, 4vw, 36px)',
-            fontWeight: 800,
-            color: 'var(--color-rich-black)',
-            lineHeight: 1.15,
-            margin: '0 0 10px',
-          }}>
-            {event.eventName}
-          </h1>
-
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: 13, color: 'var(--color-cool-gray)', fontWeight: 600,
-          }}>
-            <CalendarDays size={13} />
-            {fmt(event.eventDate)}
-            <span style={{ margin: '0 4px', color: 'var(--color-subtle-ash)' }}>·</span>
-            <span>{event.images?.length || 0} photo{event.images?.length !== 1 ? 's' : ''}</span>
-          </div>
-
-          {event.description && (
-            <p style={{
-              marginTop: 12, fontSize: 15, color: 'var(--color-cool-gray)',
-              fontWeight: 600, maxWidth: 680, lineHeight: 1.6,
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              fontFamily: 'var(--font-pp-neue-montreal)',
+              fontSize: 'clamp(17px, 3vw, 24px)',
+              fontWeight: 800,
+              color: 'var(--color-rich-black)',
+              margin: 0,
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
-              {event.description}
-            </p>
-          )}
+              {event.eventName}
+            </h1>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap',
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-cool-gray)', fontWeight: 600 }}>
+                <CalendarDays size={12} /> {fmt(event.eventDate)}
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--color-cool-gray)', fontWeight: 600 }}>
+                {event.images?.length || 0} photo{event.images?.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Images grid ── */}
-      <div className="container section">
+      {/* ── Description ── */}
+      {event.description && (
+        <div style={{ background: '#f0fdf4', borderBottom: '1px solid #d1fae5', padding: '16px 0' }}>
+          <div className="container">
+            <p style={{
+              fontSize: 14, color: 'var(--color-cool-gray)', fontWeight: 600,
+              lineHeight: 1.65, margin: 0, maxWidth: 760,
+            }}>
+              {event.description}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Images ── */}
+      <div className="container" style={{ padding: '32px 24px' }}>
         {!event.images?.length ? (
           <div className="empty">
             <div className="empty-icon"><Images size={36} /></div>
@@ -109,25 +192,26 @@ function EventDetail({ event, onBack }) {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+            gap: 16,
           }}>
             {event.images.map((img, idx) => (
               <button
                 key={img.publicId}
-                onClick={() => openLightbox(idx)}
+                onClick={() => setLightbox(idx)}
                 style={{
                   all: 'unset', cursor: 'zoom-in',
-                  aspectRatio: '1',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: '#f5f5f5',
+                  border: '1px solid var(--color-subtle-ash)',
                   borderRadius: 10,
                   overflow: 'hidden',
-                  display: 'block',
-                  border: '1px solid var(--color-subtle-ash)',
+                  /* No fixed aspect-ratio — image drives its own height */
                   transition: 'transform .2s ease, box-shadow .2s ease',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'scale(1.03)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.13)';
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -135,10 +219,16 @@ function EventDetail({ event, onBack }) {
                 }}
                 aria-label={`View photo ${idx + 1}`}
               >
+                {/* Full image — no crop, width 100%, height auto */}
                 <img
                   src={img.url}
-                  alt={`${event.eventName} – photo ${idx + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  alt={`${event.eventName} – ${idx + 1}`}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
                   loading="lazy"
                 />
               </button>
@@ -147,223 +237,26 @@ function EventDetail({ event, onBack }) {
         )}
       </div>
 
-      {/* ── Lightbox ── */}
-      {lightbox && (
-        <div
-          onClick={closeLightbox}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
-            background: 'rgba(0,0,0,0.93)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 16,
-            animation: 'fadeIn .18s ease-out',
-          }}
-          role="dialog" aria-modal="true" aria-label="Photo viewer"
-        >
-          {/* Close */}
-          <button onClick={closeLightbox} aria-label="Close"
-            style={{
-              position: 'absolute', top: 16, right: 16,
-              width: 40, height: 40, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', zIndex: 10,
-            }}>
-            <X size={20} />
-          </button>
-
-          {/* Prev */}
-          {event.images.length > 1 && (
-            <button onClick={e => { e.stopPropagation(); prev(); }} aria-label="Previous"
-              style={{
-                position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                width: 44, height: 44, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 10,
-              }}>
-              <ChevronLeft size={22} />
-            </button>
-          )}
-
-          <img
-            src={event.images[lightbox.idx].url}
-            alt={`Photo ${lightbox.idx + 1}`}
-            onClick={e => e.stopPropagation()}
-            style={{
-              maxWidth: 'min(90vw, 960px)', maxHeight: '85vh',
-              objectFit: 'contain', borderRadius: 8,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-              userSelect: 'none',
-            }}
-          />
-
-          {/* Next */}
-          {event.images.length > 1 && (
-            <button onClick={e => { e.stopPropagation(); next(); }} aria-label="Next"
-              style={{
-                position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-                width: 44, height: 44, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 10,
-              }}>
-              <ChevronRight size={22} />
-            </button>
-          )}
-
-          {/* Counter */}
-          {event.images.length > 1 && (
-            <div style={{
-              position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 20, padding: '4px 16px',
-              color: '#fff', fontSize: 13, fontWeight: 600,
-            }}>
-              {lightbox.idx + 1} / {event.images.length}
-            </div>
-          )}
-        </div>
+      {/* Lightbox */}
+      {lightbox !== null && (
+        <Lightbox
+          images={event.images}
+          startIdx={lightbox}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   EVENT CARD (shown on listing page)
-   ══════════════════════════════════════════════ */
-function EventCard({ event, onClick }) {
-  const cover = event.images?.[0]?.url || null;
-  const count = event.images?.length || 0;
-
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        all: 'unset', cursor: 'pointer', display: 'flex', flexDirection: 'column',
-        background: 'var(--color-canvas-white)',
-        border: '1px solid var(--color-subtle-ash)',
-        borderRadius: 14,
-        overflow: 'hidden',
-        transition: 'transform .2s ease, box-shadow .2s ease, border-color .2s ease',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.10)';
-        e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.borderColor = 'var(--color-subtle-ash)';
-      }}
-      aria-label={`View ${event.eventName}`}
-    >
-      {/* Cover image */}
-      <div style={{
-        width: '100%', aspectRatio: '16/10',
-        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-        overflow: 'hidden', position: 'relative', flexShrink: 0,
-      }}>
-        {cover ? (
-          <img
-            src={cover}
-            alt={event.eventName}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            loading="lazy"
-          />
-        ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--color-deep-fern-green)',
-          }}>
-            <Images size={36} strokeWidth={1.5} />
-          </div>
-        )}
-
-        {/* Photo count badge */}
-        {count > 0 && (
-          <div style={{
-            position: 'absolute', bottom: 10, right: 10,
-            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-            borderRadius: 20, padding: '3px 10px',
-            color: '#fff', fontSize: 12, fontWeight: 700,
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}>
-            <Images size={11} /> {count} photo{count !== 1 ? 's' : ''}
-          </div>
-        )}
-
-        {/* Mini strip of up to 3 extra thumbnails */}
-        {event.images?.length > 1 && (
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            display: 'flex', gap: 2, height: 42,
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.35))',
-          }}>
-            {event.images.slice(1, 4).map((img, i) => (
-              <div key={i} style={{
-                flex: 1, overflow: 'hidden',
-                opacity: 0.85,
-              }}>
-                <img
-                  src={img.url}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Card footer */}
-      <div style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{
-          fontFamily: 'var(--font-pp-neue-montreal)',
-          fontSize: 15, fontWeight: 800,
-          color: 'var(--color-rich-black)',
-          lineHeight: 1.25,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {event.eventName}
-        </div>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          fontSize: 12, color: 'var(--color-cool-gray)', fontWeight: 600,
-        }}>
-          <CalendarDays size={12} /> {fmt(event.eventDate)}
-        </div>
-        {event.description && (
-          <p style={{
-            fontSize: 13, color: 'var(--color-cool-gray)', fontWeight: 600,
-            lineHeight: 1.5, marginTop: 2,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {event.description}
-          </p>
-        )}
-      </div>
-    </button>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   MAIN GALLERY PAGE
-   ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   GALLERY LISTING — images only, no card UI
+   ══════════════════════════════════════════════════════ */
 export default function Gallery() {
-  const [events, setEvents]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
-  const [selected, setSelected] = useState(null); // selected event object
+  const [events, setEvents]     = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     api
@@ -373,27 +266,30 @@ export default function Gallery() {
       .finally(() => setLoading(false));
   }, []);
 
-  // scroll to top when opening/closing detail
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selected]);
 
-  /* ── Detail view ── */
+  /* Detail view */
   if (selected) {
     return <EventDetail event={selected} onBack={() => setSelected(null)} />;
   }
 
-  /* ── Listing view ── */
+  /* ── flatten all images with their parent event ── */
+  const allImages = events.flatMap((evt) =>
+    (evt.images || []).map((img) => ({ ...img, event: evt }))
+  );
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-canvas-white)' }}>
-      {/* Hero banner */}
+    <div style={{ minHeight: '100vh', background: '#fafafa' }}>
+      {/* Hero */}
       <div style={{
-        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%)',
+        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%)',
         borderBottom: '1px solid var(--color-subtle-ash)',
-        padding: '48px 0 36px',
+        padding: '44px 0 32px',
       }}>
         <div className="container">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 48, height: 48, borderRadius: 12,
               background: 'var(--color-deep-fern-green)',
@@ -404,15 +300,14 @@ export default function Gallery() {
             <div>
               <h1 style={{
                 fontFamily: 'var(--font-pp-neue-montreal)',
-                fontSize: 'clamp(26px, 5vw, 42px)',
-                fontWeight: 800,
-                color: 'var(--color-rich-black)',
+                fontSize: 'clamp(24px, 5vw, 40px)',
+                fontWeight: 800, color: 'var(--color-rich-black)',
                 lineHeight: 1.15, margin: 0,
               }}>
                 Event Gallery
               </h1>
-              <p style={{ fontSize: 15, color: 'var(--color-cool-gray)', marginTop: 4, fontWeight: 600 }}>
-                Moments from our events and gatherings
+              <p style={{ fontSize: 14, color: 'var(--color-cool-gray)', marginTop: 4, fontWeight: 600 }}>
+                Click any photo to view the full event
               </p>
             </div>
           </div>
@@ -420,10 +315,8 @@ export default function Gallery() {
       </div>
 
       {/* Content */}
-      <div className="container section">
-        {loading && (
-          <div className="spinner-wrap"><div className="spinner" /></div>
-        )}
+      <div className="container" style={{ padding: '36px 24px' }}>
+        {loading && <div className="spinner-wrap"><div className="spinner" /></div>}
 
         {error && (
           <div style={{
@@ -435,33 +328,96 @@ export default function Gallery() {
           </div>
         )}
 
-        {!loading && !error && events.length === 0 && (
+        {!loading && !error && allImages.length === 0 && (
           <div className="empty">
             <div className="empty-icon"><Images size={40} /></div>
-            <h3>No gallery events yet</h3>
-            <p style={{ fontSize: 14, marginTop: 6 }}>Check back soon for event photos.</p>
+            <h3>No gallery photos yet</h3>
+            <p style={{ fontSize: 14, marginTop: 6 }}>Check back soon.</p>
           </div>
         )}
 
-        {!loading && events.length > 0 && (
-          <>
-            <p style={{ fontSize: 13, color: 'var(--color-cool-gray)', fontWeight: 600, marginBottom: 24 }}>
-              {events.length} event{events.length !== 1 ? 's' : ''} · Click an event to view all photos
-            </p>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 20,
-            }}>
-              {events.map((evt) => (
-                <EventCard
-                  key={evt._id}
-                  event={evt}
-                  onClick={() => setSelected(evt)}
+        {!loading && allImages.length > 0 && (
+          <div style={{
+            columns: '4 200px',   /* masonry-like multi-column */
+            columnGap: 14,
+          }}>
+            {allImages.map((item, i) => (
+              <button
+                key={`${item.event._id}-${item.publicId}`}
+                onClick={() => setSelected(item.event)}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  display: 'block',
+                  breakInside: 'avoid',
+                  marginBottom: 14,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  border: '1px solid var(--color-subtle-ash)',
+                  background: '#fff',
+                  position: 'relative',
+                  transition: 'transform .2s ease, box-shadow .2s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.13)';
+                  e.currentTarget.querySelector('.img-overlay').style.opacity = '1';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.querySelector('.img-overlay').style.opacity = '0';
+                }}
+                aria-label={`View event: ${item.event.eventName}`}
+              >
+                {/* Full image — no crop */}
+                <img
+                  src={item.url}
+                  alt={item.event.eventName}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
+                  loading="lazy"
                 />
-              ))}
-            </div>
-          </>
+
+                {/* Hover overlay with event name */}
+                <div
+                  className="img-overlay"
+                  style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.68) 0%, transparent 55%)',
+                    opacity: 0,
+                    transition: 'opacity .2s ease',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                    padding: '12px 12px 10px',
+                    borderRadius: 10,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <div style={{
+                    fontFamily: 'var(--font-pp-neue-montreal)',
+                    fontWeight: 800, fontSize: 13,
+                    color: '#fff', lineHeight: 1.3,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}>
+                    {item.event.eventName}
+                  </div>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600,
+                  }}>
+                    <CalendarDays size={10} /> {fmt(item.event.eventDate)}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>
