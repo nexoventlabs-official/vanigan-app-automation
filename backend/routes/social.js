@@ -112,12 +112,12 @@ router.get('/profile', async (req, res) => {
     const [followingBiz, savedBiz, followers] = await Promise.all([
       followingIds.length
         ? Business.find({ _id: { $in: followingIds } })
-            .select('name category subCategory image district assembly active listingCode')
+            .select('name category subCategory image district assembly active listingCode ownerPhone ownerName')
             .lean()
         : [],
       savedIds.length
         ? Business.find({ _id: { $in: savedIds } })
-            .select('name category subCategory image district assembly active listingCode phone whatsappNo')
+            .select('name category subCategory image district assembly active listingCode phone whatsappNo ownerPhone ownerName')
             .lean()
         : [],
       // Count + list how many other users follow this user's business
@@ -127,17 +127,45 @@ router.get('/profile', async (req, res) => {
         const VaniganUser   = await getVaniganUserModel();
         const bizOid = new mongoose.Types.ObjectId(raw.businessId.toString());
         const [members, users] = await Promise.all([
-          VaniganMember.find({ following: bizOid }).select('name phone photoUrl district assemblyName membershipId').lean(),
-          VaniganUser.find({ following: bizOid }).select('name phone district assembly').lean(),
+          VaniganMember.find({ following: bizOid }).select('name phone photoUrl district assemblyName membershipId businessId').lean(),
+          VaniganUser.find({ following: bizOid }).select('name phone district assembly businessId').lean(),
         ]);
         // Merge & normalise shape
-        const list = [
-          ...members.map(m => ({ _id: m._id, name: m.name, phone: m.phone, photoUrl: m.photoUrl || '', location: [m.assemblyName, m.district].filter(Boolean).join(', '), membershipId: m.membershipId || '' })),
-          ...users.map(u => ({ _id: u._id, name: u.name, phone: u.phone, photoUrl: '', location: [u.assembly, u.district].filter(Boolean).join(', '), membershipId: '' })),
+        const allFollowers = [
+          ...members.map(m => ({ _id: m._id, name: m.name, phone: m.phone, photoUrl: m.photoUrl || '', location: [m.assemblyName, m.district].filter(Boolean).join(', '), membershipId: m.membershipId || '', businessId: m.businessId || null })),
+          ...users.map(u => ({ _id: u._id, name: u.name, phone: u.phone, photoUrl: '', location: [u.assembly, u.district].filter(Boolean).join(', '), membershipId: '', businessId: u.businessId || null })),
         ];
+        // Enrich with their business details
+        const bizIds = allFollowers.map(f => f.businessId).filter(Boolean);
+        let bizMap = {};
+        if (bizIds.length) {
+          const bizDocs = await Business.find({ _id: { $in: bizIds } })
+            .select('name category subCategory image district assembly active listingCode').lean();
+          bizDocs.forEach(b => { bizMap[b._id.toString()] = b; });
+        }
+        const list = allFollowers.map(f => ({
+          ...f,
+          business: f.businessId ? (bizMap[f.businessId.toString()] || null) : null,
+        }));
         return { count: list.length, list };
       })(),
     ]);
+
+    // Enrich followingBiz with owner profile (photo, membershipId)
+    let enrichedFollowing = followingBiz;
+    if (followingBiz.length) {
+      const ownerPhones = [...new Set(followingBiz.map(b => b.ownerPhone).filter(Boolean))];
+      const VaniganMember = await getMemberModel();
+      const VaniganUser   = await getVaniganUserModel();
+      const [memberOwners, userOwners] = await Promise.all([
+        VaniganMember.find({ phone: { $in: ownerPhones } }).select('name phone photoUrl membershipId district assemblyName').lean(),
+        VaniganUser.find({ phone: { $in: ownerPhones } }).select('name phone district assembly').lean(),
+      ]);
+      const ownerMap = {};
+      userOwners.forEach(u => { ownerMap[u.phone] = { name: u.name, photoUrl: '', membershipId: '', location: [u.assembly, u.district].filter(Boolean).join(', ') }; });
+      memberOwners.forEach(m => { ownerMap[m.phone] = { name: m.name, photoUrl: m.photoUrl || '', membershipId: m.membershipId || '', location: [m.assemblyName, m.district].filter(Boolean).join(', ') }; });
+      enrichedFollowing = followingBiz.map(b => ({ ...b, owner: ownerMap[b.ownerPhone] || null }));
+    }
 
     res.json({
       profile: {
@@ -147,7 +175,7 @@ router.get('/profile', async (req, res) => {
         savedCount:      savedIds.length,
         followerCount:   followers.count,
         followerList:    followers.list,
-        followingList:   followingBiz,
+        followingList:   enrichedFollowing,
         savedList:       savedBiz,
       },
     });
