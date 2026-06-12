@@ -43,6 +43,8 @@ export const memberLogin        = (phone, pin) => api.post('/api/member-auth/log
 export const memberGetMe        = (phone) => api.get('/api/member-auth/me', { params: { phone } });
 export const memberLinkBusiness = (phone, businessId) =>
   api.post('/api/member-auth/link-business', { phone, businessId });
+export const memberLinkEpic = (phone, epic) =>
+  api.post('/api/member-auth/link-epic', { phone, epic });
 
 /* ── Public business register URL ── */
 export const REGISTER_URL = (phone = '', opts = {}) => {

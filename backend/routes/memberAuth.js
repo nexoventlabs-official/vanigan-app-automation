@@ -435,6 +435,75 @@ router.get('/me', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────
+   POST /link-epic
+   Body: { phone, epic }
+   — For no-EPIC members who want to link their voter ID later.
+   — Validates EPIC, updates member name/district/assembly/zone,
+     clears hasEpic=false → hasEpic=true.
+───────────────────────────────────────────────────────────── */
+router.post('/link-epic', async (req, res) => {
+  try {
+    const { phone, epic } = req.body;
+    const digits = String(phone || '').replace(/\D/g, '');
+    const cleanEpic = String(epic || '').toUpperCase().trim();
+
+    if (!digits || digits.length < 10) return res.status(400).json({ error: 'Valid phone required.' });
+    if (!cleanEpic || cleanEpic.length < 6) return res.status(400).json({ error: 'Valid EPIC number required.' });
+
+    const VaniganMember = await getMemberModel();
+
+    // Must be an existing member
+    const member = await VaniganMember.findOne({ phone: digits });
+    if (!member) return res.status(404).json({ error: 'no_account', message: 'No account found.' });
+
+    // Check EPIC not already taken by another member
+    const epicTaken = await VaniganMember.findOne({ epicNo: cleanEpic });
+    if (epicTaken && epicTaken.phone !== digits) {
+      return res.status(409).json({ error: 'epic_exists', message: 'This EPIC is already linked to another account.' });
+    }
+
+    // Look up voter data
+    const voter = await findByEpicNo(cleanEpic);
+    if (!voter) {
+      return res.status(404).json({ error: 'epic_not_found', message: 'Voter not found. Please check your EPIC number.' });
+    }
+
+    const zone = getZoneByDistrict(voter.district);
+
+    // Update member with voter details
+    member.epicNo        = cleanEpic;
+    member.hasEpic       = true;
+    member.name          = voter.name;            // update to voter-verified name
+    member.assemblyName  = voter.assembly_name;
+    member.assemblyNo    = voter.assembly_no;
+    member.district      = voter.district;
+    member.zone          = zone;
+    if (voter.mobile && !member.secondaryPhone) {
+      member.secondaryPhone = voter.mobile;
+    }
+    if (voter.gender && !member.gender) {
+      member.gender = voter.gender;
+    }
+    await member.save();
+
+    res.json({
+      ok: true,
+      member: safeUser(member),
+      voter: {
+        name:          voter.name,
+        assembly_name: voter.assembly_name,
+        district:      voter.district,
+        zone,
+        mobile:        voter.mobile,
+      },
+    });
+  } catch (err) {
+    console.error('[member-auth/link-epic]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
    POST /link-business
    Body: { phone, businessId }
 ───────────────────────────────────────────────────────────── */
