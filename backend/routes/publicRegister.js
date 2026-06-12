@@ -1303,6 +1303,8 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
   const backendUrl  = (process.env.BACKEND_URL  || '').replace(/\/+$/, '');
   // Use the first origin from FRONTEND_URL as the user website base
   const frontendUrl = (process.env.FRONTEND_URL || '').split(',')[0].trim().replace(/\/+$/, '');
+  // User-facing website (member portal)
+  const userWebsiteUrl = 'https://vanigan-app-automation-k3eb.vercel.app';
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -1456,7 +1458,7 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
       🎉 <strong>Business linked!</strong><br><br>
       You can now access and manage your listing from the <strong>"My Business"</strong> section using your phone number and membership PIN.
     </div>
-    <a id="viewBizBtn" href="${escHtml(frontendUrl)}/?page=my" class="view-btn" style="display:none">
+    <a id="viewBizBtn" href="${escHtml(userWebsiteUrl)}/?page=my" class="view-btn" style="display:none">
       🏪 View My Business →
     </a>
   </div>
