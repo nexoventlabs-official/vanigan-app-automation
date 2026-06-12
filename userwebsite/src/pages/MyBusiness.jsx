@@ -409,7 +409,6 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {biz.reviews.map(rev => (
                     <ReviewCard key={rev._id} rev={rev} navigate={navigate} />
                   ))}
@@ -990,7 +989,6 @@ function ReviewCard({ rev, navigate }) {
     if (!rev.phone) return;
     setLoading(true);
     try {
-      const { getBizByPhone } = await import('../api.js');
       const r = await getBizByPhone(rev.phone.replace(/\D/g, ''));
       if (r.data.found && r.data.biz?._id) {
         navigate('detail', { id: r.data.biz._id });
