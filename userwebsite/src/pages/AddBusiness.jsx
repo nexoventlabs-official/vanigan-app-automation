@@ -89,12 +89,12 @@ export default function AddBusiness() {
 
   // Build pre-fill from the latest member state
   const buildPrefill = (m) => ({
-    bizName:     m?.bizName      || '',
-    category:    m?.bizCategory  || '',
-    subCategory: m?.bizSubCat    || '',
-    district:    m?.district     || '',
-    assembly:    m?.assemblyName || m?.assembly || '',
-    ownerName:   m?.name         || '',
+    bizName:     String(m?.bizName      || ''),
+    category:    String(m?.bizCategory  || ''),
+    subCategory: String(m?.bizSubCat    || ''),
+    district:    String(m?.district     || ''),
+    assembly:    String(m?.assemblyName || m?.assembly || ''),
+    ownerName:   String(m?.name         || ''),
   });
 
   const prefillOpts = isLoggedIn ? buildPrefill(activeUser) : {};

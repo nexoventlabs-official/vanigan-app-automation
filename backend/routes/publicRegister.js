@@ -104,7 +104,7 @@ router.post('/register', uploadFields, async (req, res) => {
       infoQuestion:     (infoQuestion || '').trim(),
       infoAnswer:       (infoAnswer || '').trim(),
       ownerPhone:       (ownerPhone || '').trim(),
-      ownerName:        (ownerName  || '').trim(),
+      ownerName:        String(ownerName  || '').trim(),
       active:           true,
     };
 

@@ -50,13 +50,15 @@ export const memberLinkEpic = (phone, epic) =>
 export const REGISTER_URL = (phone = '', opts = {}) => {
   const base = BASE.replace(/\/+$/, '');
   const params = new URLSearchParams();
-  if (phone)            params.set('phone',       phone);
-  if (opts.bizName)     params.set('bizName',     opts.bizName);
-  if (opts.category)    params.set('category',    opts.category);
-  if (opts.subCategory) params.set('subCategory', opts.subCategory);
-  if (opts.district)    params.set('district',    opts.district);
-  if (opts.assembly)    params.set('assembly',    opts.assembly);
-  if (opts.ownerName)   params.set('ownerName',   opts.ownerName);
+  // Always coerce to string to prevent "trim is not a function" if opts values are objects
+  const s = (v) => (v != null && typeof v === 'string' ? v : String(v || '')).trim();
+  if (phone)            params.set('phone',       s(phone));
+  if (opts.bizName)     params.set('bizName',     s(opts.bizName));
+  if (opts.category)    params.set('category',    s(opts.category));
+  if (opts.subCategory) params.set('subCategory', s(opts.subCategory));
+  if (opts.district)    params.set('district',    s(opts.district));
+  if (opts.assembly)    params.set('assembly',    s(opts.assembly));
+  if (opts.ownerName)   params.set('ownerName',   s(opts.ownerName));
   const qs = params.toString();
   return `${base}/public/register${qs ? `?${qs}` : ''}`;
 };
