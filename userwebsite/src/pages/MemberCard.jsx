@@ -1,35 +1,74 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNav } from '../App.jsx';
 
-/* ── Card front face ── */
-function CardFront({ member, isFlipped }) {
-  const FRONT_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png';
+const FRONT_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png';
+const BACK_BG  = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png';
+
+/* ─────────────────────────────────────────────────────────
+   CardFront
+   display prop: 'interactive' (3D face) | 'capture' (flat clone for html2canvas)
+   capture clones use 421×590 (TNVS native size) for max quality
+───────────────────────────────────────────────────────── */
+function CardFront({ member, display = 'interactive' }) {
+  const isCapture = display === 'capture';
+
+  // Sizes scale with card dimensions
+  const W = isCapture ? 421 : 320;
+  const H = isCapture ? 590 : 480;
+  const photoSize  = isCapture ? 137 : 110;
+  const nameFSize  = isCapture ? 23  : 18;
+  const detailFSize= isCapture ? 16  : 13;
+  const idFSize    = isCapture ? 18  : 14;
+  const tagFSize   = isCapture ? 10  : 8;
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-      borderRadius: 18, overflow: 'hidden',
-      backgroundImage: `url(${FRONT_BG})`,
-      backgroundSize: 'cover', backgroundPosition: 'center',
-      boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      width: W, height: H,
+      position: 'relative',
+      borderRadius: isCapture ? 0 : 18,
+      overflow: 'hidden',
+      ...(isCapture ? {} : {
+        backfaceVisibility: 'hidden',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      }),
     }}>
+      {/* Background — <img> tag so html2canvas captures it at full res */}
+      <img
+        src={FRONT_BG}
+        crossOrigin="anonymous"
+        alt=""
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'fill',
+          display: 'block',
+        }}
+      />
+
       {/* Photo */}
       <div style={{
         position: 'absolute', top: '31%', left: '50%',
         transform: 'translateX(-50%)',
-        width: 110, height: 110,
+        width: photoSize, height: photoSize,
+        zIndex: 1,
       }}>
         {member.photoUrl ? (
-          <img src={member.photoUrl} alt={member.name}
-            style={{ width: '100%', height: '100%', borderRadius: 16,
-              objectFit: 'cover' }} />
+          <img
+            src={member.photoUrl}
+            crossOrigin="anonymous"
+            alt={member.name}
+            style={{ width: '100%', height: '100%', borderRadius: isCapture ? 22 : 16, objectFit: 'cover' }}
+          />
         ) : (
-          <div style={{ width: '100%', height: '100%', borderRadius: 16,
+          <div style={{
+            width: '100%', height: '100%',
+            borderRadius: isCapture ? 22 : 16,
             background: 'rgba(0,146,69,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 40, fontWeight: 700, color: '#009245' }}>
+            fontSize: isCapture ? 52 : 40, fontWeight: 700, color: '#009245',
+          }}>
             {(member.name || 'M').slice(0, 1).toUpperCase()}
           </div>
         )}
@@ -37,41 +76,41 @@ function CardFront({ member, isFlipped }) {
 
       {/* Text block */}
       <div style={{
-        position: 'absolute', top: '57%', left: 0, right: 0,
+        position: 'absolute', top: '57%', left: 0, right: 0, zIndex: 1,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 5, padding: '0 14px',
+        gap: isCapture ? 7 : 5, padding: `0 ${isCapture ? 20 : 14}px`,
       }}>
         <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-          fontSize: 18, color: '#009245', lineHeight: 1.1, textAlign: 'center',
-          wordBreak: 'break-word' }}>
+          fontSize: nameFSize, color: '#009245', lineHeight: 1.1,
+          textAlign: 'center', wordBreak: 'break-word' }}>
           {(member.name || '').toUpperCase()}
         </p>
         {member.assemblyName && (
           <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: 13, color: '#111', textAlign: 'center' }}>
+            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
             {member.assemblyName}{' '}
-            <span style={{ display: 'inline-block', fontSize: 8, fontWeight: 700,
+            <span style={{ display: 'inline-block', fontSize: tagFSize, fontWeight: 700,
               color: '#fff', background: '#009245', borderRadius: 3,
               padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Assm</span>
           </p>
         )}
         {member.district && (
           <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: 13, color: '#111', textAlign: 'center' }}>
+            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
             {member.district}{' '}
-            <span style={{ display: 'inline-block', fontSize: 8, fontWeight: 700,
+            <span style={{ display: 'inline-block', fontSize: tagFSize, fontWeight: 700,
               color: '#fff', background: '#009245', borderRadius: 3,
               padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Dist</span>
           </p>
         )}
         {member.zone && (
           <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: 13, color: '#111', textAlign: 'center' }}>
+            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
             {member.zone}
           </p>
         )}
         <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-          fontSize: 14, letterSpacing: '0.3px', color: '#111', marginTop: 2 }}>
+          fontSize: idFSize, letterSpacing: '0.3px', color: '#111', marginTop: 2 }}>
           {member.membershipId || 'TNV-000000'}
         </p>
       </div>
@@ -79,110 +118,117 @@ function CardFront({ member, isFlipped }) {
   );
 }
 
-/* ── Card back face — matches TNVS vanigam-id-card.html exactly ── */
-function CardBack({ member, captureMode = false }) {
-  const BACK_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png';
-  const qrData  = member.membershipId || 'TNV-000000';
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=96x88&data=${encodeURIComponent(qrData)}`;
+/* ─────────────────────────────────────────────────────────
+   CardBack
+   display prop: 'interactive' | 'capture'
+───────────────────────────────────────────────────────── */
+function CardBack({ member, display = 'interactive' }) {
+  const isCapture = display === 'capture';
+
+  const W = isCapture ? 421 : 320;
+  const H = isCapture ? 590 : 480;
+
+  const qrData = member.membershipId || 'TNV-000000';
+  // Larger QR for capture card
+  const qrSize = isCapture ? 120 : 90;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize * 2}x${qrSize * 2}&data=${encodeURIComponent(qrData)}`;
 
   const formatDob = (dob) => {
     if (!dob) return '—';
     if (dob.includes('/')) {
-      // DD/MM/YYYY → 01 Jan 1985
       const [d, m, y] = dob.split('/');
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const mo = parseInt(m, 10);
-      return `${d} ${months[mo - 1] || m} ${y}`;
+      return `${d} ${months[parseInt(m, 10) - 1] || m} ${y}`;
     }
     try {
-      const dt = new Date(dob);
-      return dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+      return new Date(dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     } catch { return dob; }
   };
 
   const addressRaw = member.businessAddress || '—';
 
-  // Shared row style helpers — mirrors the TNVS view.blade.php .back-row grid
-  const rowBase = {
-    display: 'grid',
-    gridTemplateColumns: '46% 6% 48%',
-    alignItems: 'start',
-    overflow: 'hidden',
-  };
-  // Fixed-height single-field rows (like .row-single { height: 20px })
-  const rowSingle = { ...rowBase, height: 20, marginBottom: 0 };
-  // Fixed-height address row (like .row-address { height: 76px }) — keeps gap even for short address
-  const rowAddress = { ...rowBase, height: 76, marginBottom: 0 };
+  // Scale font sizes and heights with card size
+  const scale     = isCapture ? 421 / 320 : 1;
+  const labelFs   = Math.round(11 * scale);
+  const sepFs     = Math.round(20 * scale);
+  const valueFs   = Math.round(13 * scale);
+  const addrFs    = Math.round(11 * scale);
+  const rowH      = Math.round(20 * scale);
+  const addrRowH  = Math.round(76 * scale);
+  const signNameFs= Math.round(11 * scale);
+  const signSmFs  = Math.round(9  * scale);
+  const signW     = Math.round(80 * scale);
+  const topPct    = '28%';
+  const leftPx    = Math.round(22 * scale);
+  const rightPx   = Math.round(20 * scale);
+  const btmMT     = Math.round(22 * scale);
+  const btmPad    = Math.round(6  * scale);
 
-  const labelStyle   = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' };
-  const sepStyle     = { fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' };
-  const valueStyle   = { fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' };
-  const addrValStyle = { fontSize: 11, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' };
+  const rowBase = {
+    display: 'grid', gridTemplateColumns: '46% 6% 48%',
+    alignItems: 'start', overflow: 'hidden',
+  };
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-      transform: captureMode ? 'none' : 'rotateY(180deg)',
-      borderRadius: 18, overflow: 'hidden',
-      backgroundImage: `url(${BACK_BG})`,
-      backgroundSize: '100% 100%',
-      backgroundPosition: 'center',
-      boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      width: W, height: H,
+      position: 'relative',
+      borderRadius: isCapture ? 0 : 18,
+      overflow: 'hidden',
       fontFamily: 'Arial, Helvetica, sans-serif',
+      ...(isCapture ? {} : {
+        backfaceVisibility: 'hidden',
+        transform: 'rotateY(180deg)',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      }),
     }}>
-      {/*
-        back-content — mirrors TNVS view.blade.php:
-          top: 234px on 590px card  → ~39.7%
-          left: 22px, right: 20px
-      */}
-      <div style={{ position: 'absolute', top: '28%', left: 22, right: 20 }}>
+      {/* Background — <img> tag for full-res capture */}
+      <img
+        src={BACK_BG}
+        crossOrigin="anonymous"
+        alt=""
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'fill',
+          display: 'block',
+        }}
+      />
 
-        {/*
-          back-details — TNVS uses translateY(-60px) on the 590px card.
-          Scaled to 480px: -60 * (480/590) ≈ -49px → use -10px on this 320-wide card
-          (card here is 320×480, TNVS card is 421×590-ish)
-          Scale factor ≈ 0.54 → -60 * 0.54 ≈ -32px, but visual testing shows -10px works best at 320px wide
-        */}
-        <div style={{ transform: 'translateY(0px)' }}>
+      {/* Content overlay */}
+      <div style={{ position: 'absolute', top: topPct, left: leftPx, right: rightPx, zIndex: 1 }}>
 
-          {/* DATE OF BIRTH — fixed height single row */}
-          <div style={rowSingle}>
-            <div style={labelStyle}>DATE OF BIRTH</div>
-            <div style={sepStyle}>:</div>
-            <div style={valueStyle}>{formatDob(member.dob)}</div>
+        {/* Details rows */}
+        <div>
+          <div style={{ ...rowBase, height: rowH }}>
+            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
+            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
           </div>
 
-          {/* AGE — fixed height single row */}
-          <div style={rowSingle}>
-            <div style={labelStyle}>AGE</div>
-            <div style={sepStyle}>:</div>
-            <div style={valueStyle}>{member.age || '—'}</div>
+          <div style={{ ...rowBase, height: rowH }}>
+            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
+            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
           </div>
 
-          {/* BLOOD GROUP — fixed height single row */}
-          <div style={rowSingle}>
-            <div style={labelStyle}>BLOOD GROUP</div>
-            <div style={sepStyle}>:</div>
-            <div style={valueStyle}>{member.bloodGroup || '—'}</div>
+          <div style={{ ...rowBase, height: rowH }}>
+            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
+            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
           </div>
 
-          {/*
-            ADDRESS — fixed height 76px (same as TNVS .row-address).
-            This is what creates the consistent gap below ADDRESS even when
-            the address text is short (1–2 lines). The overflow:hidden clips
-            very long addresses cleanly.
-          */}
-          <div style={rowAddress}>
-            <div style={labelStyle}>ADDRESS</div>
-            <div style={sepStyle}>:</div>
-            <div style={addrValStyle}>{addressRaw}</div>
+          {/* ADDRESS — fixed height keeps gap consistent for short/long addresses */}
+          <div style={{ ...rowBase, height: addrRowH }}>
+            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
+            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: addrFs, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{addressRaw}</div>
           </div>
 
-          {/* CONTACT — fixed height single row */}
-          <div style={{ ...rowSingle, marginTop: 4 }}>
-            <div style={labelStyle}>CONTACT</div>
-            <div style={sepStyle}>:</div>
-            <div style={valueStyle}>
+          <div style={{ ...rowBase, height: rowH, marginTop: 4 }}>
+            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
+            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
               <span style={{ background: 'rgba(255,255,255,0.78)', display: 'inline-block', padding: '0 4px' }}>
                 {member.phone || '—'}
               </span>
@@ -190,35 +236,35 @@ function CardBack({ member, captureMode = false }) {
           </div>
         </div>
 
-        {/*
-          Bottom section — mirrors TNVS .back-bottom:
-            grid-template-columns: 40% 60%
-            QR: paddingLeft 20px
-            Signature: textAlign center, paddingRight 10px
-          marginTop: 10px same as TNVS
-        */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 22, paddingLeft: 6, paddingRight: 6 }}>
-
-          {/* QR Code — flush left */}
+        {/* QR + Signature — pushed down, space-between */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+          marginTop: btmMT, paddingLeft: btmPad, paddingRight: btmPad,
+        }}>
           <div>
-            <img src={qrUrl} width={90} height={82} alt="QR Code"
-              style={{ display: 'block' }} />
+            <img
+              src={qrUrl}
+              crossOrigin="anonymous"
+              width={qrSize} height={qrSize}
+              alt="QR Code"
+              style={{ display: 'block' }}
+            />
           </div>
 
-          {/* Signature — flush right */}
           <div style={{ textAlign: 'center' }}>
-            <img src="/signature.png" alt="Signature"
-              style={{ width: 80, height: 'auto', display: 'block', margin: '0 auto 2px' }} />
-            <p style={{ margin: '2px 0 0', fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 11, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>
+            <img
+              src="/signature.png"
+              crossOrigin="anonymous"
+              alt="Signature"
+              style={{ width: signW, height: 'auto', display: 'block', margin: '0 auto 2px' }}
+            />
+            <p style={{ margin: '2px 0 0', fontSize: signNameFs, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>
               SENTHIL KUMAR N
             </p>
-            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: signSmFs, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
               Founder &amp; State President
             </p>
-            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: signSmFs, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
               Tamilnadu Vanigargalin Sangamam
             </p>
           </div>
@@ -229,181 +275,151 @@ function CardBack({ member, captureMode = false }) {
   );
 }
 
-/* ── 3D Card ── */
+/* ─────────────────────────────────────────────────────────
+   Shared capture logic
+   - Uses 421×590 clones (TNVS native card size) + scale:2
+     → 842×1180 per card — crisp, true to original dimensions
+   - Background uses <img> tag so html2canvas captures it
+     at full native resolution (no blurry CSS background issue)
+───────────────────────────────────────────────────────── */
+
+// Wait for every <img> inside el to finish loading
+function waitImages(el) {
+  return new Promise((resolve) => {
+    const imgs = Array.from(el.querySelectorAll('img'));
+    if (!imgs.length) { resolve(); return; }
+    let pending = imgs.length;
+    const done = () => { if (--pending === 0) resolve(); };
+    imgs.forEach(img => {
+      if (img.complete && img.naturalWidth > 0) { done(); return; }
+      img.addEventListener('load',  done, { once: true });
+      img.addEventListener('error', done, { once: true });
+    });
+    setTimeout(resolve, 10000); // safety timeout
+  });
+}
+
+async function buildComboCanvas(frontEl, backEl) {
+  const SCALE = 2; // 421*2=842px per side — high quality, reasonable file size
+
+  await waitImages(frontEl);
+  await waitImages(backEl);
+  await new Promise(r => setTimeout(r, 800)); // let fonts & images settle
+
+  const opts = {
+    scale: SCALE,
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: '#ffffff',
+    logging: false,
+    imageTimeout: 15000,
+  };
+
+  const frontCanvas = await html2canvas(frontEl, opts);
+  await new Promise(r => setTimeout(r, 200));
+  const backCanvas  = await html2canvas(backEl, opts);
+
+  // Combine side-by-side (same as TNVS downloadCard('both'))
+  const gap    = 60 * SCALE;
+  const labelH = 24 * SCALE;
+  const combo  = document.createElement('canvas');
+  combo.width  = frontCanvas.width + gap + backCanvas.width;
+  combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
+
+  const ctx = combo.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, combo.width, combo.height);
+
+  // Labels
+  ctx.font      = `bold ${16 * SCALE}px Arial, sans-serif`;
+  ctx.fillStyle = '#333333';
+  ctx.textAlign = 'center';
+  ctx.fillText('Front', frontCanvas.width / 2,                                15 * SCALE);
+  ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2,       15 * SCALE);
+
+  // Cards
+  ctx.drawImage(frontCanvas, 0,                       labelH);
+  ctx.drawImage(backCanvas,  frontCanvas.width + gap, labelH);
+
+  return combo;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Card3D — interactive flip card + buttons
+───────────────────────────────────────────────────────── */
 function Card3D({ member }) {
-  const [flipped, setFlipped]     = useState(false);
-  const [dragging, setDragging]   = useState(false);
-  const [rotateX, setRotateX]     = useState(0);
-  const [rotateY, setRotateY]     = useState(0);
-  const [loading, setLoading]     = useState(false);
-  const [loadMsg, setLoadMsg]     = useState('');
-  const cardRef    = useRef(null);
-  const frontRef   = useRef(null);
-  const backRef    = useRef(null);
-  const lastPos    = useRef({ x: 0, y: 0 });
+  const [flipped, setFlipped]   = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [rotateX, setRotateX]   = useState(0);
+  const [rotateY, setRotateY]   = useState(0);
+  const [loading, setLoading]   = useState(false);
+  const [loadMsg, setLoadMsg]   = useState('');
+
+  const cardRef  = useRef(null);
+  const frontRef = useRef(null);
+  const backRef  = useRef(null);
+  const lastPos  = useRef({ x: 0, y: 0 });
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width / 2);
-    const dy = (e.clientY - cy) / (rect.height / 2);
-    setRotateX(-dy * 12);
-    setRotateY(dx * 12);
+    const dx = (e.clientX - (rect.left + rect.width / 2))  / (rect.width  / 2);
+    const dy = (e.clientY - (rect.top  + rect.height / 2)) / (rect.height / 2);
+    setRotateX(-dy * 12); setRotateY(dx * 12);
   };
-
-  const handleMouseLeave = () => {
-    setRotateX(0); setRotateY(0);
-  };
+  const handleMouseLeave = () => { setRotateX(0); setRotateY(0); };
 
   const handleTouchStart = (e) => {
-    const t = e.touches[0];
-    lastPos.current = { x: t.clientX, y: t.clientY };
+    lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     setDragging(true);
   };
-
   const handleTouchMove = (e) => {
     if (!dragging) return;
-    const t = e.touches[0];
-    const dx = (t.clientX - lastPos.current.x) * 0.3;
-    const dy = (t.clientY - lastPos.current.y) * 0.3;
+    const dx = (e.touches[0].clientX - lastPos.current.x) * 0.3;
+    const dy = (e.touches[0].clientY - lastPos.current.y) * 0.3;
     setRotateY(v => Math.max(-30, Math.min(30, v + dx)));
     setRotateX(v => Math.max(-20, Math.min(20, v - dy)));
-    lastPos.current = { x: t.clientX, y: t.clientY };
+    lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
+  const handleTouchEnd = () => { setDragging(false); setRotateX(0); setRotateY(0); };
 
-  const handleTouchEnd = () => {
-    setDragging(false);
-    setRotateX(0); setRotateY(0);
-  };
-
-  /* ── canvas capture helper ── */
-  const captureCard = useCallback(async (ref) => {
-    return html2canvas(ref.current, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: null,
-      logging: false,
-    });
-  }, []);
-
-  /* ── wait for all images in an element to load ── */
-  const waitImages = (el) => new Promise((resolve) => {
-    const imgs = el.querySelectorAll('img');
-    if (!imgs.length) { resolve(); return; }
-    let done = 0;
-    imgs.forEach(img => {
-      if (img.complete && img.naturalWidth > 0) { done++; if (done === imgs.length) resolve(); return; }
-      img.onload  = () => { done++; if (done === imgs.length) resolve(); };
-      img.onerror = () => { done++; if (done === imgs.length) resolve(); };
-    });
-    setTimeout(resolve, 8000);
-  });
-
-  /* ── Download: both sides side-by-side (same as TNVS) ── */
+  /* Download — high-quality PNG, both sides side-by-side */
   const handleDownload = useCallback(async () => {
     if (!frontRef.current || !backRef.current) return;
-    setLoading(true);
-    setLoadMsg('Generating card image…');
+    setLoading(true); setLoadMsg('Generating high-quality card…');
     try {
-      await waitImages(frontRef.current);
-      await waitImages(backRef.current);
-      await new Promise(r => setTimeout(r, 600));
-
-      const SCALE = 3;
-      const frontCanvas = await html2canvas(frontRef.current, { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
-      await new Promise(r => setTimeout(r, 300));
-      const backCanvas  = await html2canvas(backRef.current,  { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
-
-      // Combine side-by-side — mirrors TNVS downloadCard('both')
-      const gap    = 40 * SCALE;
-      const labelH = 20 * SCALE;
-      const combo  = document.createElement('canvas');
-      combo.width  = frontCanvas.width + gap + backCanvas.width;
-      combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
-      const ctx = combo.getContext('2d');
-
-      // White background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, combo.width, combo.height);
-
-      // "Front" / "Back" labels
-      ctx.font      = `bold ${14 * SCALE}px Arial, sans-serif`;
-      ctx.fillStyle = '#333333';
-      ctx.textAlign = 'center';
-      ctx.fillText('Front', frontCanvas.width / 2, 15 * SCALE);
-      ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
-
-      // Draw both cards
-      ctx.drawImage(frontCanvas, 0,                             labelH);
-      ctx.drawImage(backCanvas,  frontCanvas.width + gap,       labelH);
-
-      // Trigger download
-      const uid = member.membershipId || 'vanigan-card';
-      const link = document.createElement('a');
+      const combo = await buildComboCanvas(frontRef.current, backRef.current);
+      const uid   = member.membershipId || 'vanigan-card';
+      const link  = document.createElement('a');
       link.download = `${uid}_card.png`;
-      link.href = combo.toDataURL('image/png', 1.0);
+      link.href = combo.toDataURL('image/png', 1.0); // no compression
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (e) {
       alert('Download failed: ' + e.message);
     }
-    setLoading(false);
-    setLoadMsg('');
+    setLoading(false); setLoadMsg('');
   }, [member]);
 
-  /* ── Share: use Web Share API if available, else fallback to download ── */
+  /* Share — Web Share API with file, fallback to download */
   const handleShare = useCallback(async () => {
     if (!frontRef.current || !backRef.current) return;
-    setLoading(true);
-    setLoadMsg('Preparing to share…');
+    setLoading(true); setLoadMsg('Preparing to share…');
     try {
-      await waitImages(frontRef.current);
-      await waitImages(backRef.current);
-      await new Promise(r => setTimeout(r, 600));
+      const combo = await buildComboCanvas(frontRef.current, backRef.current);
+      const uid   = member.membershipId || 'vanigan-card';
 
-      const SCALE = 3;
-      const frontCanvas = await html2canvas(frontRef.current, { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
-      await new Promise(r => setTimeout(r, 300));
-      const backCanvas  = await html2canvas(backRef.current,  { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
-
-      const gap    = 40 * SCALE;
-      const labelH = 20 * SCALE;
-      const combo  = document.createElement('canvas');
-      combo.width  = frontCanvas.width + gap + backCanvas.width;
-      combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
-      const ctx = combo.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, combo.width, combo.height);
-      ctx.font = `bold ${14 * SCALE}px Arial, sans-serif`;
-      ctx.fillStyle = '#333333';
-      ctx.textAlign = 'center';
-      ctx.fillText('Front', frontCanvas.width / 2, 15 * SCALE);
-      ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
-      ctx.drawImage(frontCanvas, 0,                       labelH);
-      ctx.drawImage(backCanvas,  frontCanvas.width + gap, labelH);
-
-      const uid = member.membershipId || 'vanigan-card';
-
-      // Try Web Share API (works on mobile browsers)
       if (navigator.canShare) {
         const blob = await new Promise(res => combo.toBlob(res, 'image/png', 1.0));
         const file = new File([blob], `${uid}_card.png`, { type: 'image/png' });
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: 'Vanigan Membership Card',
-            text: `Membership ID: ${uid}`,
-            files: [file],
-          });
-          setLoading(false);
-          setLoadMsg('');
+          await navigator.share({ title: 'Vanigan Membership Card', text: `Membership ID: ${uid}`, files: [file] });
+          setLoading(false); setLoadMsg('');
           return;
         }
       }
-      // Fallback — just download
+      // Fallback — download
       const link = document.createElement('a');
       link.download = `${uid}_card.png`;
       link.href = combo.toDataURL('image/png', 1.0);
@@ -413,8 +429,7 @@ function Card3D({ member }) {
     } catch (e) {
       if (e.name !== 'AbortError') alert('Share failed: ' + e.message);
     }
-    setLoading(false);
-    setLoadMsg('');
+    setLoading(false); setLoadMsg('');
   }, [member]);
 
   return (
@@ -423,29 +438,33 @@ function Card3D({ member }) {
       {/* Loading overlay */}
       {loading && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.82)',
-          zIndex: 999, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)',
+          position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.85)', zIndex: 999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(5px)',
         }}>
-          <div style={{ fontSize: 36, marginBottom: 12, animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</div>
+          <div style={{ fontSize: 40, marginBottom: 14, display: 'inline-block',
+            animation: 'kspin 1s linear infinite' }}>⟳</div>
           <p style={{ color: '#fff', fontFamily: 'Arial, sans-serif', fontSize: 14, fontWeight: 600 }}>{loadMsg}</p>
-          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          <style>{`@keyframes kspin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
 
-      {/* Card — hidden off-screen flat clones for html2canvas capture */}
-      <div style={{ position: 'absolute', left: -9999, top: 0, pointerEvents: 'none', zIndex: -1 }}>
-        {/* Flat front for capture */}
-        <div ref={frontRef} style={{ width: 320, height: 480, borderRadius: 18, overflow: 'hidden', position: 'relative', boxShadow: 'none' }}>
-          <CardFront member={member} />
+      {/*
+        Hidden high-res clones for html2canvas capture.
+        421×590 = TNVS native card size.
+        Using <img> tags for backgrounds (not CSS backgroundImage)
+        so html2canvas captures them at full resolution.
+      */}
+      <div style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', zIndex: -1, opacity: 0 }}>
+        <div ref={frontRef} style={{ width: 421, height: 590, position: 'relative', overflow: 'hidden' }}>
+          <CardFront member={member} display="capture" />
         </div>
-        {/* Flat back for capture — rotateY(0) override so html2canvas sees it face-on */}
-        <div ref={backRef} style={{ width: 320, height: 480, borderRadius: 18, overflow: 'hidden', position: 'relative', boxShadow: 'none', marginTop: 20 }}>
-          <CardBack member={member} captureMode />
+        <div ref={backRef} style={{ width: 421, height: 590, position: 'relative', overflow: 'hidden', marginTop: 20 }}>
+          <CardBack member={member} display="capture" />
         </div>
       </div>
 
-      {/* Interactive 3D card */}
+      {/* Interactive 3D card (display size 320×480) */}
       <div ref={cardRef}
         style={{ width: 320, height: 480, perspective: '1000px', cursor: 'pointer' }}
         onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
@@ -484,31 +503,26 @@ function Card3D({ member }) {
 
       {/* Download & Share buttons */}
       <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 320 }}>
-        <button
-          onClick={handleDownload}
-          disabled={loading}
-          style={{
-            flex: 1, height: 46, borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-            background: 'linear-gradient(135deg, #009245 0%, #006d34 100%)',
-            color: '#fff', fontFamily: 'var(--font-pp-neue-montreal)',
-            fontSize: '14px', fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            opacity: loading ? 0.7 : 1, boxShadow: '0 4px 14px rgba(0,146,69,0.35)',
-          }}>
+        <button onClick={handleDownload} disabled={loading} style={{
+          flex: 1, height: 46, borderRadius: 12, border: 'none',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          background: 'linear-gradient(135deg, #009245 0%, #006d34 100%)',
+          color: '#fff', fontFamily: 'var(--font-pp-neue-montreal)',
+          fontSize: '14px', fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          opacity: loading ? 0.7 : 1, boxShadow: '0 4px 14px rgba(0,146,69,0.35)',
+        }}>
           ⬇ Download Card
         </button>
-        <button
-          onClick={handleShare}
-          disabled={loading}
-          style={{
-            flex: 1, height: 46, borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-            background: '#fff', color: '#009245',
-            border: '2px solid #009245',
-            fontFamily: 'var(--font-pp-neue-montreal)',
-            fontSize: '14px', fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            opacity: loading ? 0.7 : 1,
-          }}>
+        <button onClick={handleShare} disabled={loading} style={{
+          flex: 1, height: 46, borderRadius: 12,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          background: '#fff', color: '#009245', border: '2px solid #009245',
+          fontFamily: 'var(--font-pp-neue-montreal)',
+          fontSize: '14px', fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          opacity: loading ? 0.7 : 1,
+        }}>
           ↑ Share Card
         </button>
       </div>
@@ -517,7 +531,9 @@ function Card3D({ member }) {
   );
 }
 
-/* ── Main page ── */
+/* ─────────────────────────────────────────────────────────
+   Main page
+───────────────────────────────────────────────────────── */
 export default function MemberCard() {
   const { member, isLoggedIn } = useAuth();
   const { navigate } = useNav();
@@ -544,7 +560,6 @@ export default function MemberCard() {
 
   return (
     <div className="container section" style={{ maxWidth: 480 }}>
-      {/* Back */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
         <button onClick={() => navigate('home')}
           style={{ background: 'none', border: 'none', color: 'var(--color-cool-gray)', cursor: 'pointer',
@@ -595,10 +610,9 @@ export default function MemberCard() {
         </div>
       </div>
 
-      {/* Download hint */}
       <p style={{ textAlign: 'center', marginTop: 20, fontFamily: 'var(--font-pp-neue-montreal)',
         fontSize: '12px', color: 'var(--color-cool-gray)', lineHeight: 1.5 }}>
-        💡 Tip: Take a screenshot to save your card, or print this page.
+        💡 Use Download Card for a high-quality image of both sides.
       </p>
     </div>
   );
