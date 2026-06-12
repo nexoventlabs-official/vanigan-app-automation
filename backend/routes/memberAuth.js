@@ -586,4 +586,59 @@ router.post('/verify-business-pin', async (req, res) => {
   }
 });
 
+/* ─────────────────────────────────────────────────────────────
+   GET /admin-list  — Admin: list all VaniganMembers (paginated)
+   Query: page, limit, q (search by name/phone/membershipId)
+───────────────────────────────────────────────────────────── */
+router.get('/admin-list', async (req, res) => {
+  try {
+    const { q = '', page = 1, limit = 50 } = req.query;
+    const VaniganMember = await getMemberModel();
+
+    const filter = {};
+    if (q) {
+      const safe = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const rx = new RegExp(safe, 'i');
+      filter.$or = [{ name: rx }, { phone: rx }, { membershipId: rx }, { district: rx }];
+    }
+
+    const skip = (Math.max(1, parseInt(page)) - 1) * Math.min(100, parseInt(limit));
+    const take = Math.min(100, parseInt(limit));
+
+    const [members, total] = await Promise.all([
+      VaniganMember.find(filter)
+        .select('-pinHash')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(take)
+        .lean(),
+      VaniganMember.countDocuments(filter),
+    ]);
+
+    // Enrich with their linked business (from wati_panel businesses)
+    const phones = members.map(m => m.phone).filter(Boolean);
+    const bizDocs = phones.length
+      ? await Business.find({ ownerPhone: { $in: phones } })
+          .select('_id name ownerPhone ownerPin active category')
+          .lean()
+      : [];
+    const bizByPhone = {};
+    bizDocs.forEach(b => { bizByPhone[b.ownerPhone] = b; });
+
+    const enriched = members.map(m => ({
+      ...m,
+      business: bizByPhone[m.phone] || null,
+      // verified = has EPIC + has business with PIN set
+      verified: m.hasEpic && !!(bizByPhone[m.phone]?.ownerPin),
+      // hasBusinessPin = business linked and PIN confirmed
+      hasBusinessPin: !!(bizByPhone[m.phone]?.ownerPin),
+    }));
+
+    res.json({ members: enriched, total, page: parseInt(page), limit: take });
+  } catch (err) {
+    console.error('[member-auth/admin-list]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
