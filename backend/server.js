@@ -73,6 +73,22 @@ app.get('/', (_req, res) =>
 );
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
+/* Debug endpoint — shows which env vars are present (values masked) */
+app.get('/api/env-check', (_req, res) => {
+  const keys = [
+    'MONGODB_URI', 'BUSINESS_MONGODB_URI', 'MEMBER_MONGODB_URI',
+    'MEMBER_CLOUDINARY_NAME', 'TWO_FACTOR_API_KEY', 'BACKEND_URL',
+  ];
+  const result = {};
+  for (const k of keys) {
+    const v = process.env[k] || '';
+    result[k] = v
+      ? `SET (len=${v.length}, starts="${v.substring(0, 12)}...")`
+      : 'NOT SET';
+  }
+  res.json(result);
+});
+
 app.use('/public', publicRegisterRoutes);
 app.use('/public/dir', publicBizDirRoutes);
 app.use('/api/auth', authRoutes);
