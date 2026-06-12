@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import html2canvas from 'html2canvas';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNav } from '../App.jsx';
 
@@ -79,7 +80,7 @@ function CardFront({ member, isFlipped }) {
 }
 
 /* ── Card back face — matches TNVS vanigam-id-card.html exactly ── */
-function CardBack({ member }) {
+function CardBack({ member, captureMode = false }) {
   const BACK_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png';
   const qrData  = member.membershipId || 'TNV-000000';
   const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=96x88&data=${encodeURIComponent(qrData)}`;
@@ -121,7 +122,7 @@ function CardBack({ member }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-      transform: 'rotateY(180deg)',
+      transform: captureMode ? 'none' : 'rotateY(180deg)',
       borderRadius: 18, overflow: 'hidden',
       backgroundImage: `url(${BACK_BG})`,
       backgroundSize: '100% 100%',
@@ -230,12 +231,16 @@ function CardBack({ member }) {
 
 /* ── 3D Card ── */
 function Card3D({ member }) {
-  const [flipped, setFlipped]   = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const [rotateX, setRotateX]   = useState(0);
-  const [rotateY, setRotateY]   = useState(0);
-  const cardRef = useRef(null);
-  const lastPos = useRef({ x: 0, y: 0 });
+  const [flipped, setFlipped]     = useState(false);
+  const [dragging, setDragging]   = useState(false);
+  const [rotateX, setRotateX]     = useState(0);
+  const [rotateY, setRotateY]     = useState(0);
+  const [loading, setLoading]     = useState(false);
+  const [loadMsg, setLoadMsg]     = useState('');
+  const cardRef    = useRef(null);
+  const frontRef   = useRef(null);
+  const backRef    = useRef(null);
+  const lastPos    = useRef({ x: 0, y: 0 });
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
@@ -273,9 +278,174 @@ function Card3D({ member }) {
     setRotateX(0); setRotateY(0);
   };
 
+  /* ── canvas capture helper ── */
+  const captureCard = useCallback(async (ref) => {
+    return html2canvas(ref.current, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: null,
+      logging: false,
+    });
+  }, []);
+
+  /* ── wait for all images in an element to load ── */
+  const waitImages = (el) => new Promise((resolve) => {
+    const imgs = el.querySelectorAll('img');
+    if (!imgs.length) { resolve(); return; }
+    let done = 0;
+    imgs.forEach(img => {
+      if (img.complete && img.naturalWidth > 0) { done++; if (done === imgs.length) resolve(); return; }
+      img.onload  = () => { done++; if (done === imgs.length) resolve(); };
+      img.onerror = () => { done++; if (done === imgs.length) resolve(); };
+    });
+    setTimeout(resolve, 8000);
+  });
+
+  /* ── Download: both sides side-by-side (same as TNVS) ── */
+  const handleDownload = useCallback(async () => {
+    if (!frontRef.current || !backRef.current) return;
+    setLoading(true);
+    setLoadMsg('Generating card image…');
+    try {
+      await waitImages(frontRef.current);
+      await waitImages(backRef.current);
+      await new Promise(r => setTimeout(r, 600));
+
+      const SCALE = 3;
+      const frontCanvas = await html2canvas(frontRef.current, { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
+      await new Promise(r => setTimeout(r, 300));
+      const backCanvas  = await html2canvas(backRef.current,  { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
+
+      // Combine side-by-side — mirrors TNVS downloadCard('both')
+      const gap    = 40 * SCALE;
+      const labelH = 20 * SCALE;
+      const combo  = document.createElement('canvas');
+      combo.width  = frontCanvas.width + gap + backCanvas.width;
+      combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
+      const ctx = combo.getContext('2d');
+
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, combo.width, combo.height);
+
+      // "Front" / "Back" labels
+      ctx.font      = `bold ${14 * SCALE}px Arial, sans-serif`;
+      ctx.fillStyle = '#333333';
+      ctx.textAlign = 'center';
+      ctx.fillText('Front', frontCanvas.width / 2, 15 * SCALE);
+      ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
+
+      // Draw both cards
+      ctx.drawImage(frontCanvas, 0,                             labelH);
+      ctx.drawImage(backCanvas,  frontCanvas.width + gap,       labelH);
+
+      // Trigger download
+      const uid = member.membershipId || 'vanigan-card';
+      const link = document.createElement('a');
+      link.download = `${uid}_card.png`;
+      link.href = combo.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      alert('Download failed: ' + e.message);
+    }
+    setLoading(false);
+    setLoadMsg('');
+  }, [member]);
+
+  /* ── Share: use Web Share API if available, else fallback to download ── */
+  const handleShare = useCallback(async () => {
+    if (!frontRef.current || !backRef.current) return;
+    setLoading(true);
+    setLoadMsg('Preparing to share…');
+    try {
+      await waitImages(frontRef.current);
+      await waitImages(backRef.current);
+      await new Promise(r => setTimeout(r, 600));
+
+      const SCALE = 3;
+      const frontCanvas = await html2canvas(frontRef.current, { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
+      await new Promise(r => setTimeout(r, 300));
+      const backCanvas  = await html2canvas(backRef.current,  { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: null, logging: false });
+
+      const gap    = 40 * SCALE;
+      const labelH = 20 * SCALE;
+      const combo  = document.createElement('canvas');
+      combo.width  = frontCanvas.width + gap + backCanvas.width;
+      combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
+      const ctx = combo.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, combo.width, combo.height);
+      ctx.font = `bold ${14 * SCALE}px Arial, sans-serif`;
+      ctx.fillStyle = '#333333';
+      ctx.textAlign = 'center';
+      ctx.fillText('Front', frontCanvas.width / 2, 15 * SCALE);
+      ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
+      ctx.drawImage(frontCanvas, 0,                       labelH);
+      ctx.drawImage(backCanvas,  frontCanvas.width + gap, labelH);
+
+      const uid = member.membershipId || 'vanigan-card';
+
+      // Try Web Share API (works on mobile browsers)
+      if (navigator.canShare) {
+        const blob = await new Promise(res => combo.toBlob(res, 'image/png', 1.0));
+        const file = new File([blob], `${uid}_card.png`, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Vanigan Membership Card',
+            text: `Membership ID: ${uid}`,
+            files: [file],
+          });
+          setLoading(false);
+          setLoadMsg('');
+          return;
+        }
+      }
+      // Fallback — just download
+      const link = document.createElement('a');
+      link.download = `${uid}_card.png`;
+      link.href = combo.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      if (e.name !== 'AbortError') alert('Share failed: ' + e.message);
+    }
+    setLoading(false);
+    setLoadMsg('');
+  }, [member]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-      {/* Card */}
+
+      {/* Loading overlay */}
+      {loading && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.82)',
+          zIndex: 999, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)',
+        }}>
+          <div style={{ fontSize: 36, marginBottom: 12, animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</div>
+          <p style={{ color: '#fff', fontFamily: 'Arial, sans-serif', fontSize: 14, fontWeight: 600 }}>{loadMsg}</p>
+          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
+      {/* Card — hidden off-screen flat clones for html2canvas capture */}
+      <div style={{ position: 'absolute', left: -9999, top: 0, pointerEvents: 'none', zIndex: -1 }}>
+        {/* Flat front for capture */}
+        <div ref={frontRef} style={{ width: 320, height: 480, borderRadius: 18, overflow: 'hidden', position: 'relative', boxShadow: 'none' }}>
+          <CardFront member={member} />
+        </div>
+        {/* Flat back for capture — rotateY(0) override so html2canvas sees it face-on */}
+        <div ref={backRef} style={{ width: 320, height: 480, borderRadius: 18, overflow: 'hidden', position: 'relative', boxShadow: 'none', marginTop: 20 }}>
+          <CardBack member={member} captureMode />
+        </div>
+      </div>
+
+      {/* Interactive 3D card */}
       <div ref={cardRef}
         style={{ width: 320, height: 480, perspective: '1000px', cursor: 'pointer' }}
         onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
@@ -311,6 +481,38 @@ function Card3D({ member }) {
           {member.membershipId || 'TNV-000000'}
         </div>
       </div>
+
+      {/* Download & Share buttons */}
+      <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 320 }}>
+        <button
+          onClick={handleDownload}
+          disabled={loading}
+          style={{
+            flex: 1, height: 46, borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+            background: 'linear-gradient(135deg, #009245 0%, #006d34 100%)',
+            color: '#fff', fontFamily: 'var(--font-pp-neue-montreal)',
+            fontSize: '14px', fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            opacity: loading ? 0.7 : 1, boxShadow: '0 4px 14px rgba(0,146,69,0.35)',
+          }}>
+          ⬇ Download Card
+        </button>
+        <button
+          onClick={handleShare}
+          disabled={loading}
+          style={{
+            flex: 1, height: 46, borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
+            background: '#fff', color: '#009245',
+            border: '2px solid #009245',
+            fontFamily: 'var(--font-pp-neue-montreal)',
+            fontSize: '14px', fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            opacity: loading ? 0.7 : 1,
+          }}>
+          ↑ Share Card
+        </button>
+      </div>
+
     </div>
   );
 }
