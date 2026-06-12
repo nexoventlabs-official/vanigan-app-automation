@@ -1300,7 +1300,9 @@ if (regForm) {
 
 /* ── PIN Setup Page (shown after registration) ── */
 function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
-  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+  const backendUrl  = (process.env.BACKEND_URL  || '').replace(/\/+$/, '');
+  // Use the first origin from FRONTEND_URL as the user website base
+  const frontendUrl = (process.env.FRONTEND_URL || '').split(',')[0].trim().replace(/\/+$/, '');
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -1407,6 +1409,15 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
       border-radius: 12px; padding: 16px; margin-top: 16px;
       color: var(--text); font-size: .87rem; font-weight: 500; text-align: left;
     }
+    .view-btn{
+      display: block; width: 100%; margin-top: 16px;
+      background: var(--accent); color: #fff;
+      font-weight: 700; padding: 14px 16px; border-radius: 12px;
+      border: none; font-size: .95rem; cursor: pointer;
+      text-decoration: none; text-align: center;
+      transition: opacity .2s;
+    }
+    .view-btn:hover{ opacity: .9; }
   </style>
 </head>
 <body>
@@ -1445,6 +1456,9 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
       🎉 <strong>Business linked!</strong><br><br>
       You can now access and manage your listing from the <strong>"My Business"</strong> section using your phone number and membership PIN.
     </div>
+    <a id="viewBizBtn" href="${escHtml(frontendUrl)}/?page=my" class="view-btn" style="display:none">
+      🏪 View My Business →
+    </a>
   </div>
 
 <script>
@@ -1513,6 +1527,7 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
 
       document.getElementById('step1').style.display = 'none';
       document.getElementById('okMsg').style.display = 'block';
+      document.getElementById('viewBizBtn').style.display = 'block';
     } catch(e) {
       errEl.textContent = 'Error: ' + (e.message || 'Connection failed. Please try again.');
       btn.textContent = 'Confirm & Link Business';

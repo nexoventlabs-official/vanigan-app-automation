@@ -17,7 +17,17 @@ export const NavCtx = createContext(null);
 export const useNav = () => useContext(NavCtx);
 
 export default function App() {
-  const [page, setPage] = useState({ name: 'home', params: {} });
+  const [page, setPage] = useState(() => {
+    // Support deep-linking via ?page=xxx query param
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const p  = sp.get('page');
+      if (p && ['home','categories','list','detail','add','my','login','signup','gallery','membercard'].includes(p)) {
+        return { name: p, params: {} };
+      }
+    } catch {}
+    return { name: 'home', params: {} };
+  });
 
   const navigate = (name, params = {}) => {
     setPage({ name, params });
