@@ -194,10 +194,6 @@ export default function Profile() {
               {savedList.map(biz => (
                 <BizCard
                   key={biz._id} biz={biz}
-                  actionLabel="Remove"
-                  actionColor="#dc2626"
-                  actionLoading={actionLoading === biz._id}
-                  onAction={() => handleUnsave(biz._id)}
                   onView={() => navigate('detail', { id: biz._id })}
                 />
               ))}
@@ -221,9 +217,6 @@ export default function Profile() {
                   key={biz._id}
                   biz={biz}
                   owner={biz.owner}
-                  actionLabel="Unfollow"
-                  actionLoading={actionLoading === biz._id}
-                  onAction={() => handleUnfollow(biz._id)}
                   onView={() => navigate('detail', { id: biz._id })}
                 />
               ))}
@@ -245,42 +238,36 @@ export default function Profile() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {followerList.map((f, i) => (
-                <div key={f._id || i} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '16px', transition: 'border-color .2s' }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'}>
-                  {/* Owner row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: f.business ? 12 : 0 }}>
-                    <div style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0, background: f.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--color-subtle-ash)' }}>
-                      {f.photoUrl
-                        ? <img src={f.photoUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(f.name || 'U').charAt(0).toUpperCase()}</span>
-                      }
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)' }}>{f.name || 'Unknown'}</div>
-                      {f.location && <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{f.location}</div>}
-                      {f.membershipId && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>{f.membershipId}</div>}
-                    </div>
+                <div key={f._id || i}
+                  onClick={() => f.business && navigate('detail', { id: f.business._id })}
+                  style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: f.business ? 'pointer' : 'default', transition: 'border-color .2s, box-shadow .2s' }}
+                  onMouseEnter={e => { if (f.business) { e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'; e.currentTarget.style.boxShadow = 'none'; }}>
+
+                  {/* Avatar */}
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0, background: f.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
+                    {f.photoUrl
+                      ? <img src={f.photoUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(f.name || 'U').charAt(0).toUpperCase()}</span>
+                    }
                   </div>
-                  {/* Their business */}
-                  {f.business && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-subtle-ash)', borderRadius: 10, padding: '10px 12px', marginTop: 4 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {f.business.image
-                          ? <img src={f.business.image} alt={f.business.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <Store size={16} style={{ color: 'var(--color-cool-gray)' }} />
-                        }
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '13px', color: 'var(--color-rich-black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.business.name}</div>
-                        {f.business.category && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{f.business.category}</div>}
-                      </div>
-                      <button onClick={() => navigate('detail', { id: f.business._id })}
-                        style={{ background: 'var(--color-rich-black)', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                        View <ChevronRight size={11} />
-                      </button>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2 }}>{f.name || 'Unknown'}</div>
+                    {f.membershipId && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginBottom: 2 }}>{f.membershipId}</div>}
+                    {f.business && <div style={{ fontSize: '12px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{f.business.category || ''}</div>}
+                    {f.location && <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>{f.location}</div>}
+                  </div>
+
+                  {/* Business thumbnail */}
+                  {f.business?.image && (
+                    <div style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--color-subtle-ash)' }}>
+                      <img src={f.business.image} alt={f.business.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   )}
+
+                  {f.business && <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />}
                 </div>
               ))}
             </div>
@@ -324,81 +311,72 @@ export default function Profile() {
 /* ── Owner + Business card used in Following list ── */
 function OwnerBizCard({ biz, owner, actionLabel, actionLoading, onAction, onView }) {
   return (
-    <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: 16, transition: 'border-color .2s' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'}>
+    <div
+      onClick={onView}
+      style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'border-color .2s, box-shadow .2s' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'; e.currentTarget.style.boxShadow = 'none'; }}>
 
-      {/* Owner info */}
-      {owner && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--color-subtle-ash)' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: owner.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--color-subtle-ash)' }}>
-            {owner.photoUrl
-              ? <img src={owner.photoUrl} alt={owner.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(owner.name || 'U').charAt(0).toUpperCase()}</span>
-            }
+      {/* Owner avatar */}
+      <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0, background: owner?.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
+        {owner?.photoUrl
+          ? <img src={owner.photoUrl} alt={owner.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>
+              {((owner?.name || biz.ownerName || 'U').charAt(0)).toUpperCase()}
+            </span>
+        }
+      </div>
+
+      {/* Owner + business info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2 }}>
+          {owner?.name || biz.ownerName || biz.name}
+        </div>
+        {owner?.membershipId && (
+          <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginBottom: 2 }}>{owner.membershipId}</div>
+        )}
+        <div style={{ fontSize: '12px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{biz.category || ''}</div>
+        {(owner?.location || biz.assembly || biz.district) && (
+          <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>
+            {owner?.location || [biz.assembly, biz.district].filter(Boolean).join(', ')}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '13px', color: 'var(--color-rich-black)' }}>{owner.name || biz.ownerName || '—'}</div>
-            {owner.location && <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{owner.location}</div>}
-            {owner.membershipId && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)' }}>{owner.membershipId}</div>}
-          </div>
+        )}
+      </div>
+
+      {/* Business thumbnail */}
+      {biz.image && (
+        <div style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--color-subtle-ash)' }}>
+          <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       )}
 
-      {/* Business row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle-ash)', border: '1px solid var(--color-subtle-ash)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {biz.image
-            ? <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <Store size={20} style={{ color: 'var(--color-cool-gray)' }} />
-          }
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</div>
-          {biz.category && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{biz.category}</div>}
-          {(biz.assembly || biz.district) && <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{[biz.assembly, biz.district].filter(Boolean).join(', ')}</div>}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-          <button onClick={onView} style={{ background: 'var(--color-rich-black)', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', display: 'flex', alignItems: 'center', gap: 4 }}>
-            View <ChevronRight size={11} />
-          </button>
-          <button onClick={onAction} disabled={actionLoading} style={{ background: 'none', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', opacity: actionLoading ? 0.5 : 1 }}>
-            {actionLoading ? '…' : actionLabel}
-          </button>
-        </div>
-      </div>
+      <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />
     </div>
   );
 }
 
-/* ── Business card used in saved/following lists ── */
+/* ── Business card used in saved list ── */
 function BizCard({ biz, actionLabel, actionColor, actionLoading, onAction, onView }) {
   return (
-    <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14, padding: 14, transition: 'border-color .2s' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'}>
+    <div
+      onClick={onView}
+      style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s, box-shadow .2s' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'; e.currentTarget.style.boxShadow = 'none'; }}>
       {/* Thumbnail */}
-      <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle-ash)', border: '1px solid var(--color-subtle-ash)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle-ash)', border: '1px solid var(--color-subtle-ash)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {biz.image
           ? <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <Store size={22} style={{ color: 'var(--color-cool-gray)' }} />
+          : <Store size={20} style={{ color: 'var(--color-cool-gray)' }} />
         }
       </div>
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</div>
-        {biz.category && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{biz.category}</div>}
+        {biz.category && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{biz.category}</div>}
         {(biz.assembly || biz.district) && <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{[biz.assembly, biz.district].filter(Boolean).join(', ')}</div>}
       </div>
-      {/* Buttons */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-        <button onClick={onView} style={{ background: 'var(--color-rich-black)', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          View <ChevronRight size={11} />
-        </button>
-        <button onClick={onAction} disabled={actionLoading} style={{ background: 'none', color: actionColor, border: `1px solid ${actionColor}`, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', opacity: actionLoading ? 0.5 : 1 }}>
-          {actionLoading ? '…' : actionLabel}
-        </button>
-      </div>
+      <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />
     </div>
   );
 }
