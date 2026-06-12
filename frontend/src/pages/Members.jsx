@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, CheckCircle, Clock, Store, User, Phone, MapPin } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 import api from '../api';
 
 /* ── Blue tick SVG (verified member) ── */
@@ -13,6 +13,45 @@ function BlueTick({ size = 14 }) {
   );
 }
 
+/* ── Confirm Delete Modal ── */
+function DeleteModal({ member, onConfirm, onCancel, loading }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle size={20} className="text-red-400" />
+          </div>
+          <div>
+            <h3 className="font-bold text-white text-lg">Delete Member</h3>
+            <p className="text-sm text-gray-400">This action cannot be undone</p>
+          </div>
+        </div>
+
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-5 text-sm text-gray-300 space-y-1.5">
+          <p className="font-semibold text-white mb-2">Will permanently delete:</p>
+          <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span>Member profile & membership card ({member.membershipId})</span></div>
+          <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span>Business listing{member.business ? ` (${member.business.name})` : ' (none)'} + all images</span></div>
+          <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span>All reviews & ratings they wrote or received</span></div>
+          <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span>Following & saved lists from other members</span></div>
+          <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span>Profile photo from Cloudinary</span></div>
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={onCancel} disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition text-sm font-medium">
+            Cancel
+          </button>
+          <button onClick={onConfirm} disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white transition text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Deleting…</> : <><Trash2 size={14} /> Delete Everything</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Members() {
   const navigate = useNavigate();
   const [members, setMembers]   = useState([]);
@@ -20,6 +59,8 @@ export default function Members() {
   const [page,    setPage]      = useState(1);
   const [q,       setQ]         = useState('');
   const [loading, setLoading]   = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null); // member to delete
+  const [deleting,     setDeleting]     = useState(false);
 
   const LIMIT = 50;
 
@@ -52,6 +93,22 @@ export default function Members() {
       navigate(`/businesses/${member.business._id}`);
     }
   };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete('/member-auth/admin-delete/' + deleteTarget.phone);
+      setMembers(prev => prev.filter(m => m.phone !== deleteTarget.phone));
+      setTotal(prev => prev - 1);
+      setDeleteTarget(null);
+    } catch (err) {
+      alert('Delete failed: ' + (err?.response?.data?.error || err.message));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -110,6 +167,7 @@ export default function Members() {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Business</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Joined</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -192,6 +250,16 @@ export default function Members() {
                         {new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </span>
                     </td>
+                    {/* Actions */
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => setDeleteTarget(m)}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition"
+                        title="Delete member"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -216,6 +284,16 @@ export default function Members() {
             </div>
           )}
         </>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <DeleteModal
+          member={deleteTarget}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
       )}
     </div>
   );

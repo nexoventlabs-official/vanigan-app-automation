@@ -587,6 +587,93 @@ router.post('/verify-business-pin', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────
+   DELETE /admin-delete/:phone
+   Admin: hard-delete a VaniganMember and ALL their data:
+     - VaniganMember doc
+     - VaniganUser doc (if exists for same phone)
+     - Their Business listing + all images from businessCloudinary
+     - Reviews they wrote + reviews on their business
+     - Their following / savedBusinesses references in others' docs
+     - Member photo folder from memberCloudinary
+───────────────────────────────────────────────────────────── */
+router.delete('/admin-delete/:phone', async (req, res) => {
+  const phone = String(req.params.phone || '').replace(/\D/g, '');
+  if (!phone) return res.status(400).json({ error: 'phone required' });
+
+  const log = [];
+  try {
+    const mongoose     = require('mongoose');
+    const Review       = require('../models/Review');
+    const Business     = require('../models/Business');
+    const { getMemberModel, getVaniganUserModel } = require('../services/memberDb');
+    const { deleteMemberFolder } = require('../services/memberCloudinary');
+    const { destroy: bizDestroy } = require('../services/businessCloudinary');
+
+    const VaniganMember = await getMemberModel();
+    const VaniganUser   = await getVaniganUserModel();
+
+    // 1. Find the member
+    const member = await VaniganMember.findOne({ phone }).lean();
+    if (!member) return res.status(404).json({ error: 'Member not found' });
+
+    // 2. Delete their business listing + images
+    const biz = await Business.findOne({ ownerPhone: phone }).lean();
+    if (biz) {
+      // Delete all cloudinary images for this business
+      const toDestroy = [
+        biz.imagePublicId,
+        biz.coverImagePublicId,
+        ...(biz.galleryImages || []).map(g => g.publicId).filter(Boolean),
+        ...(biz.services || []).map(s => s.imagePublicId).filter(Boolean),
+      ].filter(Boolean);
+      for (const pid of toDestroy) {
+        await bizDestroy(pid).catch(() => {});
+      }
+      await Business.deleteOne({ _id: biz._id });
+      log.push(`Deleted business: ${biz.name}`);
+    }
+
+    // 3. Delete reviews WRITTEN by this member (by phone)
+    const revByMember = await Review.deleteMany({ phone });
+    log.push(`Deleted ${revByMember.deletedCount} reviews by member`);
+
+    // 4. Delete reviews ON their business
+    if (biz) {
+      const revOnBiz = await Review.deleteMany({ targetKind: 'business', targetId: biz._id });
+      log.push(`Deleted ${revOnBiz.deletedCount} reviews on business`);
+    }
+
+    // 5. Remove this member from others' following / savedBusinesses arrays
+    if (biz) {
+      const bizOid = new mongoose.Types.ObjectId(biz._id.toString());
+      await VaniganMember.updateMany({ following: bizOid }, { $pull: { following: bizOid } });
+      await VaniganMember.updateMany({ savedBusinesses: bizOid }, { $pull: { savedBusinesses: bizOid } });
+      await VaniganUser.updateMany({ following: bizOid }, { $pull: { following: bizOid } });
+      await VaniganUser.updateMany({ savedBusinesses: bizOid }, { $pull: { savedBusinesses: bizOid } });
+      log.push('Removed business from others\' following/saved lists');
+    }
+
+    // 6. Delete member photo folder from memberCloudinary
+    await deleteMemberFolder(phone);
+    log.push(`Deleted Cloudinary folder: vanigan_members/${phone}`);
+
+    // 7. Delete VaniganUser (legacy web-auth) if exists
+    const userDel = await VaniganUser.deleteOne({ phone });
+    if (userDel.deletedCount) log.push('Deleted VaniganUser record');
+
+    // 8. Finally delete the VaniganMember
+    await VaniganMember.deleteOne({ phone });
+    log.push('Deleted VaniganMember record');
+
+    console.log(`[admin-delete] Deleted member ${phone}:`, log);
+    res.json({ ok: true, log });
+  } catch (err) {
+    console.error('[admin-delete]', err.message);
+    res.status(500).json({ error: err.message, log });
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
    GET /admin-list  — Admin: list all VaniganMembers (paginated)
    Query: page, limit, q (search by name/phone/membershipId)
 ───────────────────────────────────────────────────────────── */

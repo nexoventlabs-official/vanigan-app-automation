@@ -202,6 +202,8 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
     try {
       const item = await Model.findById(req.params.id);
       if (!item) return res.json({ ok: true });
+
+      // Delete images from Cloudinary
       if (perItemFolder && deleteByPrefix) {
         await deleteByPrefix(`${ROOT}/${folder}/${item._id}`).catch(() => {});
       } else {
@@ -210,6 +212,35 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
         for (const g of (item.galleryImages || [])) if (g.publicId) await destroy(g.publicId).catch(() => {});
         for (const s of (item.services || [])) if (s.imagePublicId) await destroy(s.imagePublicId).catch(() => {});
       }
+
+      // If this is a Business, also clean up related data (but NOT the member/user)
+      if (folder === 'businesses') {
+        try {
+          const mongoose = require('mongoose');
+          const Review = require('../models/Review');
+          const { getMemberModel, getVaniganUserModel } = require('../services/memberDb');
+
+          // Delete all reviews on this business
+          await Review.deleteMany({ targetKind: 'business', targetId: item._id }).catch(() => {});
+
+          // Remove this business from others' following / savedBusinesses
+          const bizOid = new mongoose.Types.ObjectId(item._id.toString());
+          const [VM, VU] = await Promise.all([getMemberModel(), getVaniganUserModel()]);
+          await VM.updateMany({ following: bizOid },       { $pull: { following: bizOid } }).catch(() => {});
+          await VM.updateMany({ savedBusinesses: bizOid }, { $pull: { savedBusinesses: bizOid } }).catch(() => {});
+          await VU.updateMany({ following: bizOid },       { $pull: { following: bizOid } }).catch(() => {});
+          await VU.updateMany({ savedBusinesses: bizOid }, { $pull: { savedBusinesses: bizOid } }).catch(() => {});
+
+          // Unlink businessId from the owner's member/user record
+          if (item.ownerPhone) {
+            await VM.updateOne({ phone: item.ownerPhone }, { $unset: { businessId: '' } }).catch(() => {});
+            await VU.updateOne({ phone: item.ownerPhone }, { $unset: { businessId: '' } }).catch(() => {});
+          }
+        } catch (e) {
+          console.warn('[listing.delete] business cleanup error:', e.message);
+        }
+      }
+
       await item.deleteOne();
       res.json({ ok: true });
     } catch (err) {
