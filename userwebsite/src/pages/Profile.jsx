@@ -238,37 +238,11 @@ export default function Profile() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {followerList.map((f, i) => (
-                <div key={f._id || i}
-                  onClick={() => f.business && navigate('detail', { id: f.business._id })}
-                  style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: f.business ? 'pointer' : 'default', transition: 'border-color .2s, box-shadow .2s' }}
-                  onMouseEnter={e => { if (f.business) { e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'; e.currentTarget.style.boxShadow = 'none'; }}>
-
-                  {/* Avatar */}
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0, background: f.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
-                    {f.photoUrl
-                      ? <img src={f.photoUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(f.name || 'U').charAt(0).toUpperCase()}</span>
-                    }
-                  </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2 }}>{f.name || 'Unknown'}</div>
-                    {f.membershipId && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginBottom: 2 }}>{f.membershipId}</div>}
-                    {f.business && <div style={{ fontSize: '12px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{f.business.category || ''}</div>}
-                    {f.location && <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>{f.location}</div>}
-                  </div>
-
-                  {/* Business thumbnail */}
-                  {f.business?.image && (
-                    <div style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--color-subtle-ash)' }}>
-                      <img src={f.business.image} alt={f.business.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )}
-
-                  {f.business && <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />}
-                </div>
+                <FollowerCard
+                  key={f._id || i}
+                  follower={f}
+                  onView={() => f.business ? navigate('detail', { id: f.business._id }) : null}
+                />
               ))}
             </div>
           )}
@@ -377,6 +351,59 @@ function BizCard({ biz, actionLabel, actionColor, actionLoading, onAction, onVie
         {(biz.assembly || biz.district) && <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{[biz.assembly, biz.district].filter(Boolean).join(', ')}</div>}
       </div>
       <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />
+    </div>
+  );
+}
+
+function FollowerCard({ follower: f, onView }) {
+  const hasBiz = !!f.business;
+  return (
+    <div
+      onClick={onView}
+      style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', transition: 'border-color .2s, box-shadow .2s' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-deep-fern-green)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-subtle-ash)'; e.currentTarget.style.boxShadow = 'none'; }}>
+
+      {/* Owner row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: f.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
+          {f.photoUrl
+            ? <img src={f.photoUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(f.name || 'U').charAt(0).toUpperCase()}</span>
+          }
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2 }}>{f.name || 'Unknown'}</div>
+          {f.membershipId && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginBottom: 1 }}>{f.membershipId}</div>}
+          {f.location && <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{f.location}</div>}
+        </div>
+        {hasBiz
+          ? <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />
+          : null
+        }
+      </div>
+
+      {/* Business row or no-business note */}
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--color-subtle-ash)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {hasBiz ? (
+          <>
+            <div style={{ width: 36, height: 36, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--color-subtle-ash)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {f.business.image
+                ? <img src={f.business.image} alt={f.business.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <Store size={16} style={{ color: 'var(--color-cool-gray)' }} />
+              }
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 600, fontSize: '13px', color: 'var(--color-rich-black)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.business.name}</div>
+              {f.business.category && <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-pp-neue-montreal)' }}>{f.business.category}</div>}
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-cool-gray)', fontSize: '12px', fontFamily: 'var(--font-pp-neue-montreal)', fontStyle: 'italic' }}>
+            <Store size={14} style={{ opacity: 0.5 }} /> Has not added a business yet
+          </div>
+        )}
+      </div>
     </div>
   );
 }
