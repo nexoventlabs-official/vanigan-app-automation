@@ -587,6 +587,43 @@ router.post('/verify-business-pin', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────
+   POST /admin-promote/:phone
+   Admin: promote VaniganMember → Organizer (copies data)
+───────────────────────────────────────────────────────────── */
+router.post('/admin-promote/:phone', async (req, res) => {
+  const phone = String(req.params.phone || '').replace(/\D/g, '');
+  if (!phone) return res.status(400).json({ error: 'phone required' });
+  try {
+    const VaniganMember = await getMemberModel();
+    const member = await VaniganMember.findOne({ phone }).lean();
+    if (!member) return res.status(404).json({ error: 'Member not found' });
+
+    const Organizer = require('../models/Organizer');
+    // Check if already an organizer
+    const existing = await Organizer.findOne({ phone });
+    if (existing) return res.status(409).json({ error: 'already_organizer', message: 'This member is already an organizer.' });
+
+    const org = await Organizer.create({
+      name:        member.name,
+      description: member.businessAddress || '',
+      role:        member.bizCategory || 'Member',
+      district:    member.district || '',
+      assembly:    member.assemblyName || '',
+      phone:       member.phone,
+      email:       '',
+      image:       member.photoUrl || '',
+      imagePublicId: member.photoPublicId || '',
+      active:      true,
+    });
+
+    res.json({ ok: true, organizer: org });
+  } catch (err) {
+    console.error('[admin-promote]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
    DELETE /admin-delete/:phone
    Admin: hard-delete a VaniganMember and ALL their data:
      - VaniganMember doc

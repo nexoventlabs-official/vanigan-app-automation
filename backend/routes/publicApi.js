@@ -328,4 +328,68 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
   }
 });
 
+/* ── GET /api/public/members — public member list (logged-in users only via frontend check) ── */
+router.get('/members', async (req, res) => {
+  try {
+    const { page = 1, q = '', district = '' } = req.query;
+    const { getMemberModel } = require('../services/memberDb');
+    const VaniganMember = await getMemberModel();
+    const filter = { active: true };
+    if (district) filter.district = district;
+    if (q) {
+      const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: rx }, { assemblyName: rx }, { district: rx }];
+    }
+    const skip = (Math.max(1, parseInt(page)) - 1) * 50;
+    const [members, total] = await Promise.all([
+      VaniganMember.find(filter)
+        .select('name phone photoUrl membershipId district assemblyName bizCategory hasEpic businessId createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip).limit(50).lean(),
+      VaniganMember.countDocuments(filter),
+    ]);
+    // Enrich with business
+    const phones = members.map(m => m.phone).filter(Boolean);
+    const bizDocs = phones.length
+      ? await Business.find({ ownerPhone: { $in: phones }, active: true }).select('_id name ownerPhone category image').lean()
+      : [];
+    const bizByPhone = {};
+    bizDocs.forEach(b => { bizByPhone[b.ownerPhone] = b; });
+    const enriched = members.map(m => ({ ...m, business: bizByPhone[m.phone] || null }));
+    res.json({ members: enriched, total, page: parseInt(page) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── GET /api/public/organizers — public organizer list ── */
+router.get('/organizers', async (req, res) => {
+  try {
+    const { page = 1, q = '', district = '' } = req.query;
+    const Organizer = require('../models/Organizer');
+    const filter = { active: true };
+    if (district) filter.district = district;
+    if (q) {
+      const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: rx }, { role: rx }, { district: rx }];
+    }
+    const skip = (Math.max(1, parseInt(page)) - 1) * 50;
+    const [organizers, total] = await Promise.all([
+      Organizer.find(filter).sort({ createdAt: -1 }).skip(skip).limit(50).lean(),
+      Organizer.countDocuments(filter),
+    ]);
+    // Enrich with business
+    const phones = organizers.map(o => o.phone).filter(Boolean);
+    const bizDocs = phones.length
+      ? await Business.find({ ownerPhone: { $in: phones }, active: true }).select('_id name ownerPhone category image').lean()
+      : [];
+    const bizByPhone = {};
+    bizDocs.forEach(b => { bizByPhone[b.ownerPhone] = b; });
+    const enriched = organizers.map(o => ({ ...o, business: bizByPhone[o.phone] || null }));
+    res.json({ organizers: enriched, total, page: parseInt(page) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

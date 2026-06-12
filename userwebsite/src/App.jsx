@@ -12,6 +12,8 @@ import Signup         from './pages/Signup.jsx';
 import Gallery        from './pages/Gallery.jsx';
 import MemberCard     from './pages/MemberCard.jsx';
 import Profile        from './pages/Profile.jsx';
+import MemberList     from './pages/MemberList.jsx';
+import OrganizerList  from './pages/OrganizerList.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 
 export const NavCtx = createContext(null);
@@ -23,7 +25,7 @@ export default function App() {
     try {
       const sp = new URLSearchParams(window.location.search);
       const p  = sp.get('page');
-      if (p && ['home','categories','list','detail','add','my','login','signup','gallery','membercard','profile'].includes(p)) {
+      if (p && ['home','categories','list','detail','add','my','login','signup','gallery','membercard','profile','members','organizers'].includes(p)) {
         return { name: p, params: {} };
       }
     } catch {}
@@ -41,12 +43,14 @@ export default function App() {
     list:       <BusinessList params={page.params} />,
     detail:     <BusinessDetail params={page.params} />,
     add:        <AddBusiness params={page.params} />,
-    my:         <MyBusiness />,
-    login:      <Login />,
-    signup:     <Signup />,
-    gallery:    <Gallery />,
-    membercard: <MemberCard />,
-    profile:    <Profile />,
+    my:          <MyBusiness />,
+    login:       <Login />,
+    signup:      <Signup />,
+    gallery:     <Gallery />,
+    membercard:  <MemberCard />,
+    profile:     <Profile />,
+    members:     <MemberList />,
+    organizers:  <OrganizerList />,
   };
 
   return (

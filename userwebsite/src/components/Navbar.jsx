@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn, Images, CreditCard } from 'lucide-react';
+import { Store, Plus, User, Menu, X, Grid3X3, LogOut, LogIn, Images, CreditCard, Users, Star } from 'lucide-react';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -39,8 +39,10 @@ export default function Navbar() {
     { label: 'Categories', page: 'categories', icon: Grid3X3 },
     { label: 'Gallery',    page: 'gallery',    icon: Images },
     ...(isLoggedIn ? [
-      { label: 'My Profile',  page: 'profile', icon: User },
-      { label: 'My Business', page: 'my',      icon: User },
+      { label: 'Members',    page: 'members',    icon: Users },
+      { label: 'Organizers', page: 'organizers', icon: Star },
+      { label: 'My Profile',  page: 'profile',   icon: User },
+      { label: 'My Business', page: 'my',        icon: Store },
     ] : []),
   ];
 
@@ -119,6 +121,38 @@ export default function Navbar() {
               <span className="uiverse-nav-btn-text">Gallery</span>
             </div>
           </button>
+
+          {isLoggedIn && (
+            <>
+              <button
+                onClick={() => go('members')}
+                className={`uiverse-nav-btn ${current.name === 'members' ? 'active' : ''}`}
+                style={{ '--clr': current.name === 'members' ? '#22c55e' : '#000000' }}
+              >
+                <span className="uiverse-nav-btn-decor"></span>
+                <div className="uiverse-nav-btn-content">
+                  <div className="uiverse-nav-btn-icon">
+                    <Users size={16} color="#ffffff" />
+                  </div>
+                  <span className="uiverse-nav-btn-text">Members</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => go('organizers')}
+                className={`uiverse-nav-btn ${current.name === 'organizers' ? 'active' : ''}`}
+                style={{ '--clr': current.name === 'organizers' ? '#22c55e' : '#000000' }}
+              >
+                <span className="uiverse-nav-btn-decor"></span>
+                <div className="uiverse-nav-btn-content">
+                  <div className="uiverse-nav-btn-icon">
+                    <Star size={16} color="#ffffff" />
+                  </div>
+                  <span className="uiverse-nav-btn-text">Organizers</span>
+                </div>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Right Desktop Actions */}
