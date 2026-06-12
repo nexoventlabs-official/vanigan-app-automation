@@ -561,7 +561,6 @@ router.post('/verify-business-pin', async (req, res) => {
     }
 
     // 2. Find the business for this phone and set ownerPin = same hash
-    const Business = require('../models/Business');
     const biz = await Business.findOne({ ownerPhone: digits });
     if (!biz) {
       return res.status(404).json({
