@@ -185,4 +185,17 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+/* ── GET /api/social/biz-by-phone?phone= — find business owned by this phone ── */
+router.get('/biz-by-phone', async (req, res) => {
+  try {
+    const digits = String(req.query.phone || '').replace(/\D/g, '');
+    if (!digits) return res.status(400).json({ error: 'phone required' });
+    const biz = await Business.findOne({ ownerPhone: digits, active: true }).select('_id name category image district assembly').lean();
+    if (!biz) return res.json({ found: false });
+    res.json({ found: true, biz });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

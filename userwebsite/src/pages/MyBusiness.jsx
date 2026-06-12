@@ -16,7 +16,7 @@ function WhatsAppIcon({ size = 14, style }) {
 }
 import {
   checkOwnerPhone, verifyOwnerPin, updateOwnerBusiness,
-  getBusiness, REGISTER_URL, setStoredPhone, webGetMe, memberGetMe,
+  getBusiness, REGISTER_URL, setStoredPhone, webGetMe, memberGetMe, getBizByPhone,
 } from '../api.js';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -409,27 +409,9 @@ function BusinessView({ biz, navigate, onRefresh, onClear, loading, onEdit }) {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {biz.reviews.map(rev => (
-                    <div key={rev._id} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderLeft: '4px solid var(--color-deep-fern-green)', borderRadius: 12, padding: 20, fontFamily: 'var(--font-pp-neue-montreal)', position: 'relative' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-rich-black)' }}>{rev.reviewerName||'Anonymous'}</div>
-                          <div style={{ display: 'flex', gap: 2, marginTop: 4 }}>
-                            {[1, 2, 3, 4, 5].map(s => (
-                              <Star key={s} size={11} fill="var(--color-leafy-green)" stroke="var(--color-leafy-green)" />
-                            ))}
-                          </div>
-                        </div>
-                        <span style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>
-                          {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                      {rev.text && (
-                        <p style={{ fontSize: '14px', color: 'var(--color-cool-gray)', lineHeight: 1.6, fontStyle: 'italic', fontFamily: 'var(--font-pp-neue-montreal)', margin: 0, paddingLeft: 4 }}>
-                          “{rev.text}”
-                        </p>
-                      )}
-                    </div>
+                    <ReviewCard key={rev._id} rev={rev} navigate={navigate} />
                   ))}
                 </div>
               )}
@@ -999,3 +981,50 @@ function InfoRow({ icon: Icon, label, value }) {
   );
 }
 
+
+/* ── ReviewCard — reviewer name clicks to open their business ── */
+function ReviewCard({ rev, navigate }) {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleNameClick = async () => {
+    if (!rev.phone) return;
+    setLoading(true);
+    try {
+      const { getBizByPhone } = await import('../api.js');
+      const r = await getBizByPhone(rev.phone.replace(/\D/g, ''));
+      if (r.data.found && r.data.biz?._id) {
+        navigate('detail', { id: r.data.biz._id });
+      }
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderLeft: '4px solid var(--color-deep-fern-green)', borderRadius: 12, padding: 20, fontFamily: 'var(--font-pp-neue-montreal)', position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <div>
+          <div
+            onClick={rev.phone ? handleNameClick : undefined}
+            style={{ fontWeight: 600, fontSize: '14px', color: rev.phone ? 'var(--color-deep-fern-green)' : 'var(--color-rich-black)', cursor: rev.phone ? 'pointer' : 'default', textDecoration: rev.phone ? 'underline' : 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {loading ? '...' : (rev.reviewerName || 'Anonymous')}
+          </div>
+          <div style={{ display: 'flex', gap: 2, marginTop: 4 }}>
+            {[1, 2, 3, 4, 5].map(s => (
+              <Star key={s} size={11}
+                fill={s <= rev.rating ? 'var(--color-leafy-green)' : 'none'}
+                stroke={s <= rev.rating ? 'var(--color-leafy-green)' : 'var(--color-subtle-ash)'} />
+            ))}
+          </div>
+        </div>
+        <span style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>
+          {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+        </span>
+      </div>
+      {rev.text && (
+        <p style={{ fontSize: '14px', color: 'var(--color-cool-gray)', lineHeight: 1.6, fontStyle: 'italic', fontFamily: 'var(--font-pp-neue-montreal)', margin: 0, paddingLeft: 4 }}>
+          "{rev.text}"
+        </p>
+      )}
+    </div>
+  );
+}

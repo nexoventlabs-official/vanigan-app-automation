@@ -53,6 +53,8 @@ export const toggleSave   = (phone, businessId) =>
   api.post('/api/social/save',   { phone, businessId });
 export const getSocialProfile = (phone) =>
   api.get('/api/social/profile', { params: { phone } });
+export const getBizByPhone = (phone) =>
+  api.get('/api/social/biz-by-phone', { params: { phone } });
 
 /* ── Public business register URL ── */
 export const REGISTER_URL = (phone = '', opts = {}) => {
