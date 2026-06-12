@@ -33,14 +33,21 @@ export default function Organizers() {
 
   useEffect(() => { load(); }, []);
 
-  // When clicking an organizer row, look up their business by phone
+  // When clicking an organizer row, look up their business by ownerPhone
   const handleRowClick = async (org) => {
     if (!org.phone) return;
     try {
-      const r = await api.get('/businesses', { params: { q: org.phone, limit: 1 } });
+      const phone = String(org.phone).replace(/\D/g, '');
+      const r = await api.get('/businesses', { params: { ownerPhone: phone, limit: 1 } });
       const biz = r.data.items?.[0];
-      if (biz?._id) navigate(`/businesses/${biz._id}`);
-    } catch { /* no business found, do nothing */ }
+      if (biz?._id) {
+        navigate(`/businesses/${biz._id}`);
+      } else {
+        alert(`No business listing found for ${org.name}`);
+      }
+    } catch {
+      alert('Could not find business. Please try again.');
+    }
   };
 
   const openCreate = () => { setForm(BLANK); setEditingId(null); setShowForm(true); };

@@ -76,10 +76,11 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
   /* ── GET / (paginated list) ── */
   router.get('/', auth, async (req, res) => {
     try {
-      const { district, assembly, q, page = 1, limit = 50 } = req.query;
+      const { district, assembly, q, ownerPhone, page = 1, limit = 50 } = req.query;
       const filter = {};
       if (district) filter.district = district;
       if (assembly) filter.assembly = assembly;
+      if (ownerPhone) filter.ownerPhone = String(ownerPhone).replace(/\D/g, '');
       if (q) {
         const term = String(q).trim();
         const safe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex specials

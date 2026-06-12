@@ -73,12 +73,11 @@ export default function Navbar() {
 
         {/* Centered Desktop Navigation */}
         <div style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
-          gap: 12
+          gap: 8,
+          flexWrap: 'nowrap',
+          overflow: 'hidden',
         }} className="desktop-nav">
           <button
             onClick={() => go('home')}
@@ -217,6 +216,18 @@ export default function Navbar() {
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                       <User size={13} /> My Business
+                    </button>
+                    <button onClick={() => go('members')}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      <Users size={13} /> Members
+                    </button>
+                    <button onClick={() => go('organizers')}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      <Star size={13} /> Organizers
                     </button>
                     {member && (
                       <button onClick={() => go('membercard')}
