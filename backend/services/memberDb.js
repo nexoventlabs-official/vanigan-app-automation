@@ -1,44 +1,88 @@
 /**
  * memberDb.js
- * Creates a dedicated Mongoose connection to MEMBER_MONGODB_URI.
- * All VaniganMember operations go through this connection so the
- * 18k-record old member collection (on the default MONGODB_URI) is
- * never touched.
+ * ONE shared Mongoose connection to MEMBER_MONGODB_URI.
+ *
+ * All new data — VaniganMember, VaniganUser, Business listings, Reviews —
+ * goes through this single connection.
+ *
+ * The old BUSINESS_MONGODB_URI cluster holds the 18k seed businesses
+ * and is NOT touched for any new writes.
  *
  * Usage:
- *   const { getMemberModel } = require('./services/memberDb');
+ *   const { getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel } = require('./services/memberDb');
  *   const VaniganMember = await getMemberModel();
+ *   const Business      = await getBusinessModel();
+ *   const Review        = await getReviewModel();
+ *   const VaniganUser   = await getVaniganUserModel();
  */
 const mongoose = require('mongoose');
 
 let _conn = null;
-let _model = null;
+let _connPromise = null;
 
-async function getConnection() {
-  if (_conn && _conn.readyState === 1) return _conn;
+// Cached model references (populated lazily)
+const _models = {};
+
+function getConnection() {
+  if (_conn && _conn.readyState === 1) return Promise.resolve(_conn);
+  if (_connPromise) return _connPromise;
 
   const uri = process.env.MEMBER_MONGODB_URI;
   if (!uri) {
-    throw new Error('MEMBER_MONGODB_URI is not configured');
+    return Promise.reject(new Error('MEMBER_MONGODB_URI is not configured'));
   }
 
-  _conn = await mongoose.createConnection(uri, {
-    serverSelectionTimeoutMS: 10000,
-  }).asPromise();
+  _connPromise = mongoose
+    .createConnection(uri, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    })
+    .asPromise()
+    .then((conn) => {
+      _conn = conn;
+      _connPromise = null;
+      console.log('[MemberDB] connected to', uri.split('@')[1]?.split('/')[0] || 'member DB');
+      return conn;
+    })
+    .catch((err) => {
+      _connPromise = null;
+      console.error('[MemberDB] connection error:', err.message);
+      throw err;
+    });
 
-  console.log('[MemberDB] connected to', uri.split('@')[1]?.split('/')[0] || 'member DB');
-  return _conn;
+  return _connPromise;
 }
 
 async function getMemberModel() {
-  if (_model) return _model;
+  if (_models.VaniganMember) return _models.VaniganMember;
   const conn = await getConnection();
-
-  // Use rawSchema exported from the model file
-  const VaniganMemberFile = require('../models/VaniganMember');
-  const schema = VaniganMemberFile.rawSchema || VaniganMemberFile.schema;
-  _model = conn.models['VaniganMember'] || conn.model('VaniganMember', schema);
-  return _model;
+  const { rawSchema } = require('../models/VaniganMember');
+  _models.VaniganMember = conn.models['VaniganMember'] || conn.model('VaniganMember', rawSchema);
+  return _models.VaniganMember;
 }
 
-module.exports = { getConnection, getMemberModel };
+async function getBusinessModel() {
+  if (_models.Business) return _models.Business;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Business');
+  _models.Business = conn.models['Business'] || conn.model('Business', rawSchema);
+  return _models.Business;
+}
+
+async function getReviewModel() {
+  if (_models.Review) return _models.Review;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Review');
+  _models.Review = conn.models['Review'] || conn.model('Review', rawSchema);
+  return _models.Review;
+}
+
+async function getVaniganUserModel() {
+  if (_models.VaniganUser) return _models.VaniganUser;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/VaniganUser');
+  _models.VaniganUser = conn.models['VaniganUser'] || conn.model('VaniganUser', rawSchema);
+  return _models.VaniganUser;
+}
+
+module.exports = { getConnection, getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel };

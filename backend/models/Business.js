@@ -4,7 +4,12 @@ const mongoose = require('mongoose');
 /**
  * A business listed in the directory. Shown to WhatsApp users after they
  * pick District + Assembly inside the flow.
- * Uses BUSINESS_MONGODB_URI if set, otherwise falls back to the default connection.
+ *
+ * NEW LISTINGS → stored in MEMBER_MONGODB_URI (wati_panel DB).
+ * OLD SEED DATA → stays in BUSINESS_MONGODB_URI (vanigan DB, 18k records, untouched).
+ *
+ * rawSchema is exported so memberDb.js can register the model on the shared
+ * MEMBER_MONGODB_URI connection without opening a duplicate connection.
  */
 const ServiceSchema = new mongoose.Schema({
   name:          { type: String, default: '' },
@@ -72,8 +77,8 @@ const BusinessSchema = new mongoose.Schema(
     listingMode:      { type: String, default: '' },
     slug:             { type: String, default: '' },
     ownerPhone:       { type: String, default: '', trim: true, index: true },
-    ownerName:        { type: String, default: '', trim: true },   // business person name (from voter/signup)
-    ownerPin:         { type: String, default: '' },   // bcrypt hash of 4-digit PIN
+    ownerName:        { type: String, default: '', trim: true },
+    ownerPin:         { type: String, default: '' },
     active:           { type: Boolean, default: true },
   },
   { timestamps: true }
@@ -81,16 +86,25 @@ const BusinessSchema = new mongoose.Schema(
 
 BusinessSchema.index({ district: 1, assembly: 1, active: 1 });
 
-const BUSINESS_URI = process.env.BUSINESS_MONGODB_URI;
-if (BUSINESS_URI) {
-  // Create connection with buffering enabled (default) so queries queue until connected
-  const conn = mongoose.createConnection(BUSINESS_URI, {
+// Expose schema so memberDb.js can register the model on its shared connection
+const rawSchema = BusinessSchema;
+
+// Build the model on MEMBER_MONGODB_URI so new listings land in the member DB.
+// Falls back to the default connection if MEMBER_MONGODB_URI is not set.
+const MEMBER_URI = process.env.MEMBER_MONGODB_URI;
+let BusinessModel;
+
+if (MEMBER_URI) {
+  const conn = mongoose.createConnection(MEMBER_URI, {
     serverSelectionTimeoutMS: 15000,
     socketTimeoutMS: 45000,
   });
-  conn.on('connected', () => console.log('[BusinessDB] connected'));
-  conn.on('error', (err) => console.error('[BusinessDB] connection error:', err.message));
-  module.exports = conn.model('Business', BusinessSchema);
+  conn.on('connected', () => console.log('[MemberDB/Business] connected'));
+  conn.on('error', (err) => console.error('[MemberDB/Business] error:', err.message));
+  BusinessModel = conn.model('Business', BusinessSchema);
 } else {
-  module.exports = mongoose.model('Business', BusinessSchema);
+  BusinessModel = mongoose.model('Business', BusinessSchema);
 }
+
+BusinessModel.rawSchema = rawSchema;
+module.exports = BusinessModel;

@@ -134,27 +134,24 @@ async function start() {
   // Connect member MongoDB (for VaniganMember model) if configured
   if (process.env.MEMBER_MONGODB_URI) {
     try {
-      // Warm up the member DB connection early (lazy-init via memberDb.js)
+      // Warm up the shared member DB connection (Business, Review, VaniganUser, VaniganMember)
       const { getConnection } = require('./services/memberDb');
-      getConnection().catch(e => console.warn('[MemberDB] warm-up error:', e.message));
+      getConnection().then(() => {
+        // Pre-load models so first requests don't wait
+        const Business    = require('./models/Business');
+        const Review      = require('./models/Review');
+        const VaniganUser = require('./models/VaniganUser');
+        // Run lightweight warm-up queries
+        Business.findOne({}).select('_id').lean().catch(e => console.warn('[MemberDB/Business] warm-up:', e.message));
+        Review.findOne({}).select('_id').lean().catch(e => console.warn('[MemberDB/Review] warm-up:', e.message));
+        VaniganUser.findOne({}).select('_id').lean().catch(e => console.warn('[MemberDB/VaniganUser] warm-up:', e.message));
+      }).catch(e => console.warn('[MemberDB] warm-up error:', e.message));
     } catch (err) {
       console.warn('[MemberDB] init skipped:', err.message);
     }
   }
 
-  // Connect business MongoDB (for Business model) if configured
-  if (process.env.BUSINESS_MONGODB_URI) {
-    try {
-      // Requiring Business triggers createConnection — warm it up early
-      const Business = require('./models/Business');
-      // Run a lightweight query to confirm connection is live
-      Business.findOne({}).select('_id').lean().catch(e =>
-        console.warn('[BusinessDB] warm-up query error:', e.message)
-      );
-    } catch (err) {
-      console.warn('[BusinessDB] init skipped:', err.message);
-    }
-  }
+  // BUSINESS_MONGODB_URI is now READ-ONLY seed data (18k records) — no warm-up needed
 
   // Seed default admin if none exists
   try {
