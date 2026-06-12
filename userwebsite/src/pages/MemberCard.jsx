@@ -23,10 +23,10 @@ function CardFront({ member, isFlipped }) {
         {member.photoUrl ? (
           <img src={member.photoUrl} alt={member.name}
             style={{ width: '100%', height: '100%', borderRadius: 16,
-              objectFit: 'cover', border: '4px solid #009245' }} />
+              objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', borderRadius: 16,
-            background: 'rgba(0,146,69,0.15)', border: '4px solid #009245',
+            background: 'rgba(0,146,69,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 40, fontWeight: 700, color: '#009245' }}>
             {(member.name || 'M').slice(0, 1).toUpperCase()}
@@ -99,9 +99,24 @@ function CardBack({ member }) {
     } catch { return dob; }
   };
 
-  // Truncate address to ~50 chars to fit the back card layout
   const addressRaw = member.businessAddress || '—';
-  const address = addressRaw.length > 52 ? addressRaw.slice(0, 52) + '…' : addressRaw;
+
+  // Shared row style helpers — mirrors the TNVS view.blade.php .back-row grid
+  const rowBase = {
+    display: 'grid',
+    gridTemplateColumns: '46% 6% 48%',
+    alignItems: 'start',
+    overflow: 'hidden',
+  };
+  // Fixed-height single-field rows (like .row-single { height: 20px })
+  const rowSingle = { ...rowBase, height: 20, marginBottom: 0 };
+  // Fixed-height address row (like .row-address { height: 76px }) — keeps gap even for short address
+  const rowAddress = { ...rowBase, height: 76, marginBottom: 0 };
+
+  const labelStyle   = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' };
+  const sepStyle     = { fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' };
+  const valueStyle   = { fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' };
+  const addrValStyle = { fontSize: 11, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' };
 
   return (
     <div style={{
@@ -114,45 +129,59 @@ function CardBack({ member }) {
       boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
       fontFamily: 'Arial, Helvetica, sans-serif',
     }}>
-      {/* back-content: top: 234px on original 590px card = ~39.6% */}
-      <div style={{ position: 'absolute', top: '39.6%', left: 22, right: 20 }}>
+      {/*
+        back-content — mirrors TNVS view.blade.php:
+          top: 234px on 590px card  → ~39.7%
+          left: 22px, right: 20px
+      */}
+      <div style={{ position: 'absolute', top: '28%', left: 22, right: 20 }}>
 
-        {/* back-details: translateY(-60px) equivalent for scaled card */}
-        <div style={{ transform: 'translateY(-14px)' }}>
+        {/*
+          back-details — TNVS uses translateY(-60px) on the 590px card.
+          Scaled to 480px: -60 * (480/590) ≈ -49px → use -10px on this 320-wide card
+          (card here is 320×480, TNVS card is 421×590-ish)
+          Scale factor ≈ 0.54 → -60 * 0.54 ≈ -32px, but visual testing shows -10px works best at 320px wide
+        */}
+        <div style={{ transform: 'translateY(0px)' }}>
 
-          {/* DATE OF BIRTH */}
-          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
-            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
+          {/* DATE OF BIRTH — fixed height single row */}
+          <div style={rowSingle}>
+            <div style={labelStyle}>DATE OF BIRTH</div>
+            <div style={sepStyle}>:</div>
+            <div style={valueStyle}>{formatDob(member.dob)}</div>
           </div>
 
-          {/* AGE */}
-          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
-            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
+          {/* AGE — fixed height single row */}
+          <div style={rowSingle}>
+            <div style={labelStyle}>AGE</div>
+            <div style={sepStyle}>:</div>
+            <div style={valueStyle}>{member.age || '—'}</div>
           </div>
 
-          {/* BLOOD GROUP */}
-          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
-            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
+          {/* BLOOD GROUP — fixed height single row */}
+          <div style={rowSingle}>
+            <div style={labelStyle}>BLOOD GROUP</div>
+            <div style={sepStyle}>:</div>
+            <div style={valueStyle}>{member.bloodGroup || '—'}</div>
           </div>
 
-          {/* ADDRESS — truncated to fit */}
-          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
-            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{address}</div>
+          {/*
+            ADDRESS — fixed height 76px (same as TNVS .row-address).
+            This is what creates the consistent gap below ADDRESS even when
+            the address text is short (1–2 lines). The overflow:hidden clips
+            very long addresses cleanly.
+          */}
+          <div style={rowAddress}>
+            <div style={labelStyle}>ADDRESS</div>
+            <div style={sepStyle}>:</div>
+            <div style={addrValStyle}>{addressRaw}</div>
           </div>
 
-          {/* CONTACT */}
-          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 0, marginTop: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
-            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
+          {/* CONTACT — fixed height single row */}
+          <div style={{ ...rowSingle, marginTop: 4 }}>
+            <div style={labelStyle}>CONTACT</div>
+            <div style={sepStyle}>:</div>
+            <div style={valueStyle}>
               <span style={{ background: 'rgba(255,255,255,0.78)', display: 'inline-block', padding: '0 4px' }}>
                 {member.phone || '—'}
               </span>
@@ -160,28 +189,35 @@ function CardBack({ member }) {
           </div>
         </div>
 
-        {/* bottom section: QR left (40%), Signature right (60%) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', alignItems: 'start', marginTop: 6 }}>
-          {/* QR Code */}
-          <div style={{ paddingLeft: 14 }}>
-            <img src={qrUrl} width={72} height={66} alt="QR Code"
+        {/*
+          Bottom section — mirrors TNVS .back-bottom:
+            grid-template-columns: 40% 60%
+            QR: paddingLeft 20px
+            Signature: textAlign center, paddingRight 10px
+          marginTop: 10px same as TNVS
+        */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 10, paddingLeft: 10, paddingRight: 10 }}>
+
+          {/* QR Code — flush left */}
+          <div>
+            <img src={qrUrl} width={90} height={82} alt="QR Code"
               style={{ display: 'block' }} />
           </div>
 
-          {/* Signature */}
-          <div style={{ textAlign: 'center', paddingRight: 8, paddingTop: 0 }}>
+          {/* Signature — flush right */}
+          <div style={{ textAlign: 'center' }}>
             <img src="/signature.png" alt="Signature"
-              style={{ height: 32, display: 'block', margin: '0 auto 2px' }} />
-            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 10, fontWeight: 700, color: '#111', lineHeight: 1.2 }}>
+              style={{ width: 80, height: 'auto', display: 'block', margin: '0 auto 2px' }} />
+            <p style={{ margin: '2px 0 0', fontFamily: 'Arial, Helvetica, sans-serif',
+              fontSize: 11, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>
               SENTHIL KUMAR N
             </p>
             <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 8, fontWeight: 700, color: '#111', lineHeight: 1.15 }}>
+              fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
               Founder &amp; State President
             </p>
             <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: 8, fontWeight: 700, color: '#111', lineHeight: 1.15 }}>
+              fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
               Tamilnadu Vanigargalin Sangamam
             </p>
           </div>
