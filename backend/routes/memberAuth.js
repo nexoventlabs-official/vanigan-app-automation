@@ -616,6 +616,9 @@ router.post('/admin-promote/:phone', async (req, res) => {
       active:      true,
     });
 
+    // Mark member as promoted — hide from member list
+    await VaniganMember.updateOne({ phone }, { isOrganizer: true });
+
     res.json({ ok: true, organizer: org });
   } catch (err) {
     console.error('[admin-promote]', err.message);
@@ -725,6 +728,8 @@ router.get('/admin-list', async (req, res) => {
       const rx = new RegExp(safe, 'i');
       filter.$or = [{ name: rx }, { phone: rx }, { membershipId: rx }, { district: rx }];
     }
+    // Exclude promoted organizers
+    filter.isOrganizer = { $ne: true };
 
     const skip = (Math.max(1, parseInt(page)) - 1) * Math.min(100, parseInt(limit));
     const take = Math.min(100, parseInt(limit));

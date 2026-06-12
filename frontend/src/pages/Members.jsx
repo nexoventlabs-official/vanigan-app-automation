@@ -189,6 +189,9 @@ export default function Members() {
     setActionLoading(true);
     try {
       await api.post(`/member-auth/admin-promote/${promoteTarget.phone}`);
+      // Remove from members list — they're now an organizer
+      setMembers(prev => prev.filter(m => m.phone !== promoteTarget.phone));
+      setTotal(prev => prev - 1);
       setPromoteTarget(null);
       alert(`${promoteTarget.name} has been promoted to Organizer!`);
     } catch (err) {

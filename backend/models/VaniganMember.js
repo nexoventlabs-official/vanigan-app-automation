@@ -52,6 +52,7 @@ const VaniganMemberSchema = new mongoose.Schema(
 
     /* ── Status ── */
     active:        { type: Boolean, default: true },
+    isOrganizer:   { type: Boolean, default: false }, // true after admin promotes to organizer
   },
   { timestamps: true }
 );

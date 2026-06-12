@@ -334,7 +334,7 @@ router.get('/members', async (req, res) => {
     const { page = 1, q = '', district = '' } = req.query;
     const { getMemberModel } = require('../services/memberDb');
     const VaniganMember = await getMemberModel();
-    const filter = { active: true };
+    const filter = { active: true, isOrganizer: { $ne: true } };
     if (district) filter.district = district;
     if (q) {
       const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
