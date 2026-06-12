@@ -1306,7 +1306,7 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Set Your PIN — Vanigan</title>
+  <title>Confirm with Membership PIN — Vanigan</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1318,8 +1318,6 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
       --text: #000000;
       --muted: #5b616b;
       --accent: #0b7443;
-      --accent-rgb: 11, 116, 67;
-      --charcoal-black: #000000;
       --font-sans: 'Inter', Arial, sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -1336,135 +1334,78 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
     }
     .top-bar{
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       z-index: 100;
     }
     .card{
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: none;
       padding: 40px 32px;
       width: 100%;
       max-width: 420px;
       text-align: center;
     }
-    .icon{
-      font-size: 3rem;
-      margin-bottom: 16px;
-    }
+    .icon{ font-size: 3rem; margin-bottom: 16px; }
     h1{
-      font-family: var(--font-sans);
-      font-size: 1.7rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      letter-spacing: -.02em;
-      color: var(--charcoal-black);
+      font-size: 1.7rem; font-weight: 700;
+      margin-bottom: 8px; letter-spacing: -.02em; color: var(--text);
     }
     .sub{
-      color: var(--muted);
-      font-size: .87rem;
-      line-height: 1.6;
-      margin-bottom: 28px;
+      color: var(--muted); font-size: .87rem;
+      line-height: 1.6; margin-bottom: 24px;
     }
     .code-badge{
       display: inline-block;
-      background: #fee9d1;
-      border: 1px solid rgba(113, 80, 57, 0.3);
-      color: #715039;
-      border-radius: 80px;
-      padding: 6px 16px;
-      font-size: .8rem;
-      font-weight: 700;
-      letter-spacing: .05em;
-      margin: 8px 0 20px;
+      background: #fee9d1; border: 1px solid rgba(113,80,57,.3);
+      color: #715039; border-radius: 80px;
+      padding: 6px 16px; font-size: .8rem; font-weight: 700;
+      letter-spacing: .05em; margin: 8px 0 20px;
+    }
+    .divider{ border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .hint-box{
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 10px; padding: 12px 16px;
+      margin-bottom: 20px; text-align: left;
+      font-size: .82rem; color: #166534; line-height: 1.5;
     }
     .pin-wrap{
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin: 8px 0 20px;
+      display: flex; gap: 12px;
+      justify-content: center; margin: 8px 0 20px;
     }
     .pin-box{
-      width: 56px;
-      height: 64px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--card);
-      font-size: 1.8rem;
-      font-weight: 700;
-      text-align: center;
-      color: var(--text);
-      outline: none;
-      transition: all .2s;
-      caret-color: transparent;
+      width: 56px; height: 64px;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: var(--card); font-size: 1.8rem; font-weight: 700;
+      text-align: center; color: var(--text); outline: none;
+      transition: all .2s; caret-color: transparent;
     }
-    .pin-box:focus{
-      border-color: var(--accent);
-      background: #e1fdea;
-    }
+    .pin-box:focus{ border-color: var(--accent); background: #e1fdea; }
     label.lbl{
-      display: block;
-      font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-      text-align: left;
+      display: block; font-size: .75rem; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px; text-align: left;
     }
     .btn{
-      width: 100%;
-      background: var(--accent);
-      color: #ffffff;
-      font-weight: 600;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: none;
-      font-size: .88rem;
-      cursor: pointer;
-      transition: opacity 0.2s ease;
-      margin-top: 4px;
+      width: 100%; background: var(--accent); color: #fff;
+      font-weight: 600; padding: 12px 16px; border-radius: 12px;
+      border: none; font-size: .88rem; cursor: pointer;
+      transition: opacity .2s; margin-top: 4px;
     }
-    .btn:hover:not(:disabled){
-      opacity: 0.9;
-    }
+    .btn:hover:not(:disabled){ opacity: .9; }
     .btn:disabled{
-      background: #e5e7eb;
-      color: #9ca3af;
-      cursor: not-allowed;
-      border: 1px solid #e5e7eb;
+      background: #e5e7eb; color: #9ca3af;
+      cursor: not-allowed; border: 1px solid #e5e7eb;
     }
-    .err{
-      color: #ef4444;
-      font-size: .8rem;
-      margin-top: 8px;
-      min-height: 20px;
-    }
+    .err{ color: #ef4444; font-size: .8rem; margin-top: 8px; min-height: 20px; }
     .ok-msg{
       display: none;
-      background: #e1fdea;
-      border: 1px solid var(--accent);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 16px;
-      color: var(--charcoal-black);
-      font-size: .87rem;
-      font-weight: 500;
-      text-align: left;
-    }
-    .divider{
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 24px 0;
+      background: #e1fdea; border: 1px solid var(--accent);
+      border-radius: 12px; padding: 16px; margin-top: 16px;
+      color: var(--text); font-size: .87rem; font-weight: 500; text-align: left;
     }
   </style>
 </head>
@@ -1475,17 +1416,20 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
 
   <div class="card">
     <div class="icon">✅</div>
-    <h1>Registration Submitted!</h1>
-    <p class="sub"><strong style="color:var(--text)">${escHtml(name)}</strong> is now live on Vanigan.<br>You can manage your listing anytime using your PIN.</p>
+    <h1>Business Submitted!</h1>
+    <p class="sub">
+      <strong style="color:var(--text)">${escHtml(name)}</strong> is now live on Vanigan.
+    </p>
     <div class="code-badge"># ${escHtml(listingCode)}</div>
 
     <hr class="divider">
 
-    <p style="font-size:.95rem;font-weight:700;margin-bottom:6px">🔐 Set Your Security PIN</p>
-    <p class="sub" style="margin-bottom:20px">Create a 4-digit PIN to manage and edit your listing. You'll need it to access "My Business".</p>
+    <div class="hint-box">
+      🔐 <strong>One last step</strong> — enter the 4-digit PIN you set when you signed up for your Vanigan membership. This links your business to your account.
+    </div>
 
     <div id="step1">
-      <label class="lbl">Enter 4-digit PIN</label>
+      <label class="lbl">Your Membership PIN</label>
       <div class="pin-wrap" id="pinBoxes1">
         <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="0">
         <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="1">
@@ -1493,25 +1437,18 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
         <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="3">
       </div>
 
-      <label class="lbl" style="margin-top:16px">Confirm PIN</label>
-      <div class="pin-wrap" id="pinBoxes2">
-        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="0">
-        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="1">
-        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="2">
-        <input class="pin-box" type="password" inputmode="numeric" maxlength="1" data-idx="3">
-      </div>
-
       <div class="err" id="pinErr"></div>
-      <button class="btn" id="setPinBtn" onclick="submitPin()">Set PIN &amp; Confirm</button>
+      <button class="btn" id="setPinBtn" onclick="submitPin()">Confirm &amp; Link Business</button>
     </div>
 
     <div class="ok-msg" id="okMsg">
-      🎉 PIN set successfully! You can now access your business listing using your WhatsApp number and this PIN in the "My Business" section.
+      🎉 <strong>Business linked!</strong><br><br>
+      You can now access and manage your listing from the <strong>"My Business"</strong> section using your phone number and membership PIN.
     </div>
   </div>
 
 <script>
-  const BACKEND = '${backendUrl}';
+  const BACKEND    = '${backendUrl}';
   const OWNER_PHONE = '${escHtml(ownerPhone)}';
 
   function initPinBoxes(wrapId) {
@@ -1535,48 +1472,48 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
   }
 
   initPinBoxes('pinBoxes1');
-  initPinBoxes('pinBoxes2');
 
   function getPin(wrapId) {
     return Array.from(document.querySelectorAll('#' + wrapId + ' .pin-box')).map(b => b.value).join('');
   }
 
   async function submitPin() {
-    const pin1 = getPin('pinBoxes1');
-    const pin2 = getPin('pinBoxes2');
+    const pin = getPin('pinBoxes1');
     const errEl = document.getElementById('pinErr');
     errEl.textContent = '';
 
-    if (pin1.length < 4) { errEl.textContent = 'Please enter a 4-digit PIN.'; return; }
-    if (pin2.length < 4) { errEl.textContent = 'Please confirm your PIN.'; return; }
-    if (pin1 !== pin2)   { errEl.textContent = 'PINs do not match. Please try again.'; return; }
+    if (pin.length < 4) { errEl.textContent = 'Please enter your 4-digit membership PIN.'; return; }
 
     const btn = document.getElementById('setPinBtn');
-    btn.textContent = 'Setting PIN…';
+    btn.textContent = 'Verifying…';
     btn.disabled = true;
 
     try {
-      const resp = await fetch(BACKEND + '/api/public/owner/set-pin', {
+      const resp = await fetch(BACKEND + '/api/member-auth/verify-business-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ownerPhone: OWNER_PHONE, pin: pin1 }),
+        body: JSON.stringify({ phone: OWNER_PHONE, pin }),
       });
       const data = await resp.json();
+
       if (!resp.ok) {
-        if (data.error === 'pin_already_set') {
-          errEl.textContent = 'A PIN is already set for this business.';
+        if (data.error === 'wrong_pin') {
+          errEl.textContent = 'Incorrect PIN. Please enter the PIN you set during signup.';
+        } else if (data.error === 'no_member') {
+          errEl.textContent = 'No Vanigan membership found for this number. Please sign up first.';
         } else {
-          errEl.textContent = data.error || 'Something went wrong. Please try again.';
+          errEl.textContent = data.message || data.error || 'Something went wrong. Please try again.';
         }
-        btn.textContent = 'Set PIN & Confirm';
+        btn.textContent = 'Confirm & Link Business';
         btn.disabled = false;
         return;
       }
+
       document.getElementById('step1').style.display = 'none';
       document.getElementById('okMsg').style.display = 'block';
     } catch(e) {
       errEl.textContent = 'Connection error. Please try again.';
-      btn.textContent = 'Set PIN & Confirm';
+      btn.textContent = 'Confirm & Link Business';
       btn.disabled = false;
     }
   }

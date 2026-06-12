@@ -527,4 +527,64 @@ router.post('/link-business', async (req, res) => {
   }
 });
 
+/* ─────────────────────────────────────────────────────────────
+   POST /verify-business-pin
+   Body: { phone, pin }
+   — Verifies the member's signup PIN, then copies it as the
+     business ownerPin so the same PIN unlocks "My Business".
+   — Called from the post-registration page instead of "set a new PIN".
+───────────────────────────────────────────────────────────── */
+router.post('/verify-business-pin', async (req, res) => {
+  try {
+    const { phone, pin } = req.body;
+    const digits = String(phone || '').replace(/\D/g, '');
+    if (!digits || !/^\d{4}$/.test(String(pin || ''))) {
+      return res.status(400).json({ error: 'phone and 4-digit PIN are required.' });
+    }
+
+    // 1. Look up member and verify PIN
+    const VaniganMember = await getMemberModel();
+    const member = await VaniganMember.findOne({ phone: digits });
+    if (!member) {
+      return res.status(404).json({
+        error: 'no_member',
+        message: 'No membership account found for this number. Please sign up first.',
+      });
+    }
+
+    const pinOk = await bcrypt.compare(String(pin), member.pinHash);
+    if (!pinOk) {
+      return res.status(403).json({
+        error: 'wrong_pin',
+        message: 'Incorrect PIN. Please enter the PIN you set during signup.',
+      });
+    }
+
+    // 2. Find the business for this phone and set ownerPin = same hash
+    const Business = require('../models/Business');
+    const biz = await Business.findOne({ ownerPhone: digits });
+    if (!biz) {
+      return res.status(404).json({
+        error: 'no_business',
+        message: 'Business not found. Please complete registration first.',
+      });
+    }
+
+    // Use the same pinHash (already bcrypt) — no need to re-hash
+    biz.ownerPin = member.pinHash;
+    await biz.save();
+
+    // 3. Link business to member record if not already linked
+    if (!member.businessId) {
+      member.businessId = biz._id;
+      await member.save();
+    }
+
+    res.json({ ok: true, businessId: biz._id, businessName: biz.name });
+  } catch (err) {
+    console.error('[member-auth/verify-business-pin]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
