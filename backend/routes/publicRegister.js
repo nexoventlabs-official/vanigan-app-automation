@@ -53,7 +53,7 @@ router.get('/register', async (req, res) => {
 router.post('/register', uploadFields, async (req, res) => {
   try {
     const { name, category, subCategory, description, district, assembly, address,
-            phone, whatsappNo, landline, ownerPhone, phone2, email, website, landmark,
+            phone, whatsappNo, landline, ownerPhone, ownerName, phone2, email, website, landmark,
             serviceLocations, city, pincode, openTime, closeTime, lat, lng,
             fbLink, twitterLink, instaLink, googleMap, videoUrl, infoQuestion, infoAnswer,
             service1Name, service1Price, service1Detail,
@@ -104,6 +104,7 @@ router.post('/register', uploadFields, async (req, res) => {
       infoQuestion:     (infoQuestion || '').trim(),
       infoAnswer:       (infoAnswer || '').trim(),
       ownerPhone:       (ownerPhone || '').trim(),
+      ownerName:        (ownerName  || '').trim(),
       active:           true,
     };
 
@@ -572,6 +573,18 @@ function buildFormHtml(phone, prefill = {}) {
     <input type="hidden" name="ownerPhone" value="${escHtml(phone)}">
     <input type="hidden" name="ownerName"  value="${escHtml(ownerName)}">
 
+    ${ownerName || district ? `
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-family:inherit">
+      <div style="font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✅ Member Details Pre-filled</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:13px;color:#374151">
+        ${ownerName ? `<div>👤 <strong>Name:</strong> ${escHtml(ownerName)}</div>` : ''}
+        ${phone     ? `<div>📱 <strong>Phone:</strong> ${escHtml(phone)}</div>` : ''}
+        ${district  ? `<div>📍 <strong>District:</strong> ${escHtml(district)}</div>` : ''}
+        ${assembly  ? `<div>🏛 <strong>Assembly:</strong> ${escHtml(assembly)}</div>` : ''}
+        ${bizName   ? `<div>🏪 <strong>Business:</strong> ${escHtml(bizName)}</div>` : ''}
+      </div>
+    </div>
+    ` : ''}
     <!-- Card 1: Basic Information -->
     <div class="card">
       <div class="card-header">
@@ -583,6 +596,7 @@ function buildFormHtml(phone, prefill = {}) {
       <div class="field">
         <label>Business Name <span class="req">*</span></label>
         <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores" value="${escHtml(bizName)}">
+        ${bizName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your signup — you can edit this</p>' : ''}
       </div>
 
       <div class="row field">
@@ -619,17 +633,22 @@ function buildFormHtml(phone, prefill = {}) {
       <div class="row field">
         <div>
           <label>District <span class="req">*</span></label>
-          <select name="district" id="districtSel" required>
+          <select name="district" id="districtSel" required
+            ${district ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ''}>
             <option value="">— Select District —</option>
             ${districtOptionsHtml}
           </select>
+          ${district ? `<input type="hidden" name="district" value="${escHtml(district)}">` : ''}
         </div>
         <div>
           <label>Assembly <span class="req">*</span></label>
-          <select name="assembly" id="assemblySel" required>
+          <select name="assembly" id="assemblySel" required
+            ${assembly ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ''}>
             <option value="">Select district first</option>
             ${assemblyOptionsHtml}
           </select>
+          ${assembly ? `<input type="hidden" name="assembly" value="${escHtml(assembly)}">` : ''}
+          ${district && assembly ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ''}
         </div>
       </div>
 
@@ -672,6 +691,14 @@ function buildFormHtml(phone, prefill = {}) {
         <span class="card-step">Section 3 of 8</span>
         <h2>Contact Details</h2>
         <p>Provide contact channels for customers to reach you</p>
+      </div>
+
+      <div class="field">
+        <label>Business Person / Owner Name <span class="req">*</span></label>
+        <input type="text" name="ownerName" value="${escHtml(ownerName)}"
+          placeholder="Owner or contact person name" required
+          ${ownerName ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" readonly' : ''}>
+        ${ownerName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ''}
       </div>
 
       <div class="field">

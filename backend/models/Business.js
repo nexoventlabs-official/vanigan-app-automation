@@ -72,6 +72,7 @@ const BusinessSchema = new mongoose.Schema(
     listingMode:      { type: String, default: '' },
     slug:             { type: String, default: '' },
     ownerPhone:       { type: String, default: '', trim: true, index: true },
+    ownerName:        { type: String, default: '', trim: true },   // business person name (from voter/signup)
     ownerPin:         { type: String, default: '' },   // bcrypt hash of 4-digit PIN
     active:           { type: Boolean, default: true },
   },
