@@ -274,8 +274,22 @@ function pageShell(title, bodyContent) {
 }
 
 function buildFormHtml(phone, prefill = {}) {
-  const { category = '', subCategory = '', district = '', assembly = '', bizName = '', ownerName = '' } = prefill;
+  const { category = '', subCategory = '', bizName = '', ownerName = '' } = prefill;
+  const rawDistrict = prefill.district || '';
+  const rawAssembly = prefill.assembly || '';
   const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+
+  /* ── Normalise district to match tn-districts.json casing ── */
+  const allDistricts = districts.getDistricts();
+  const district = rawDistrict
+    ? (allDistricts.find(d => d.toLowerCase() === rawDistrict.toLowerCase()) || rawDistrict)
+    : '';
+
+  /* ── Normalise assembly casing against the actual list for this district ── */
+  const assembliesForDistrict = district ? districts.getAssemblies(district) : [];
+  const assembly = rawAssembly
+    ? (assembliesForDistrict.find(a => a.toLowerCase() === rawAssembly.toLowerCase()) || rawAssembly)
+    : '';
 
   /* ── Server-side render: category options with selected ── */
   const ALL_CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'];
@@ -291,13 +305,11 @@ function buildFormHtml(phone, prefill = {}) {
   const showSubCatWrap = subCatsForCategory.length > 0;
 
   /* ── Server-side render: district options ── */
-  const allDistricts = districts.getDistricts(); // synchronous
   const districtOptionsHtml = allDistricts
     .map(d => `<option value="${escHtml(d)}"${d === district ? ' selected' : ''}>${escHtml(d)}</option>`)
     .join('');
 
   /* ── Server-side render: assembly options for pre-selected district ── */
-  const assembliesForDistrict = district ? districts.getAssemblies(district) : [];
   const assemblyOptionsHtml = assembliesForDistrict.length
     ? assembliesForDistrict.map(a => `<option value="${escHtml(a)}"${a === assembly ? ' selected' : ''}>${escHtml(a)}</option>`).join('')
     : '';
