@@ -120,17 +120,22 @@ router.get('/profile', async (req, res) => {
             .select('name category subCategory image district assembly active listingCode phone whatsappNo')
             .lean()
         : [],
-      // Count how many other users follow this user's business
+      // Count + list how many other users follow this user's business
       (async () => {
-        if (!raw.businessId) return 0;
+        if (!raw.businessId) return { count: 0, list: [] };
         const VaniganMember = await getMemberModel();
         const VaniganUser   = await getVaniganUserModel();
         const bizOid = new mongoose.Types.ObjectId(raw.businessId.toString());
-        const [mc, uc] = await Promise.all([
-          VaniganMember.countDocuments({ following: bizOid }),
-          VaniganUser.countDocuments({ following: bizOid }),
+        const [members, users] = await Promise.all([
+          VaniganMember.find({ following: bizOid }).select('name phone photoUrl district assemblyName membershipId').lean(),
+          VaniganUser.find({ following: bizOid }).select('name phone district assembly').lean(),
         ]);
-        return mc + uc;
+        // Merge & normalise shape
+        const list = [
+          ...members.map(m => ({ _id: m._id, name: m.name, phone: m.phone, photoUrl: m.photoUrl || '', location: [m.assemblyName, m.district].filter(Boolean).join(', '), membershipId: m.membershipId || '' })),
+          ...users.map(u => ({ _id: u._id, name: u.name, phone: u.phone, photoUrl: '', location: [u.assembly, u.district].filter(Boolean).join(', '), membershipId: '' })),
+        ];
+        return { count: list.length, list };
       })(),
     ]);
 
@@ -140,7 +145,8 @@ router.get('/profile', async (req, res) => {
         type,
         followingCount:  followingIds.length,
         savedCount:      savedIds.length,
-        followerCount:   followers,
+        followerCount:   followers.count,
+        followerList:    followers.list,
         followingList:   followingBiz,
         savedList:       savedBiz,
       },

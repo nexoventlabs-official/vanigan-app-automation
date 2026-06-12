@@ -51,6 +51,7 @@ export default function Profile() {
   const savedList    = profile?.savedList    || [];
   const followingList= profile?.followingList || [];
   const followerCount= profile?.followerCount ?? 0;
+  const followerList = profile?.followerList  || [];
   const followingCount = profile?.followingCount ?? 0;
   const savedCount   = profile?.savedCount ?? 0;
 
@@ -144,7 +145,7 @@ export default function Profile() {
         <div style={{ display: 'flex', gap: 0, marginTop: 24, borderTop: '1px solid var(--color-subtle-ash)', paddingTop: 20 }}>
           {[
             { label: 'Following',  value: followingCount, icon: UserPlus, tab: 'following' },
-            { label: 'Followers',  value: followerCount,  icon: Users,    tab: 'info' },
+            { label: 'Followers',  value: followerCount,  icon: Users,    tab: 'followers' },
             { label: 'Saved',      value: savedCount,     icon: Bookmark, tab: 'saved' },
           ].map((s, i) => (
             <button key={s.label} onClick={() => setTab(s.tab)} style={{
@@ -173,6 +174,9 @@ export default function Profile() {
             <CreditCard size={13} /> Membership Card
           </button>
         )}
+        <button onClick={() => setTab('info')} className="btn btn-outline btn-sm" style={{ borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, borderColor: tab === 'info' ? 'var(--color-rich-black)' : undefined }}>
+          <User size={13} /> Profile Details
+        </button>
       </div>
 
       {/* ── Tab content ── */}
@@ -221,6 +225,42 @@ export default function Profile() {
                   onAction={() => handleUnfollow(biz._id)}
                   onView={() => navigate('detail', { id: biz._id })}
                 />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FOLLOWERS */}
+      {tab === 'followers' && (
+        <div>
+          <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '16px', color: 'var(--color-rich-black)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Users size={16} /> Followers
+          </h3>
+          {!profile?.businessId ? (
+            <EmptyState icon="🏪" title="No business linked" sub="Followers are people who follow your business. List your business first to get followers." />
+          ) : followerList.length === 0 ? (
+            <EmptyState icon="👥" title="No followers yet" sub="When someone follows your business, they'll appear here." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {followerList.map((f, i) => (
+                <div key={f._id || i} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px' }}>
+                  {/* Avatar */}
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: f.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--color-subtle-ash)' }}>
+                    {f.photoUrl
+                      ? <img src={f.photoUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(f.name || 'U').charAt(0).toUpperCase()}</span>
+                    }
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 2 }}>{f.name || 'Unknown'}</div>
+                    {f.location && <div style={{ fontSize: '12px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)' }}>{f.location}</div>}
+                    {f.membershipId && (
+                      <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 600, fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 2 }}>{f.membershipId}</div>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}
