@@ -196,7 +196,7 @@ function CardBack({ member }) {
             Signature: textAlign center, paddingRight 10px
           marginTop: 10px same as TNVS
         */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 10, paddingLeft: 10, paddingRight: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 22, paddingLeft: 6, paddingRight: 6 }}>
 
           {/* QR Code — flush left */}
           <div>
