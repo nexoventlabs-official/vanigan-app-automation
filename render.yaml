@@ -54,3 +54,31 @@ services:
         value: vanigan
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: BUSINESS_MONGODB_URI
+        sync: false
+      - key: MEMBER_MONGODB_URI
+        sync: false
+      - key: BUSINESS_CLOUDINARY_NAME
+        sync: false
+      - key: BUSINESS_CLOUDINARY_KEY
+        sync: false
+      - key: BUSINESS_CLOUDINARY_SECRET
+        sync: false
+      - key: GALLERY_CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: GALLERY_CLOUDINARY_API_KEY
+        sync: false
+      - key: GALLERY_CLOUDINARY_API_SECRET
+        sync: false
+      - key: MEMBER_CLOUDINARY_NAME
+        sync: false
+      - key: MEMBER_CLOUDINARY_KEY
+        sync: false
+      - key: MEMBER_CLOUDINARY_SECRET
+        sync: false
+      - key: TWO_FACTOR_API_KEY
+        sync: false
+      - key: MONGO_VOTER_URL
+        sync: false
+      - key: MONGO_VOTER_DB_NAME
+        sync: false
