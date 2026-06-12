@@ -6,111 +6,150 @@ import { useNav } from '../App.jsx';
 const FRONT_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png';
 const BACK_BG  = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png';
 
+/*
+  Card dimensions — exact TNVS values:
+  width: 421px, photo at top:182px, text stack at top:328px
+  Card height is natural from the background image (~590px)
+*/
+const CARD_W = 421;
+
 /* ─────────────────────────────────────────────────────────
-   CardFront
-   display prop: 'interactive' (3D face) | 'capture' (flat clone for html2canvas)
-   capture clones use 421×590 (TNVS native size) for max quality
+   CardFront — interactive (320×480) and capture (421×auto)
 ───────────────────────────────────────────────────────── */
 function CardFront({ member, display = 'interactive' }) {
   const isCapture = display === 'capture';
 
-  // Sizes scale with card dimensions
-  const W = isCapture ? 421 : 320;
-  const H = isCapture ? 590 : 480;
-  const photoSize  = isCapture ? 137 : 110;
-  const nameFSize  = isCapture ? 23  : 18;
-  const detailFSize= isCapture ? 16  : 13;
-  const idFSize    = isCapture ? 18  : 14;
-  const tagFSize   = isCapture ? 10  : 8;
+  if (isCapture) {
+    // Capture clone — exact TNVS pixel positions, width=421, height from bg img
+    return (
+      <div style={{ width: CARD_W, position: 'relative', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
+        {/* Background img sets the natural height */}
+        <img
+          src={FRONT_BG}
+          crossOrigin="anonymous"
+          alt=""
+          style={{ display: 'block', width: CARD_W, height: 'auto' }}
+        />
 
+        {/* Photo — top:182px, width:137px, height:136px — exact TNVS values */}
+        <div style={{
+          position: 'absolute', top: 182, left: '50%', transform: 'translateX(-50%)',
+          width: 137,
+        }}>
+          {member.photoUrl ? (
+            <img
+              src={member.photoUrl}
+              crossOrigin="anonymous"
+              alt={member.name}
+              style={{ display: 'block', width: 137, height: 136, objectFit: 'cover', borderRadius: 22 }}
+            />
+          ) : (
+            <div style={{
+              width: 137, height: 136, borderRadius: 22,
+              background: 'rgba(0,146,69,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 56, fontWeight: 700, color: '#009245',
+            }}>
+              {(member.name || 'M').slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        {/* Text stack — top:328px, left/right:28px — exact TNVS values */}
+        <div style={{
+          position: 'absolute', top: 328, left: 28, right: 28,
+          textAlign: 'center', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 0,
+        }}>
+          <p style={{ margin: '0 0 6px', fontSize: 23, fontWeight: 700, color: '#009245', lineHeight: 1.08, wordBreak: 'break-word' }}>
+            {(member.name || '').toUpperCase()}
+          </p>
+          {member.assemblyName && (
+            <p style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, color: '#111', lineHeight: 1.06 }}>
+              {member.assemblyName}{' '}
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: '#fff',
+                background: '#009245', borderRadius: 4, padding: '1px 5px', marginLeft: 4,
+                textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.4, verticalAlign: 'middle' }}>Assm</span>
+            </p>
+          )}
+          {member.district && (
+            <p style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, color: '#111', lineHeight: 1.06 }}>
+              {member.district}{' '}
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: '#fff',
+                background: '#009245', borderRadius: 4, padding: '1px 5px', marginLeft: 4,
+                textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.4, verticalAlign: 'middle' }}>Dist</span>
+            </p>
+          )}
+          {member.zone && (
+            <p style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, color: '#111', lineHeight: 1.06 }}>
+              {member.zone}
+            </p>
+          )}
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#111', letterSpacing: '0.2px', marginTop: 2 }}>
+            {member.membershipId || 'TNV-000000'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Interactive display (320×480, percentage-based positions)
   return (
     <div style={{
-      width: W, height: H,
-      position: 'relative',
-      borderRadius: isCapture ? 0 : 18,
-      overflow: 'hidden',
-      ...(isCapture ? {} : {
-        backfaceVisibility: 'hidden',
-        boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-      }),
+      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+      borderRadius: 18, overflow: 'hidden',
+      backgroundImage: `url(${FRONT_BG})`,
+      backgroundSize: 'cover', backgroundPosition: 'center',
+      boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
     }}>
-      {/* Background — <img> tag so html2canvas captures it at full res */}
-      <img
-        src={FRONT_BG}
-        crossOrigin="anonymous"
-        alt=""
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          objectFit: 'fill',
-          display: 'block',
-        }}
-      />
-
       {/* Photo */}
       <div style={{
         position: 'absolute', top: '31%', left: '50%',
-        transform: 'translateX(-50%)',
-        width: photoSize, height: photoSize,
-        zIndex: 1,
+        transform: 'translateX(-50%)', width: 110, height: 110,
       }}>
         {member.photoUrl ? (
-          <img
-            src={member.photoUrl}
-            crossOrigin="anonymous"
-            alt={member.name}
-            style={{ width: '100%', height: '100%', borderRadius: isCapture ? 22 : 16, objectFit: 'cover' }}
-          />
+          <img src={member.photoUrl} alt={member.name}
+            style={{ width: '100%', height: '100%', borderRadius: 16, objectFit: 'cover' }} />
         ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            borderRadius: isCapture ? 22 : 16,
+          <div style={{ width: '100%', height: '100%', borderRadius: 16,
             background: 'rgba(0,146,69,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: isCapture ? 52 : 40, fontWeight: 700, color: '#009245',
-          }}>
+            fontSize: 40, fontWeight: 700, color: '#009245' }}>
             {(member.name || 'M').slice(0, 1).toUpperCase()}
           </div>
         )}
       </div>
-
       {/* Text block */}
       <div style={{
-        position: 'absolute', top: '57%', left: 0, right: 0, zIndex: 1,
+        position: 'absolute', top: '57%', left: 0, right: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: isCapture ? 7 : 5, padding: `0 ${isCapture ? 20 : 14}px`,
+        gap: 5, padding: '0 14px',
       }}>
         <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-          fontSize: nameFSize, color: '#009245', lineHeight: 1.1,
-          textAlign: 'center', wordBreak: 'break-word' }}>
+          fontSize: 18, color: '#009245', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>
           {(member.name || '').toUpperCase()}
         </p>
         {member.assemblyName && (
-          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
+          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 13, color: '#111', textAlign: 'center' }}>
             {member.assemblyName}{' '}
-            <span style={{ display: 'inline-block', fontSize: tagFSize, fontWeight: 700,
-              color: '#fff', background: '#009245', borderRadius: 3,
-              padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Assm</span>
+            <span style={{ display: 'inline-block', fontSize: 8, fontWeight: 700, color: '#fff',
+              background: '#009245', borderRadius: 3, padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Assm</span>
           </p>
         )}
         {member.district && (
-          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
+          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 13, color: '#111', textAlign: 'center' }}>
             {member.district}{' '}
-            <span style={{ display: 'inline-block', fontSize: tagFSize, fontWeight: 700,
-              color: '#fff', background: '#009245', borderRadius: 3,
-              padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Dist</span>
+            <span style={{ display: 'inline-block', fontSize: 8, fontWeight: 700, color: '#fff',
+              background: '#009245', borderRadius: 3, padding: '1px 4px', marginLeft: 2, textTransform: 'uppercase' }}>Dist</span>
           </p>
         )}
         {member.zone && (
-          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-            fontSize: detailFSize, color: '#111', textAlign: 'center' }}>
+          <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 13, color: '#111', textAlign: 'center' }}>
             {member.zone}
           </p>
         )}
         <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
-          fontSize: idFSize, letterSpacing: '0.3px', color: '#111', marginTop: 2 }}>
+          fontSize: 14, letterSpacing: '0.3px', color: '#111', marginTop: 2 }}>
           {member.membershipId || 'TNV-000000'}
         </p>
       </div>
@@ -119,19 +158,15 @@ function CardFront({ member, display = 'interactive' }) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   CardBack
-   display prop: 'interactive' | 'capture'
+   CardBack — interactive (320×480) and capture (421×auto)
 ───────────────────────────────────────────────────────── */
 function CardBack({ member, display = 'interactive' }) {
   const isCapture = display === 'capture';
 
-  const W = isCapture ? 421 : 320;
-  const H = isCapture ? 590 : 480;
-
   const qrData = member.membershipId || 'TNV-000000';
-  // Larger QR for capture card
-  const qrSize = isCapture ? 120 : 90;
-  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize * 2}x${qrSize * 2}&data=${encodeURIComponent(qrData)}`;
+  // QR size: 96px for capture (matches TNVS), 90px for interactive
+  const qrSize = isCapture ? 96 : 90;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize * 3}x${qrSize * 3}&data=${encodeURIComponent(qrData)}`;
 
   const formatDob = (dob) => {
     if (!dob) return '—';
@@ -147,137 +182,151 @@ function CardBack({ member, display = 'interactive' }) {
 
   const addressRaw = member.businessAddress || '—';
 
-  // Scale font sizes and heights with card size
-  const scale     = isCapture ? 421 / 320 : 1;
-  const labelFs   = Math.round(11 * scale);
-  const sepFs     = Math.round(20 * scale);
-  const valueFs   = Math.round(13 * scale);
-  const addrFs    = Math.round(11 * scale);
-  const rowH      = Math.round(20 * scale);
-  const addrRowH  = Math.round(76 * scale);
-  const signNameFs= Math.round(11 * scale);
-  const signSmFs  = Math.round(9  * scale);
-  const signW     = Math.round(80 * scale);
-  const topPct    = '28%';
-  const leftPx    = Math.round(22 * scale);
-  const rightPx   = Math.round(20 * scale);
-  const btmMT     = Math.round(22 * scale);
-  const btmPad    = Math.round(6  * scale);
+  if (isCapture) {
+    // Capture clone — exact TNVS pixel positions for back card
+    // back-content: top:234px, left:22px, right:20px
+    // back-details: translateY(-60px) → effective top = 234-60 = 174px
+    const rowBase = {
+      display: 'grid', gridTemplateColumns: '46% 6% 48%',
+      alignItems: 'start', overflow: 'hidden',
+    };
 
+    return (
+      <div style={{ width: CARD_W, position: 'relative', overflow: 'hidden', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        {/* Background img sets natural height */}
+        <img
+          src={BACK_BG}
+          crossOrigin="anonymous"
+          alt=""
+          style={{ display: 'block', width: CARD_W, height: 'auto' }}
+        />
+
+        {/* Details — top:174px (234-60), left:22px, right:20px — exact TNVS */}
+        <div style={{ position: 'absolute', top: 174, left: 22, right: 20 }}>
+
+          <div style={{ ...rowBase, height: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
+            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
+          </div>
+
+          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
+            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
+          </div>
+
+          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
+            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
+          </div>
+
+          {/* ADDRESS — fixed height 76px keeps gap consistent */}
+          <div style={{ ...rowBase, height: 76, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
+            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{addressRaw}</div>
+          </div>
+
+          <div style={{ ...rowBase, height: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
+            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
+              <span style={{ background: 'rgba(255,255,255,0.78)', display: 'inline-block', padding: '0 4px' }}>
+                {member.phone || '—'}
+              </span>
+            </div>
+          </div>
+
+          {/* QR + Signature */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 28, paddingLeft: 8, paddingRight: 8 }}>
+            <div>
+              <img src={qrUrl} crossOrigin="anonymous" width={qrSize} height={qrSize} alt="QR Code" style={{ display: 'block' }} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <img src="/signature.png" crossOrigin="anonymous" alt="Signature"
+                style={{ width: 80, height: 'auto', display: 'block', margin: '0 auto 2px' }} />
+              <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>
+                SENTHIL KUMAR N
+              </p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
+                Founder &amp; State President
+              </p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
+                Tamilnadu Vanigargalin Sangamam
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Interactive display (320×480)
   const rowBase = {
     display: 'grid', gridTemplateColumns: '46% 6% 48%',
     alignItems: 'start', overflow: 'hidden',
   };
+  const rowSingle  = { ...rowBase, height: 20, marginBottom: 0 };
+  const rowAddress = { ...rowBase, height: 76, marginBottom: 0 };
 
   return (
     <div style={{
-      width: W, height: H,
-      position: 'relative',
-      borderRadius: isCapture ? 0 : 18,
-      overflow: 'hidden',
+      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+      transform: 'rotateY(180deg)', borderRadius: 18, overflow: 'hidden',
+      backgroundImage: `url(${BACK_BG})`, backgroundSize: '100% 100%',
+      backgroundPosition: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
       fontFamily: 'Arial, Helvetica, sans-serif',
-      ...(isCapture ? {} : {
-        backfaceVisibility: 'hidden',
-        transform: 'rotateY(180deg)',
-        boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-      }),
     }}>
-      {/* Background — <img> tag for full-res capture */}
-      <img
-        src={BACK_BG}
-        crossOrigin="anonymous"
-        alt=""
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          objectFit: 'fill',
-          display: 'block',
-        }}
-      />
-
-      {/* Content overlay */}
-      <div style={{ position: 'absolute', top: topPct, left: leftPx, right: rightPx, zIndex: 1 }}>
-
-        {/* Details rows */}
+      <div style={{ position: 'absolute', top: '28%', left: 22, right: 20 }}>
         <div>
-          <div style={{ ...rowBase, height: rowH }}>
-            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
-            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
+          <div style={rowSingle}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
           </div>
-
-          <div style={{ ...rowBase, height: rowH }}>
-            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
-            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
+          <div style={rowSingle}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
           </div>
-
-          <div style={{ ...rowBase, height: rowH }}>
-            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
-            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
+          <div style={rowSingle}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
           </div>
-
-          {/* ADDRESS — fixed height keeps gap consistent for short/long addresses */}
-          <div style={{ ...rowBase, height: addrRowH }}>
-            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
-            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: addrFs, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{addressRaw}</div>
+          <div style={rowAddress}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{addressRaw}</div>
           </div>
-
-          <div style={{ ...rowBase, height: rowH, marginTop: 4 }}>
-            <div style={{ fontSize: labelFs, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
-            <div style={{ fontSize: sepFs, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
-            <div style={{ fontSize: valueFs, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
+          <div style={{ ...rowSingle, marginTop: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
               <span style={{ background: 'rgba(255,255,255,0.78)', display: 'inline-block', padding: '0 4px' }}>
                 {member.phone || '—'}
               </span>
             </div>
           </div>
         </div>
-
-        {/* QR + Signature — pushed down, space-between */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          marginTop: btmMT, paddingLeft: btmPad, paddingRight: btmPad,
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 22, paddingLeft: 6, paddingRight: 6 }}>
           <div>
-            <img
-              src={qrUrl}
-              crossOrigin="anonymous"
-              width={qrSize} height={qrSize}
-              alt="QR Code"
-              style={{ display: 'block' }}
-            />
+            <img src={qrUrl} width={90} height={90} alt="QR Code" style={{ display: 'block' }} />
           </div>
-
           <div style={{ textAlign: 'center' }}>
-            <img
-              src="/signature.png"
-              crossOrigin="anonymous"
-              alt="Signature"
-              style={{ width: signW, height: 'auto', display: 'block', margin: '0 auto 2px' }}
-            />
-            <p style={{ margin: '2px 0 0', fontSize: signNameFs, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>
-              SENTHIL KUMAR N
-            </p>
-            <p style={{ margin: 0, fontSize: signSmFs, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
-              Founder &amp; State President
-            </p>
-            <p style={{ margin: 0, fontSize: signSmFs, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>
-              Tamilnadu Vanigargalin Sangamam
-            </p>
+            <img src="/signature.png" alt="Signature"
+              style={{ width: 80, height: 'auto', display: 'block', margin: '0 auto 2px' }} />
+            <p style={{ margin: '2px 0 0', fontSize: 11, fontWeight: 700, color: '#111', lineHeight: 1.2, textAlign: 'center' }}>SENTHIL KUMAR N</p>
+            <p style={{ margin: 0, fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>Founder &amp; State President</p>
+            <p style={{ margin: 0, fontSize: 9, fontWeight: 700, color: '#111', lineHeight: 1.15, textAlign: 'center' }}>Tamilnadu Vanigargalin Sangamam</p>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
-
-/* ─────────────────────────────────────────────────────────
-   Shared capture logic
-   - Uses 421×590 clones (TNVS native card size) + scale:2
      → 842×1180 per card — crisp, true to original dimensions
    - Background uses <img> tag so html2canvas captures it
      at full native resolution (no blurry CSS background issue)
@@ -300,7 +349,7 @@ function waitImages(el) {
 }
 
 async function buildComboCanvas(frontEl, backEl) {
-  const SCALE = 2; // 421*2=842px per side — high quality, reasonable file size
+  const SCALE = 3; // 421*3=1263px per card — full quality
 
   await waitImages(frontEl);
   await waitImages(backEl);
@@ -456,10 +505,10 @@ function Card3D({ member }) {
         so html2canvas captures them at full resolution.
       */}
       <div style={{ position: 'fixed', left: -9999, top: 0, pointerEvents: 'none', zIndex: -1, opacity: 0 }}>
-        <div ref={frontRef} style={{ width: 421, height: 590, position: 'relative', overflow: 'hidden' }}>
+        <div ref={frontRef} style={{ width: 421, position: 'relative', overflow: 'hidden' }}>
           <CardFront member={member} display="capture" />
         </div>
-        <div ref={backRef} style={{ width: 421, height: 590, position: 'relative', overflow: 'hidden', marginTop: 20 }}>
+        <div ref={backRef} style={{ width: 421, position: 'relative', overflow: 'hidden', marginTop: 20 }}>
           <CardBack member={member} display="capture" />
         </div>
       </div>
