@@ -6,6 +6,7 @@ import {
 } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNav } from '../App.jsx';
+import PhotoCropper from '../components/PhotoCropper.jsx';
 
 /* ── Blood groups ── */
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -161,6 +162,7 @@ export default function Signup() {
   const [photoPreview, setPhotoPreview] = useState('');
   const [photoUrl, setPhotoUrl]         = useState('');
   const [photoPublicId, setPhotoPublicId] = useState('');
+  const [cropSrc, setCropSrc]           = useState('');   // raw image waiting to be cropped
   const photoRef = useRef();
 
   // PIN
@@ -317,13 +319,30 @@ export default function Signup() {
     finally { setLoading(false); }
   };
 
-  /* Photo select */
+  /* Photo select — open cropper */
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Reset file input so same file can be re-selected
+    e.target.value = '';
+    const rawUrl = URL.createObjectURL(file);
+    setCropSrc(rawUrl);   // opens the cropper modal
+    setPhotoUrl('');
+    setPhotoPublicId('');
+  };
+
+  /* Cropper done — receives cropped File + previewUrl */
+  const handleCropDone = ({ file, previewUrl }) => {
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-    setPhotoUrl(''); setPhotoPublicId('');
+    setPhotoPreview(previewUrl);
+    setCropSrc('');  // close cropper
+    setPhotoUrl('');
+    setPhotoPublicId('');
+  };
+
+  /* Cropper cancelled */
+  const handleCropCancel = () => {
+    setCropSrc('');
   };
 
   const handlePhotoUpload = async () => {
@@ -771,44 +790,74 @@ export default function Signup() {
             <div style={fieldStyle}>
               <label style={labelStyle}>Profile Photo</label>
               <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:12 }}>
+
+                {/* Preview — shows cropped result */}
                 {photoPreview ? (
                   <div style={{ position:'relative' }}>
+                    {/* Mirror card photo aspect: 137×136 rendered at 2× = 137px wide */}
                     <img src={photoPreview} alt="Preview"
-                      style={{ width:100,height:100,borderRadius:12,objectFit:'cover',
-                        border:'3px solid var(--color-deep-fern-green)' }} />
+                      style={{ width:137,height:136,borderRadius:16,objectFit:'cover',
+                        border:'3px solid var(--color-deep-fern-green)',display:'block' }} />
                     {photoUrl && (
-                      <span style={{ position:'absolute',bottom:-8,right:-8,background:'var(--color-deep-fern-green)',
-                        color:'#fff',borderRadius:'50%',width:22,height:22,display:'flex',
+                      <span style={{ position:'absolute',bottom:-8,right:-8,
+                        background:'var(--color-deep-fern-green)',color:'#fff',
+                        borderRadius:'50%',width:22,height:22,display:'flex',
                         alignItems:'center',justifyContent:'center',fontSize:12 }}>✓</span>
                     )}
                   </div>
                 ) : (
-                  <div style={{ width:100,height:100,borderRadius:12,border:'2px dashed var(--color-subtle-ash)',
-                    display:'flex',alignItems:'center',justifyContent:'center',background:'var(--color-subtle-ash)' }}>
+                  /* Placeholder shows card slot ratio */
+                  <div style={{ width:137,height:136,borderRadius:16,
+                    border:'2px dashed var(--color-subtle-ash)',
+                    display:'flex',flexDirection:'column',alignItems:'center',
+                    justifyContent:'center',background:'var(--color-subtle-ash)',gap:6 }}>
                     <Camera size={32} style={{ color:'var(--color-cool-gray)' }} />
+                    <span style={{ fontSize:10,color:'var(--color-cool-gray)',
+                      fontFamily:'var(--font-pp-neue-montreal)' }}>137 × 136</span>
                   </div>
                 )}
+
                 <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }}
                   onChange={handlePhotoSelect} />
-                <div style={{ display:'flex',gap:8 }}>
+
+                <div style={{ display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center' }}>
+                  {/* Upload / Change button */}
                   <button type="button" onClick={() => photoRef.current?.click()}
                     style={{ padding:'8px 16px',border:'1px solid var(--color-subtle-ash)',borderRadius:10,
                       background:'var(--color-canvas-white)',cursor:'pointer',fontSize:'13px',
                       fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:6 }}>
-                    <Upload size={14} /> {photoPreview ? 'Change' : 'Upload Photo'}
+                    <Upload size={14} /> {photoPreview ? 'Change Photo' : 'Upload Photo'}
                   </button>
+
+                  {/* Re-crop button — shown when preview exists but not yet uploaded */}
+                  {photoPreview && !photoUrl && cropSrc === '' && (
+                    <button type="button"
+                      onClick={() => {
+                        // Re-open cropper with the current preview as source
+                        setCropSrc(photoPreview);
+                      }}
+                      style={{ padding:'8px 16px',border:'1px solid var(--color-subtle-ash)',borderRadius:10,
+                        background:'var(--color-canvas-white)',cursor:'pointer',fontSize:'13px',
+                        fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:6 }}>
+                      ✂ Re-crop
+                    </button>
+                  )}
+
+                  {/* Manual upload button */}
                   {photoFile && !photoUrl && (
                     <button type="button" onClick={handlePhotoUpload} disabled={loading}
                       style={{ padding:'8px 16px',border:'none',borderRadius:10,
                         background:'var(--color-deep-fern-green)',color:'#fff',
                         cursor:'pointer',fontSize:'13px',fontFamily:'var(--font-pp-neue-montreal)' }}>
-                      {loading ? 'Uploading…' : 'Upload'}
+                      {loading ? 'Uploading…' : '⬆ Upload'}
                     </button>
                   )}
                 </div>
+
                 <p style={{ fontSize:'11px',color:'var(--color-cool-gray)',textAlign:'center',
-                  fontFamily:'var(--font-pp-neue-montreal)',margin:0 }}>
-                  Appears on your membership card
+                  fontFamily:'var(--font-pp-neue-montreal)',margin:0,lineHeight:1.5 }}>
+                  Photo is auto-cropped to card dimensions (137×136 px).<br/>
+                  Appears on your membership card.
                 </p>
               </div>
             </div>
@@ -900,6 +949,15 @@ export default function Signup() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ════════════ Photo Cropper Modal ════════════ */}
+      {cropSrc && (
+        <PhotoCropper
+          imageSrc={cropSrc}
+          onDone={handleCropDone}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );
