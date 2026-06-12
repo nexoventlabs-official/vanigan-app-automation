@@ -327,10 +327,6 @@ function CardBack({ member, display = 'interactive' }) {
     </div>
   );
 }
-     → 842×1180 per card — crisp, true to original dimensions
-   - Background uses <img> tag so html2canvas captures it
-     at full native resolution (no blurry CSS background issue)
-───────────────────────────────────────────────────────── */
 
 // Wait for every <img> inside el to finish loading
 function waitImages(el) {
