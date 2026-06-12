@@ -24,6 +24,7 @@ const publicApiRoutes     = require('./routes/publicApi');
 const webAuthRoutes       = require('./routes/webAuth');
 const galleryRoutes       = require('./routes/gallery');
 const memberAuthRoutes    = require('./routes/memberAuth');
+const socialRoutes        = require('./routes/social');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -108,6 +109,7 @@ app.use('/api/public',          publicApiRoutes);
 app.use('/api/web-auth',        webAuthRoutes);
 app.use('/api/gallery',         galleryRoutes);
 app.use('/api/member-auth',     memberAuthRoutes);
+app.use('/api/social',          socialRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found', path: req.originalUrl }));
 

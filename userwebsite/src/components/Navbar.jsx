@@ -38,7 +38,10 @@ export default function Navbar() {
     { label: 'Home',       page: 'home',       icon: Store },
     { label: 'Categories', page: 'categories', icon: Grid3X3 },
     { label: 'Gallery',    page: 'gallery',    icon: Images },
-    ...(isLoggedIn ? [{ label: 'My Business', page: 'my', icon: User }] : []),
+    ...(isLoggedIn ? [
+      { label: 'My Profile',  page: 'profile', icon: User },
+      { label: 'My Business', page: 'my',      icon: User },
+    ] : []),
   ];
 
   const isHome = current.name === 'home';
@@ -169,6 +172,12 @@ export default function Navbar() {
                       <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', fontWeight: 600, color: 'var(--color-rich-black)' }}>{user?.name || 'User'}</div>
                       <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '11px', color: 'var(--color-cool-gray)' }}>{user?.phone}</div>
                     </div>
+                    <button onClick={() => go('profile')}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      <User size={13} /> My Profile
+                    </button>
                     <button onClick={() => go('my')}
                       style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}

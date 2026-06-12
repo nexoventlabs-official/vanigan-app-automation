@@ -3,8 +3,9 @@ import {
   Phone, Mail, Globe, MapPin, Clock, Star, Share2,
   ChevronLeft, Tag, Facebook, Twitter, Instagram,
   Video, Map, Image as ImageIcon, Store, ChevronRight, ChevronLeft as PrevIcon,
+  Heart, UserPlus, UserCheck, Bookmark, BookmarkCheck,
 } from 'lucide-react';
-import { getBusiness, postReview, getStoredPhone, setStoredPhone, getReviewed, markReviewed } from '../api.js';
+import { getBusiness, postReview, getStoredPhone, setStoredPhone, getReviewed, markReviewed, toggleFollow, toggleSave } from '../api.js';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -37,6 +38,11 @@ export default function BusinessDetail({ params = {} }) {
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
+  // Follow & Save state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isSaved,     setIsSaved]     = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
+
   useEffect(() => {
     if (!params.id) { setLoading(false); return; }
     getBusiness(params.id)
@@ -44,6 +50,13 @@ export default function BusinessDetail({ params = {} }) {
         setBiz(r.data);
         setReviews(r.data.reviews || []);
         if (getReviewed().includes(r.data._id?.toString())) setAlreadyReviewed(true);
+        // Load follow/save state from localStorage
+        if (isLoggedIn && user?.phone) {
+          const phone = user.phone.replace(/\D/g, '');
+          const ls = JSON.parse(localStorage.getItem(`vanigan_social_${phone}`) || '{}');
+          setIsFollowing(!!(ls.following || []).includes(r.data._id?.toString()));
+          setIsSaved(!!(ls.saved || []).includes(r.data._id?.toString()));
+        }
       })
       .catch(() => setBiz(null))
       .finally(() => setLoading(false));
@@ -114,6 +127,39 @@ export default function BusinessDetail({ params = {} }) {
       navigator.clipboard?.writeText(window.location.href);
       alert('Link copied!');
     }
+  };
+
+  const updateLocalSocial = (key, bizId, value) => {
+    if (!user?.phone) return;
+    const phone = user.phone.replace(/\D/g, '');
+    const ls = JSON.parse(localStorage.getItem(`vanigan_social_${phone}`) || '{}');
+    const arr = ls[key] || [];
+    if (value && !arr.includes(bizId)) arr.push(bizId);
+    if (!value) { const i = arr.indexOf(bizId); if (i > -1) arr.splice(i, 1); }
+    ls[key] = arr;
+    localStorage.setItem(`vanigan_social_${phone}`, JSON.stringify(ls));
+  };
+
+  const handleFollow = async () => {
+    if (!isLoggedIn) { navigate('login'); return; }
+    setSocialLoading(true);
+    try {
+      const r = await toggleFollow(user.phone.replace(/\D/g, ''), biz._id);
+      setIsFollowing(r.data.followed);
+      updateLocalSocial('following', biz._id.toString(), r.data.followed);
+    } catch { /* ignore */ }
+    finally { setSocialLoading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!isLoggedIn) { navigate('login'); return; }
+    setSocialLoading(true);
+    try {
+      const r = await toggleSave(user.phone.replace(/\D/g, ''), biz._id);
+      setIsSaved(r.data.saved);
+      updateLocalSocial('saved', biz._id.toString(), r.data.saved);
+    } catch { /* ignore */ }
+    finally { setSocialLoading(false); }
   };
 
   return (
@@ -270,6 +316,45 @@ export default function BusinessDetail({ params = {} }) {
               <Map size={15} /> Directions
             </a>
           )}
+
+          {/* Follow & Save — shown to all, prompt login if not logged in */}
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleFollow}
+              disabled={socialLoading}
+              title={isLoggedIn ? (isFollowing ? 'Unfollow' : 'Follow') : 'Login to follow'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', borderRadius: 12, border: '1px solid',
+                cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                fontFamily: 'var(--font-pp-neue-montreal)',
+                transition: 'all .2s',
+                background: isFollowing ? 'var(--color-deep-fern-green)' : 'var(--color-canvas-white)',
+                color:      isFollowing ? '#fff' : 'var(--color-rich-black)',
+                borderColor: isFollowing ? 'var(--color-deep-fern-green)' : 'var(--color-subtle-ash)',
+              }}>
+              {isFollowing ? <UserCheck size={15} /> : <UserPlus size={15} />}
+              {isFollowing ? 'Following' : 'Follow'}
+            </button>
+
+            <button
+              onClick={handleSave}
+              disabled={socialLoading}
+              title={isLoggedIn ? (isSaved ? 'Remove from saved' : 'Save business') : 'Login to save'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', borderRadius: 12, border: '1px solid',
+                cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                fontFamily: 'var(--font-pp-neue-montreal)',
+                transition: 'all .2s',
+                background: isSaved ? '#fef2f2' : 'var(--color-canvas-white)',
+                color:      isSaved ? '#dc2626' : 'var(--color-rich-black)',
+                borderColor: isSaved ? '#fca5a5' : 'var(--color-subtle-ash)',
+              }}>
+              {isSaved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+              {isSaved ? 'Saved' : 'Save'}
+            </button>
+          </div>
         </div>
 
         <div className="biz-detail-grid">

@@ -46,6 +46,10 @@ const VaniganMemberSchema = new mongoose.Schema(
     bizSubCat:     { type: String, default: '', trim: true },
     businessId:    { type: mongoose.Schema.Types.ObjectId, default: null },
 
+    /* ── Social ── */
+    following:       { type: [mongoose.Schema.Types.ObjectId], default: [] }, // business ids followed
+    savedBusinesses: { type: [mongoose.Schema.Types.ObjectId], default: [] }, // saved/fav business ids
+
     /* ── Status ── */
     active:        { type: Boolean, default: true },
   },

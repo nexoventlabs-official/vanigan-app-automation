@@ -46,6 +46,14 @@ export const memberLinkBusiness = (phone, businessId) =>
 export const memberLinkEpic = (phone, epic) =>
   api.post('/api/member-auth/link-epic', { phone, epic });
 
+/* ── Social — Follow / Save ── */
+export const toggleFollow = (phone, businessId) =>
+  api.post('/api/social/follow', { phone, businessId });
+export const toggleSave   = (phone, businessId) =>
+  api.post('/api/social/save',   { phone, businessId });
+export const getSocialProfile = (phone) =>
+  api.get('/api/social/profile', { params: { phone } });
+
 /* ── Public business register URL ── */
 export const REGISTER_URL = (phone = '', opts = {}) => {
   const base = BASE.replace(/\/+$/, '');

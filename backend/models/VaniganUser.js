@@ -20,6 +20,9 @@ const VaniganUserSchema = new mongoose.Schema(
     bizCategory: { type: String, default: '', trim: true },
     bizSubCat:   { type: String, default: '', trim: true },
     businessId:  { type: mongoose.Schema.Types.ObjectId, default: null },
+    // Social
+    following:       { type: [mongoose.Schema.Types.ObjectId], default: [] }, // business ids followed
+    savedBusinesses: { type: [mongoose.Schema.Types.ObjectId], default: [] }, // saved/fav business ids
   },
   { timestamps: true }
 );
