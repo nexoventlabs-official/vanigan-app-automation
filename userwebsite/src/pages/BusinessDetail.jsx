@@ -19,7 +19,7 @@ function WhatsAppIcon({ size = 16, style, className }) {
 }
 
 export default function BusinessDetail({ params = {} }) {
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
   const { isLoggedIn, user } = useAuth();
   const [biz, setBiz]         = useState(null);
   const [loading, setLoading] = useState(true);
@@ -194,7 +194,7 @@ export default function BusinessDetail({ params = {} }) {
             </div>
           )}
           {/* Back button */}
-          <button onClick={() => window.history.length > 1 ? window.history.back() : navigate('list', {})} style={{
+          <button onClick={goBack} style={{
             position: 'absolute', top: 16, left: 16,
             background: 'var(--color-canvas-white)',
             border: '1px solid var(--color-subtle-ash)', color: 'var(--color-rich-black)', cursor: 'pointer',

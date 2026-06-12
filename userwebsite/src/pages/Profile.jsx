@@ -10,7 +10,7 @@ import { useNav } from '../App.jsx';
 
 export default function Profile() {
   const { user, member, isLoggedIn, isMember, logout } = useAuth();
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [tab, setTab]           = useState('saved'); // 'saved' | 'following' | 'info'

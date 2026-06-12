@@ -42,7 +42,7 @@ function PinBoxes({ value, onChange, disabled }) {
 
 export default function Login() {
   const { memberLogin, login } = useAuth();
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
 
   const [step, setStep]     = useState('phone'); // 'phone' | 'pin'
   const [phone, setPhone]   = useState('');
@@ -121,7 +121,7 @@ export default function Login() {
     <div className="container section" style={{ maxWidth: 440 }}>
       {/* Back */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-        <button onClick={() => step === 'pin' ? setStep('phone') : navigate('home')}
+        <button onClick={() => step === 'pin' ? setStep('phone') : goBack()}
           style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',
             fontSize:'14px',fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:4 }}>
           ← {step === 'pin' ? 'Back' : 'Home'}

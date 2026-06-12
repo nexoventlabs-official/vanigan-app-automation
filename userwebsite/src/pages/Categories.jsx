@@ -4,7 +4,7 @@ import { getCategories } from '../api.js';
 import { useNav } from '../App.jsx';
 
 export default function Categories() {
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
   const [items, setItems]   = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function Categories() {
     <div className="container section">
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <button onClick={() => navigate('home')} style={{
+        <button onClick={goBack} style={{
           background: 'none',
           border: 'none',
           color: 'var(--color-cool-gray)',

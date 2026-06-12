@@ -123,7 +123,7 @@ const fieldStyle = { marginBottom:18 };
 */
 export default function Signup() {
   const { memberLogin } = useAuth();
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
 
   const [step, setStep]       = useState(1);
   const [loading, setLoading] = useState(false);

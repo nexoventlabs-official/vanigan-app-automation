@@ -80,7 +80,7 @@ function PinInput({ value, onChange, disabled }) {
    Main export — multi-step flow
 ────────────────────────────────────────────────────────── */
 export default function MyBusiness() {
-  const { navigate } = useNav();
+  const { navigate, goBack } = useNav();
   const { isLoggedIn, user, business: sessionBiz, updateBusiness, updateMemberBusiness, isMember, logout } = useAuth();
 
   /* If logged in, skip phone/pin steps entirely — go straight to view */

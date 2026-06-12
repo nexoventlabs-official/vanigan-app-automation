@@ -21,7 +21,6 @@ export const useNav = () => useContext(NavCtx);
 
 export default function App() {
   const [page, setPage] = useState(() => {
-    // Support deep-linking via ?page=xxx query param
     try {
       const sp = new URLSearchParams(window.location.search);
       const p  = sp.get('page');
@@ -32,9 +31,25 @@ export default function App() {
     return { name: 'home', params: {} };
   });
 
+  // In-memory history stack for SPA back navigation
+  const [history, setHistory] = useState([]);
+
   const navigate = (name, params = {}) => {
+    setHistory(prev => [...prev, page]); // push current page before navigating
     setPage({ name, params });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      setHistory(h => h.slice(0, -1));
+      setPage(prev);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setPage({ name: 'home', params: {} });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const pages = {
@@ -55,7 +70,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <NavCtx.Provider value={{ navigate, current: page }}>
+      <NavCtx.Provider value={{ navigate, goBack, current: page, canGoBack: history.length > 0 }}>
         <Navbar />
         <div className="page">
           {pages[page.name] || <Home />}
