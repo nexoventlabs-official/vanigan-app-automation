@@ -36,6 +36,12 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Always allow the backend's own URL (for server-rendered pages calling own API)
+const backendSelf = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+if (backendSelf && !allowedOrigins.includes(backendSelf)) {
+  allowedOrigins.push(backendSelf);
+}
+
 app.use(
   cors({
     origin: (origin, cb) => {

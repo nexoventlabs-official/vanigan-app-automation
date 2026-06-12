@@ -1489,7 +1489,9 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
     btn.disabled = true;
 
     try {
-      const resp = await fetch(BACKEND + '/api/member-auth/verify-business-pin', {
+      // Use relative URL — page is served from the same backend domain,
+      // so this avoids any CORS preflight entirely.
+      const resp = await fetch('/api/member-auth/verify-business-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: OWNER_PHONE, pin }),
@@ -1512,7 +1514,7 @@ function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
       document.getElementById('step1').style.display = 'none';
       document.getElementById('okMsg').style.display = 'block';
     } catch(e) {
-      errEl.textContent = 'Connection error. Please try again.';
+      errEl.textContent = 'Error: ' + (e.message || 'Connection failed. Please try again.');
       btn.textContent = 'Confirm & Link Business';
       btn.disabled = false;
     }
