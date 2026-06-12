@@ -83,7 +83,13 @@ BusinessSchema.index({ district: 1, assembly: 1, active: 1 });
 
 const BUSINESS_URI = process.env.BUSINESS_MONGODB_URI;
 if (BUSINESS_URI) {
-  const conn = mongoose.createConnection(BUSINESS_URI);
+  // Create connection with buffering enabled (default) so queries queue until connected
+  const conn = mongoose.createConnection(BUSINESS_URI, {
+    serverSelectionTimeoutMS: 15000,
+    socketTimeoutMS: 45000,
+  });
+  conn.on('connected', () => console.log('[BusinessDB] connected'));
+  conn.on('error', (err) => console.error('[BusinessDB] connection error:', err.message));
   module.exports = conn.model('Business', BusinessSchema);
 } else {
   module.exports = mongoose.model('Business', BusinessSchema);

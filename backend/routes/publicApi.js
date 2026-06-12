@@ -156,12 +156,16 @@ router.post('/owner/set-pin', async (req, res) => {
       return res.status(400).json({ error: 'ownerPhone and a 4-digit PIN are required.' });
     }
     const biz = await Business.findOne({ ownerPhone: digits });
-    if (!biz) return res.status(404).json({ error: 'Business not found.' });
+    if (!biz) {
+      console.warn('[set-pin] no business found for phone:', digits);
+      return res.status(404).json({ error: 'Business not found. Please complete registration first.' });
+    }
     if (biz.ownerPin) return res.status(409).json({ error: 'pin_already_set' });
     biz.ownerPin = await bcrypt.hash(String(pin), 10);
     await biz.save();
     res.json({ ok: true, businessId: biz._id });
   } catch (err) {
+    console.error('[owner/set-pin] error:', err.message, err.stack);
     res.status(500).json({ error: err.message });
   }
 });

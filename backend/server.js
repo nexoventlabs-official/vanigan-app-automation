@@ -120,6 +120,20 @@ async function start() {
     }
   }
 
+  // Connect business MongoDB (for Business model) if configured
+  if (process.env.BUSINESS_MONGODB_URI) {
+    try {
+      // Requiring Business triggers createConnection — warm it up early
+      const Business = require('./models/Business');
+      // Run a lightweight query to confirm connection is live
+      Business.findOne({}).select('_id').lean().catch(e =>
+        console.warn('[BusinessDB] warm-up query error:', e.message)
+      );
+    } catch (err) {
+      console.warn('[BusinessDB] init skipped:', err.message);
+    }
+  }
+
   // Seed default admin if none exists
   try {
     const Admin = require('./models/Admin');
