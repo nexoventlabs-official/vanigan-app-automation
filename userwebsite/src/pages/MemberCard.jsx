@@ -78,21 +78,30 @@ function CardFront({ member, isFlipped }) {
   );
 }
 
-/* ── Card back face ── */
+/* ── Card back face — matches TNVS vanigam-id-card.html exactly ── */
 function CardBack({ member }) {
   const BACK_BG = 'https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png';
   const qrData  = member.membershipId || 'TNV-000000';
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${qrData}`;
+  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=96x88&data=${encodeURIComponent(qrData)}`;
 
   const formatDob = (dob) => {
     if (!dob) return '—';
-    if (dob.includes('/')) return dob;
-    // YYYY-MM-DD → DD/MM/YYYY
+    if (dob.includes('/')) {
+      // DD/MM/YYYY → 01 Jan 1985
+      const [d, m, y] = dob.split('/');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const mo = parseInt(m, 10);
+      return `${d} ${months[mo - 1] || m} ${y}`;
+    }
     try {
-      const [y, m, d] = dob.split('-');
-      return `${d}/${m}/${y}`;
+      const dt = new Date(dob);
+      return dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
     } catch { return dob; }
   };
+
+  // Truncate address to ~50 chars to fit the back card layout
+  const addressRaw = member.businessAddress || '—';
+  const address = addressRaw.length > 52 ? addressRaw.slice(0, 52) + '…' : addressRaw;
 
   return (
     <div style={{
@@ -100,53 +109,84 @@ function CardBack({ member }) {
       transform: 'rotateY(180deg)',
       borderRadius: 18, overflow: 'hidden',
       backgroundImage: `url(${BACK_BG})`,
-      backgroundSize: 'cover', backgroundPosition: 'center',
+      backgroundSize: '100% 100%',
+      backgroundPosition: 'center',
       boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      fontFamily: 'Arial, Helvetica, sans-serif',
     }}>
-      <div style={{
-        position: 'absolute', top: '39%', left: 18, right: 16,
-      }}>
-        {[
-          { label: 'DATE OF BIRTH', value: formatDob(member.dob) },
-          { label: 'AGE',           value: member.age ? `${member.age}` : '—' },
-          { label: 'BLOOD GROUP',   value: member.bloodGroup || '—' },
-          { label: 'ADDRESS',       value: member.businessAddress || '—' },
-          { label: 'CONTACT',       value: member.phone || '—' },
-        ].map(({ label, value }) => (
-          <div key={label} style={{
-            display: 'grid', gridTemplateColumns: '44% 6% 50%',
-            alignItems: 'start', marginBottom: 3,
-          }}>
-            <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 11,
-              fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>
-              {label}
-            </div>
-            <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 20,
-              lineHeight: 0.7, textAlign: 'center', fontWeight: 700, color: '#111' }}>:
-            </div>
-            <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 13,
-              fontWeight: 700, lineHeight: 1.1, wordBreak: 'break-word', color: '#111' }}>
-              {value}
-            </div>
-          </div>
-        ))}
+      {/* back-content: top: 234px on original 590px card = ~39.6% */}
+      <div style={{ position: 'absolute', top: '39.6%', left: 22, right: 20 }}>
 
-        {/* Bottom: QR + Signature */}
-        <div style={{ display: 'grid', gridTemplateColumns: '38% 62%', alignItems: 'start', marginTop: -10 }}>
-          <div style={{ paddingLeft: 14 }}>
-            <img src={qrUrl} width={80} height={80} alt="QR Code" />
+        {/* back-details: translateY(-60px) equivalent for scaled card */}
+        <div style={{ transform: 'translateY(-14px)' }}>
+
+          {/* DATE OF BIRTH */}
+          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{formatDob(member.dob)}</div>
           </div>
-          <div style={{ textAlign: 'center', paddingRight: 8, paddingTop: 4 }}>
-            <p style={{ margin: '0 0 2px', fontFamily: 'Arial, sans-serif',
-              fontSize: 11, fontWeight: 700, color: '#111' }}>SENTHIL KUMAR N</p>
-            <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontSize: 9, fontWeight: 700, color: '#111' }}>
+
+          {/* AGE */}
+          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>AGE</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.age || '—'}</div>
+          </div>
+
+          {/* BLOOD GROUP */}
+          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>BLOOD GROUP</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>{member.bloodGroup || '—'}</div>
+          </div>
+
+          {/* ADDRESS — truncated to fit */}
+          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>ADDRESS</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#111' }}>{address}</div>
+          </div>
+
+          {/* CONTACT */}
+          <div style={{ display:'grid', gridTemplateColumns:'46% 6% 48%', alignItems:'start', marginBottom: 0, marginTop: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>CONTACT</div>
+            <div style={{ fontSize: 20, lineHeight: 0.65, textAlign: 'center', fontWeight: 700, color: '#111' }}>:</div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.12, color: '#111' }}>
+              <span style={{ background: 'rgba(255,255,255,0.78)', display: 'inline-block', padding: '0 4px' }}>
+                {member.phone || '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* bottom section: QR left (40%), Signature right (60%) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', alignItems: 'start', marginTop: 6 }}>
+          {/* QR Code */}
+          <div style={{ paddingLeft: 14 }}>
+            <img src={qrUrl} width={72} height={66} alt="QR Code"
+              style={{ display: 'block' }} />
+          </div>
+
+          {/* Signature */}
+          <div style={{ textAlign: 'center', paddingRight: 8, paddingTop: 0 }}>
+            <img src="/signature.png" alt="Signature"
+              style={{ height: 32, display: 'block', margin: '0 auto 2px' }} />
+            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
+              fontSize: 10, fontWeight: 700, color: '#111', lineHeight: 1.2 }}>
+              SENTHIL KUMAR N
+            </p>
+            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
+              fontSize: 8, fontWeight: 700, color: '#111', lineHeight: 1.15 }}>
               Founder &amp; State President
             </p>
-            <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontSize: 9, fontWeight: 700, color: '#111' }}>
+            <p style={{ margin: 0, fontFamily: 'Arial, Helvetica, sans-serif',
+              fontSize: 8, fontWeight: 700, color: '#111', lineHeight: 1.15 }}>
               Tamilnadu Vanigargalin Sangamam
             </p>
           </div>
         </div>
+
       </div>
     </div>
   );
