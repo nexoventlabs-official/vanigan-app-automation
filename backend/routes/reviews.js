@@ -2,15 +2,16 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Review = require('../models/Review');
 const Business = require('../models/Business');
-const Organizer = require('../models/Organizer');
-const Member = require('../models/Member');
+const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
 
 const router = express.Router();
 
-const MODELS = { business: Business, organizer: Organizer, member: Member };
-
 router.get('/', auth, async (req, res) => {
   try {
+    const Organizer = await getOrganizerModel();
+    const Member = await getMemberListingModel();
+    const MODELS = { business: Business, organizer: Organizer, member: Member };
+
     const { kind, targetId } = req.query;
     const filter = {};
     if (kind && MODELS[kind]) filter.targetKind = kind;

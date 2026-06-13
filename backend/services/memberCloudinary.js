@@ -2,7 +2,15 @@
  * memberCloudinary.js
  * Dedicated Cloudinary service for member photos and business images.
  * Uses the new Cloudinary account (MEMBER_CLOUDINARY_*).
- * Each member gets their own folder: vanigan_members/{phone}/
+ *
+ * Folder structure per person:
+ *   vanigan_members/{phone}/photos/          — member signup photo
+ *   vanigan_members/{phone}/business/        — business profile image
+ *   vanigan_members/{phone}/business/cover/  — business cover image
+ *   vanigan_members/{phone}/business/gallery/— business gallery images
+ *   vanigan_members/{phone}/business/services/— business service images
+ *
+ * For organizer images: vanigan_members/{phone}/organizer/
  */
 const cloudinary = require('cloudinary').v2;
 
@@ -19,7 +27,9 @@ function memberConfig() {
 /**
  * Upload a buffer to member's folder.
  * @param {Buffer} buffer
- * @param {{ phone: string, subfolder?: string, publicId?: string }} opts
+ * @param {{ phone?: string, subfolder?: string, publicId?: string }} opts
+ *   subfolder examples: 'photos', 'business', 'business/cover',
+ *                       'business/gallery', 'business/services', 'organizer'
  */
 function uploadBuffer(buffer, { phone, subfolder = 'photos', publicId } = {}) {
   const cfg = memberConfig();

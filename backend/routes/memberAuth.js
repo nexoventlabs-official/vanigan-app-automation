@@ -24,6 +24,7 @@ const Business              = require('../models/Business');
 const { findByEpicNo }      = require('../services/voterDb');
 const { uploadBuffer }      = require('../services/memberCloudinary');
 const { getZoneByDistrict, calculateAge } = require('../utils/zoneData');
+const crypto                = require('crypto');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -39,18 +40,24 @@ function safeUser(m) {
   return obj;
 }
 
+/** Generate membership ID: TNVS- + 8 uppercase hex chars e.g. TNVS-A3F2B7C1 */
 async function generateMembershipId(VaniganMember) {
-  const last = await VaniganMember
-    .findOne({ membershipId: { $regex: /^TNV-\d+$/ } })
-    .sort({ createdAt: -1 })
-    .select('membershipId')
-    .lean();
-  let nextNum = 1;
-  if (last?.membershipId) {
-    const n = parseInt(last.membershipId.replace('TNV-', ''), 10);
-    if (!isNaN(n)) nextNum = n + 1;
-  }
-  return `TNV-${String(nextNum).padStart(6, '0')}`;
+  let id, exists;
+  do {
+    id = 'TNVS-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    exists = await VaniganMember.findOne({ membershipId: id }).select('_id').lean();
+  } while (exists);
+  return id;
+}
+
+/** Generate referral code: REF- + 8 uppercase hex chars e.g. REF-B91A4C2F */
+async function generateReferralCode(VaniganMember) {
+  let code, exists;
+  do {
+    code = 'REF-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    exists = await VaniganMember.findOne({ referralCode: code }).select('_id').lean();
+  } while (exists);
+  return code;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -233,6 +240,7 @@ router.post('/signup', async (req, res) => {
       photoUrl, photoPublicId,
       pin, confirmPin,
       bizName, bizCategory, bizSubCat,
+      referredBy,
     } = req.body;
 
     /* ── Validation ── */
@@ -263,14 +271,23 @@ router.post('/signup', async (req, res) => {
       }
     }
 
+    /* ── Validate referredBy ── */
+    const cleanReferredBy = String(referredBy || '').trim().toUpperCase();
+    let referrer = null;
+    if (cleanReferredBy) {
+      referrer = await VaniganMember.findOne({ membershipId: cleanReferredBy }).select('_id referralCount').lean();
+      // silently ignore invalid referral codes — don't block signup
+    }
+
     /* ── Calculate age from DOB (DD/MM/YYYY) ── */
     const age = calculateAge(dob);
 
     /* ── Zone ── */
     const memberZone = zone || getZoneByDistrict(district);
 
-    /* ── Generate membership ID ── */
+    /* ── Generate membership ID + referral code ── */
     const membershipId = await generateMembershipId(VaniganMember);
+    const referralCode = await generateReferralCode(VaniganMember);
 
     /* ── Hash PIN ── */
     const pinHash = await bcrypt.hash(String(pin), 10);
@@ -278,6 +295,8 @@ router.post('/signup', async (req, res) => {
     /* ── Create member ── */
     const member = await VaniganMember.create({
       membershipId,
+      referralCode,
+      referredBy:     referrer ? cleanReferredBy : '',
       phone:          digits,
       secondaryPhone: String(secondaryPhone || '').replace(/\D/g, ''),
       pinHash,
@@ -300,6 +319,11 @@ router.post('/signup', async (req, res) => {
       bizSubCat:      String(bizSubCat      || '').trim(),
       active: true,
     });
+
+    /* ── Increment referrer's count ── */
+    if (referrer) {
+      await VaniganMember.updateOne({ _id: referrer._id }, { $inc: { referralCount: 1 } });
+    }
 
     // Auto-link business if one exists for this phone
     const biz = await Business.findOne({ ownerPhone: digits }).lean();
@@ -598,7 +622,8 @@ router.post('/admin-promote/:phone', async (req, res) => {
     const member = await VaniganMember.findOne({ phone }).lean();
     if (!member) return res.status(404).json({ error: 'Member not found' });
 
-    const Organizer = require('../models/Organizer');
+    const { getOrganizerModel } = require('../services/memberDb');
+    const Organizer = await getOrganizerModel();
     // Check if already an organizer
     const existing = await Organizer.findOne({ phone });
     if (existing) return res.status(409).json({ error: 'already_organizer', message: 'This member is already an organizer.' });
@@ -631,7 +656,7 @@ router.post('/admin-promote/:phone', async (req, res) => {
    Admin: hard-delete a VaniganMember and ALL their data:
      - VaniganMember doc
      - VaniganUser doc (if exists for same phone)
-     - Their Business listing + all images from businessCloudinary
+     - Their Business listing + all images (in memberCloudinary vanigan_members/{phone}/)
      - Reviews they wrote + reviews on their business
      - Their following / savedBusinesses references in others' docs
      - Member photo folder from memberCloudinary
@@ -647,7 +672,8 @@ router.delete('/admin-delete/:phone', async (req, res) => {
     const Business     = require('../models/Business');
     const { getMemberModel, getVaniganUserModel } = require('../services/memberDb');
     const { deleteMemberFolder } = require('../services/memberCloudinary');
-    const { destroy: bizDestroy } = require('../services/businessCloudinary');
+    // Business images now live in member cloudinary (vanigan_members/{phone}/business/...)
+    // so deleteMemberFolder already covers them — no separate bizDestroy needed
 
     const VaniganMember = await getMemberModel();
     const VaniganUser   = await getVaniganUserModel();
@@ -656,19 +682,10 @@ router.delete('/admin-delete/:phone', async (req, res) => {
     const member = await VaniganMember.findOne({ phone }).lean();
     if (!member) return res.status(404).json({ error: 'Member not found' });
 
-    // 2. Delete their business listing + images
+    // 2. Delete their business listing
+    // Images are under vanigan_members/{phone}/business/... — deleteMemberFolder below covers them
     const biz = await Business.findOne({ ownerPhone: phone }).lean();
     if (biz) {
-      // Delete all cloudinary images for this business
-      const toDestroy = [
-        biz.imagePublicId,
-        biz.coverImagePublicId,
-        ...(biz.galleryImages || []).map(g => g.publicId).filter(Boolean),
-        ...(biz.services || []).map(s => s.imagePublicId).filter(Boolean),
-      ].filter(Boolean);
-      for (const pid of toDestroy) {
-        await bizDestroy(pid).catch(() => {});
-      }
       await Business.deleteOne({ _id: biz._id });
       log.push(`Deleted business: ${biz.name}`);
     }
@@ -766,6 +783,55 @@ router.get('/admin-list', async (req, res) => {
     res.json({ members: enriched, total, page: parseInt(page), limit: take });
   } catch (err) {
     console.error('[member-auth/admin-list]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
+   GET /referral-info?phone=
+   Returns referral code, link, count, who referred this member,
+   and list of members they referred.
+───────────────────────────────────────────────────────────── */
+router.get('/referral-info', async (req, res) => {
+  try {
+    const digits = String(req.query.phone || '').replace(/\D/g, '');
+    if (!digits) return res.status(400).json({ error: 'phone required' });
+
+    const VaniganMember = await getMemberModel();
+    const member = await VaniganMember.findOne({ phone: digits })
+      .select('membershipId referralCode referredBy referralCount name')
+      .lean();
+    if (!member) return res.status(404).json({ error: 'not_found' });
+
+    const backendUrl = (process.env.FRONTEND_URL || process.env.BACKEND_URL || '').split(',')[0].replace(/\/+$/, '');
+    const referralLink = `${backendUrl}?ref=${member.membershipId}`;
+
+    // Who referred this member
+    let referredByMember = null;
+    if (member.referredBy) {
+      referredByMember = await VaniganMember
+        .findOne({ membershipId: member.referredBy })
+        .select('name membershipId photoUrl district assemblyName')
+        .lean();
+    }
+
+    // Members they referred
+    const referredMembers = await VaniganMember
+      .find({ referredBy: member.membershipId })
+      .select('name membershipId photoUrl district assemblyName createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      referralCode:    member.referralCode,
+      membershipId:    member.membershipId,
+      referralLink,
+      referralCount:   member.referralCount || referredMembers.length,
+      referredBy:      referredByMember,
+      referredMembers,
+    });
+  } catch (err) {
+    console.error('[referral-info]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -2,18 +2,20 @@
  * memberDb.js
  * ONE shared Mongoose connection to MEMBER_MONGODB_URI.
  *
- * All new data — VaniganMember, VaniganUser, Business listings, Reviews —
- * goes through this single connection.
+ * All new data — VaniganMember, VaniganUser, Business listings, Reviews,
+ * Organizer profiles, and Member directory listings — goes through this single connection.
  *
  * The old BUSINESS_MONGODB_URI cluster holds the 18k seed businesses
  * and is NOT touched for any new writes.
  *
  * Usage:
- *   const { getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel } = require('./services/memberDb');
+ *   const { getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel, getOrganizerModel, getMemberListingModel } = require('./services/memberDb');
  *   const VaniganMember = await getMemberModel();
  *   const Business      = await getBusinessModel();
  *   const Review        = await getReviewModel();
  *   const VaniganUser   = await getVaniganUserModel();
+ *   const Organizer     = await getOrganizerModel();
+ *   const Member        = await getMemberListingModel();
  */
 const mongoose = require('mongoose');
 
@@ -85,4 +87,20 @@ async function getVaniganUserModel() {
   return _models.VaniganUser;
 }
 
-module.exports = { getConnection, getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel };
+async function getOrganizerModel() {
+  if (_models.Organizer) return _models.Organizer;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Organizer');
+  _models.Organizer = conn.models['Organizer'] || conn.model('Organizer', rawSchema);
+  return _models.Organizer;
+}
+
+async function getMemberListingModel() {
+  if (_models.Member) return _models.Member;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Member');
+  _models.Member = conn.models['Member'] || conn.model('Member', rawSchema);
+  return _models.Member;
+}
+
+module.exports = { getConnection, getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel, getOrganizerModel, getMemberListingModel };

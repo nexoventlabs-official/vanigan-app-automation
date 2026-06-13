@@ -21,9 +21,34 @@ const MULTI_FIELDS = [
  *   extraFields      array of field-name strings for simple text fields
  *   multiImage       if true, enable cover/gallery/services image uploads
  *   cloudinaryService override Cloudinary service (uploadBuffer, destroy, ROOT)
+ *   getPhone         optional fn(doc, req) → phone string — when provided, uploads go
+ *                    to vanigan_members/{phone}/business/... via memberCloudinary
  */
-function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService, perItemFolder = false, onBeforeCreate }) {
-  const { uploadBuffer, destroy, ROOT, deleteByPrefix } = cloudinaryService || defaultCloud;
+function listingRouter({ Model, folder, extraFields = [], multiImage = false, cloudinaryService, perItemFolder = false, onBeforeCreate, getPhone }) {
+  const { uploadBuffer: _uploadBuffer, destroy, ROOT, deleteByPrefix } = cloudinaryService || defaultCloud;
+
+  // If getPhone is provided, wrap uploadBuffer to route into per-phone folders
+  // The folder arg from the factory looks like: ROOT/businesses, ROOT/businesses/gallery, etc.
+  // We translate that to subfolder: business, business/gallery, business/services, etc.
+  function resolveUpload(phone) {
+    if (!phone || !getPhone) return _uploadBuffer;
+    const { uploadBuffer: memberUpload } = require('../services/memberCloudinary');
+    return (buffer, { folder: f } = {}) => {
+      // Strip ROOT/businesses (or ROOT/organizers) prefix to get the sub-path
+      // e.g. vanigan_members/businesses          → subfolder: business
+      //      vanigan_members/businesses/gallery  → subfolder: business/gallery
+      //      vanigan_members/organizers           → subfolder: organizer
+      const base = `${ROOT}/${folder}`;
+      // Default subfolder is the singular form of folder name
+      const defaultSub = folder.replace(/s$/, ''); // businesses→business, organizers→organizer
+      let sub = defaultSub;
+      if (f && f.startsWith(base)) {
+        const rest = f.slice(base.length).replace(/^\//, '');
+        sub = rest ? `${defaultSub}/${rest}` : defaultSub;
+      }
+      return memberUpload(buffer, { phone, subfolder: sub });
+    };
+  }
   const router = express.Router();
   const uploader = multiImage ? upload.fields(MULTI_FIELDS) : upload.single('image');
 
@@ -40,7 +65,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
     }
   }
 
-  async function applyServices(item, body, files) {
+  async function applyServices(item, body, files, uploadBuffer) {
     const existing = Array.isArray(item.services) ? [...item.services] : [];
     while (existing.length < 6) existing.push({ name:'', price:'', detail:'', image:'', imagePublicId:'' });
     for (let i = 1; i <= 6; i++) {
@@ -59,7 +84,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
     item.services = existing.filter(s => s.name || s.image);
   }
 
-  async function applyGallery(item, body, files) {
+  async function applyGallery(item, body, files, uploadBuffer) {
     const toRemove = (body.galleryToRemove || '').split(',').filter(Boolean);
     if (toRemove.length) {
       for (const pid of toRemove) await destroy(pid).catch(() => {});
@@ -128,6 +153,11 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
 
       const imgFile = getFile(req, 'image');
       if (onBeforeCreate) await onBeforeCreate(doc, req);
+
+      // Resolve phone for per-person folder routing
+      const phone = getPhone ? getPhone(doc, req) : null;
+      const uploadBuffer = resolveUpload(phone);
+
       if (perItemFolder) {
         const created = await Model.create(doc);
         if (imgFile) {
@@ -148,8 +178,8 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
           const r = await uploadBuffer(coverFile.buffer, { folder: `${ROOT}/${folder}` });
           created.coverImage = r.secure_url; created.coverImagePublicId = r.public_id;
         }
-        await applyGallery(created, req.body, req);
-        await applyServices(created, req.body, req);
+        await applyGallery(created, req.body, req, uploadBuffer);
+        await applyServices(created, req.body, req, uploadBuffer);
         await created.save();
       }
       res.json({ item: created });
@@ -173,6 +203,10 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       if (active !== undefined) item.active = active === 'true' || active === true;
       applySimpleFields(item, req.body, extraFields);
 
+      // Resolve phone for per-person folder routing
+      const phone = getPhone ? getPhone(item, req) : null;
+      const uploadBuffer = resolveUpload(phone);
+
       const imgFile = getFile(req, 'image');
       if (imgFile) {
         if (item.imagePublicId) await destroy(item.imagePublicId).catch(() => {});
@@ -187,8 +221,8 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
           const r = await uploadBuffer(coverFile.buffer, { folder: `${ROOT}/${folder}` });
           item.coverImage = r.secure_url; item.coverImagePublicId = r.public_id;
         }
-        await applyGallery(item, req.body, req);
-        await applyServices(item, req.body, req);
+        await applyGallery(item, req.body, req, uploadBuffer);
+        await applyServices(item, req.body, req, uploadBuffer);
       }
       await item.save();
       res.json({ item });

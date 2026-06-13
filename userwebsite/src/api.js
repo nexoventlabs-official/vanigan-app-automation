@@ -45,6 +45,8 @@ export const memberLinkBusiness = (phone, businessId) =>
   api.post('/api/member-auth/link-business', { phone, businessId });
 export const memberLinkEpic = (phone, epic) =>
   api.post('/api/member-auth/link-epic', { phone, epic });
+export const memberGetReferralInfo = (phone) =>
+  api.get('/api/member-auth/referral-info', { params: { phone } });
 
 /* ── Social — Follow / Save ── */
 export const toggleFollow = (phone, businessId) =>

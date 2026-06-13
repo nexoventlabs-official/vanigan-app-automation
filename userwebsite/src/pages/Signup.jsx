@@ -8,7 +8,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useNav } from '../App.jsx';
 import PhotoCropper from '../components/PhotoCropper.jsx';
 
-/* ── Blood groups ── */
+/* ── Read referral code from URL: ?ref=TNVS-XXXXXXXX ── */
+function getReferralFromUrl() {
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    return (sp.get('ref') || '').trim().toUpperCase();
+  } catch { return ''; }
+}
+
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const TN_DISTRICTS = [
@@ -164,6 +171,9 @@ export default function Signup() {
   const [photoPublicId, setPhotoPublicId] = useState('');
   const [cropSrc, setCropSrc]           = useState('');   // raw image waiting to be cropped
   const photoRef = useRef();
+
+  // Referral — pre-filled from ?ref= URL param
+  const [referredBy] = useState(() => getReferralFromUrl());
 
   // PIN
   const [pin, setPin]             = useState('');
@@ -427,6 +437,7 @@ export default function Signup() {
         bizSubCat:   '',
         pin:         cleanPin,
         confirmPin:  cleanConfirm,
+        referredBy:  referredBy || '',
       };
 
       const r = await memberSignup(payload);

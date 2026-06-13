@@ -18,11 +18,10 @@ const meta = require('../services/metaCloud');
 
 const User = require('../models/User');
 const Business = require('../models/Business');
-const Organizer = require('../models/Organizer');
-const Member = require('../models/Member');
 const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const CategoryImage   = require('../models/CategoryImage');
+const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
 const SUB_CATEGORIES  = require('../utils/subCategories');
 
 const router = express.Router();
@@ -160,10 +159,10 @@ function phoneFromToken(token) {
 }
 
 function modelFor(kind) {
-  if (kind === 'business') return Business;
-  if (kind === 'organizer') return Organizer;
-  if (kind === 'member') return Member;
-  return null;
+  if (kind === 'business') return Promise.resolve(Business);
+  if (kind === 'organizer') return getOrganizerModel();
+  if (kind === 'member') return getMemberListingModel();
+  return Promise.resolve(null);
 }
 
 function kindLabel(kind, plural = false) {
@@ -234,7 +233,7 @@ function buildAssemblyOptions(district) {
 }
 
 async function buildItemList(kind, district, assembly) {
-  const M = modelFor(kind);
+  const M = await modelFor(kind);
   if (!M) return [];
   const items = await M.find({ district, assembly, active: true }).sort({ name: 1 }).limit(20).lean();
 
@@ -713,7 +712,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
   if (screen === 'ITEM_LIST') {
     const kind = data?.kind || 'business';
     const itemId = data?.selected_item;
-    const M = modelFor(kind);
+    const M = await modelFor(kind);
     if (!M || !itemId) {
       return { screen: 'INFO', data: { info_title: 'Not found', info_body: 'Please try again.' } };
     }
@@ -773,7 +772,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
     const kind = data?.kind || 'business';
     const itemId = data?.item_id;
     const user = phone ? await User.findOne({ phone }).lean() : null;
-    const M = modelFor(kind);
+    const M = await modelFor(kind);
     let doc = null;
     if (M && itemId) {
       try { doc = await M.findById(itemId).lean(); } catch {}
@@ -800,7 +799,7 @@ async function handleDataExchange({ screen, data, flow_token }) {
     const ratingNum = parseInt(data?.rating, 10);
     const text = (data?.review_text || '').trim();
     const reviewerName = (data?.reviewer_name || '').trim();
-    const M = modelFor(kind);
+    const M = await modelFor(kind);
 
     if (!M || !itemId || !ratingNum || !reviewerName) {
       return {

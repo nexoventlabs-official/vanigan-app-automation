@@ -4,7 +4,7 @@ const multer   = require('multer');
 const bcrypt   = require('bcryptjs');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
-const { uploadBuffer, destroy } = require('../services/businessCloudinary');
+const { uploadBuffer: memberUpload, destroy } = require('../services/memberCloudinary');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
@@ -269,18 +269,18 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
       if (biz.imagePublicId) await destroy(biz.imagePublicId).catch(() => {});
       const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
-      const r = await uploadBuffer(buffer, { folder: 'vanigan_biz' });
+      const r = await memberUpload(buffer, { phone: biz.ownerPhone, subfolder: 'business' });
       biz.image = r.secure_url; biz.imagePublicId = r.public_id;
     } else if (req.files?.image?.[0]) {
       if (biz.imagePublicId) await destroy(biz.imagePublicId).catch(() => {});
-      const r = await uploadBuffer(req.files.image[0].buffer, { folder: 'vanigan_biz' });
+      const r = await memberUpload(req.files.image[0].buffer, { phone: biz.ownerPhone, subfolder: 'business' });
       biz.image = r.secure_url; biz.imagePublicId = r.public_id;
     }
 
     /* Cover image */
     if (req.files?.coverImageFile?.[0]) {
       if (biz.coverImagePublicId) await destroy(biz.coverImagePublicId).catch(() => {});
-      const r = await uploadBuffer(req.files.coverImageFile[0].buffer, { folder: 'vanigan_biz' });
+      const r = await memberUpload(req.files.coverImageFile[0].buffer, { phone: biz.ownerPhone, subfolder: 'business/cover' });
       biz.coverImage = r.secure_url; biz.coverImagePublicId = r.public_id;
     }
 
@@ -293,7 +293,7 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
     /* Gallery - add new */
     const newGallery = req.files?.galleryFiles || [];
     for (const gf of newGallery) {
-      const r = await uploadBuffer(gf.buffer, { folder: 'vanigan_biz/gallery' });
+      const r = await memberUpload(gf.buffer, { phone: biz.ownerPhone, subfolder: 'business/gallery' });
       biz.galleryImages = biz.galleryImages || [];
       biz.galleryImages.push({ url: r.secure_url, publicId: r.public_id });
     }
@@ -309,7 +309,7 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
       const sf = req.files?.[`service${i}Image`]?.[0];
       if (sf) {
         if (s.imagePublicId) await destroy(s.imagePublicId).catch(() => {});
-        const r = await uploadBuffer(sf.buffer, { folder: 'vanigan_biz/services' });
+        const r = await memberUpload(sf.buffer, { phone: biz.ownerPhone, subfolder: 'business/services' });
         s.image = r.secure_url; s.imagePublicId = r.public_id;
       }
       existing[i-1] = s;
@@ -366,7 +366,8 @@ router.get('/members', async (req, res) => {
 router.get('/organizers', async (req, res) => {
   try {
     const { page = 1, q = '', district = '' } = req.query;
-    const Organizer = require('../models/Organizer');
+    const { getOrganizerModel } = require('../services/memberDb');
+    const Organizer = await getOrganizerModel();
     const filter = { active: true };
     if (district) filter.district = district;
     if (q) {

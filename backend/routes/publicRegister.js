@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { uploadBuffer } = require('../services/cloudinary');
-const { uploadBuffer: bizUpload } = require('../services/businessCloudinary');
+const { uploadBuffer: memberUpload } = require('../services/memberCloudinary');
 const districts = require('../services/districts');
 const Business = require('../models/Business');
 const meta = require('../services/metaCloud');
@@ -112,18 +111,18 @@ router.post('/register', uploadFields, async (req, res) => {
     if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
       const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
-      const result = await bizUpload(buffer, { folder: 'vanigan_biz' });
+      const result = await memberUpload(buffer, { phone: doc.ownerPhone, subfolder: 'business' });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
     } else if (req.files?.image?.[0]) {
-      const result = await bizUpload(req.files.image[0].buffer, { folder: 'vanigan_biz' });
+      const result = await memberUpload(req.files.image[0].buffer, { phone: doc.ownerPhone, subfolder: 'business' });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
     }
 
     /* ── Cover image ── */
     if (req.files?.coverImage?.[0]) {
-      const result = await bizUpload(req.files.coverImage[0].buffer, { folder: 'vanigan_biz' });
+      const result = await memberUpload(req.files.coverImage[0].buffer, { phone: doc.ownerPhone, subfolder: 'business/cover' });
       doc.coverImage = result.secure_url;
       doc.coverImagePublicId = result.public_id;
     }
@@ -132,7 +131,7 @@ router.post('/register', uploadFields, async (req, res) => {
     if (req.files?.galleryImages?.length) {
       doc.galleryImages = await Promise.all(
         req.files.galleryImages.map(async (f) => {
-          const r = await bizUpload(f.buffer, { folder: 'vanigan_biz' });
+          const r = await memberUpload(f.buffer, { phone: doc.ownerPhone, subfolder: 'business/gallery' });
           return { url: r.secure_url, publicId: r.public_id };
         })
       );
@@ -150,7 +149,7 @@ router.post('/register', uploadFields, async (req, res) => {
       let img = '', imgId = '';
       const imgFile = req.files?.[`service${i + 1}Image`]?.[0];
       if (imgFile) {
-        const r = await bizUpload(imgFile.buffer, { folder: 'vanigan_biz' });
+        const r = await memberUpload(imgFile.buffer, { phone: doc.ownerPhone, subfolder: 'business/services' });
         img = r.secure_url; imgId = r.public_id;
       }
       if (n || p || d || img) services.push({ name: n, price: p, detail: d, image: img, imagePublicId: imgId });

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import {
   User, Phone, MapPin, Bookmark, UserPlus, Users,
   Store, ChevronRight, RefreshCw, LogOut, CreditCard,
-  Calendar, Droplets, Star,
+  Calendar, Droplets, Star, Share2, Copy, Check,
 } from 'lucide-react';
-import { getSocialProfile, toggleFollow, toggleSave } from '../api.js';
+import { getSocialProfile, toggleFollow, toggleSave, memberGetReferralInfo } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNav } from '../App.jsx';
 
@@ -13,8 +13,10 @@ export default function Profile() {
   const { navigate, goBack } = useNav();
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState('saved'); // 'saved' | 'following' | 'info'
+  const [tab, setTab]           = useState('saved'); // 'saved' | 'following' | 'followers' | 'info' | 'referral'
   const [actionLoading, setActionLoading] = useState(false);
+  const [referralInfo, setReferralInfo]   = useState(null);
+  const [copied, setCopied]               = useState(false);
 
   const phone = (user?.phone || member?.phone || '').replace(/\D/g, '');
 
@@ -31,6 +33,20 @@ export default function Profile() {
     } catch { setProfile(null); }
     finally { setLoading(false); }
   };
+
+  const fetchReferralInfo = async () => {
+    if (!isMember || !phone) return;
+    try {
+      const r = await memberGetReferralInfo(phone);
+      setReferralInfo(r.data);
+    } catch { setReferralInfo(null); }
+  };
+
+  useEffect(() => {
+    if (tab === 'referral' && isMember && phone && !referralInfo) {
+      fetchReferralInfo();
+    }
+  }, [tab]);
 
   if (!isLoggedIn) {
     return (
@@ -81,6 +97,26 @@ export default function Profile() {
       }));
     } catch { /* ignore */ }
     finally { setActionLoading(false); }
+  };
+
+  const handleCopyLink = async () => {
+    if (!referralInfo?.referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralInfo.referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* ignore */ }
+  };
+
+  const handleShareLink = async () => {
+    if (!referralInfo?.referralLink) return;
+    try {
+      await navigator.share({
+        title: 'Join Vanigan',
+        text: `Join Vanigan with my referral link! Use my referral: ${referralInfo.membershipId}`,
+        url: referralInfo.referralLink,
+      });
+    } catch { /* user cancelled or not supported */ }
   };
 
   return (
@@ -147,11 +183,12 @@ export default function Profile() {
             { label: 'Following',  value: followingCount, icon: UserPlus, tab: 'following' },
             { label: 'Followers',  value: followerCount,  icon: Users,    tab: 'followers' },
             { label: 'Saved',      value: savedCount,     icon: Bookmark, tab: 'saved' },
-          ].map((s, i) => (
+            ...(isMember ? [{ label: 'Referred', value: profile?.referralCount ?? 0, icon: Share2, tab: 'referral' }] : []),
+          ].map((s, i, arr) => (
             <button key={s.label} onClick={() => setTab(s.tab)} style={{
               flex: 1, background: 'none', border: 'none', cursor: 'pointer',
               padding: '8px 4px', textAlign: 'center',
-              borderRight: i < 2 ? '1px solid var(--color-subtle-ash)' : 'none',
+              borderRight: i < arr.length - 1 ? '1px solid var(--color-subtle-ash)' : 'none',
               borderBottom: tab === s.tab ? '2px solid var(--color-deep-fern-green)' : '2px solid transparent',
               transition: 'border-color .2s',
             }}>
@@ -172,6 +209,11 @@ export default function Profile() {
         {isMember && (
           <button onClick={() => navigate('membercard')} className="btn btn-outline btn-sm" style={{ borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-deep-fern-green)', borderColor: 'var(--color-deep-fern-green)' }}>
             <CreditCard size={13} /> Membership Card
+          </button>
+        )}
+        {isMember && (
+          <button onClick={() => setTab('referral')} className="btn btn-outline btn-sm" style={{ borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, color: tab === 'referral' ? 'var(--color-deep-fern-green)' : undefined, borderColor: tab === 'referral' ? 'var(--color-deep-fern-green)' : undefined }}>
+            <Share2 size={13} /> Refer a Friend
           </button>
         )}
         <button onClick={() => setTab('info')} className="btn btn-outline btn-sm" style={{ borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, borderColor: tab === 'info' ? 'var(--color-rich-black)' : undefined }}>
@@ -276,6 +318,119 @@ export default function Profile() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* REFERRAL */}
+      {tab === 'referral' && isMember && (
+        <div>
+          <h3 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '16px', color: 'var(--color-rich-black)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Share2 size={16} /> Refer a Friend
+          </h3>
+
+          {!referralInfo ? (
+            <div className="spinner-wrap"><div className="spinner" /></div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Referral link card */}
+              <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 16, padding: 24 }}>
+                <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '15px', color: 'var(--color-rich-black)', marginBottom: 6 }}>
+                  Your Referral Link
+                </div>
+                <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '12px', color: 'var(--color-cool-gray)', marginBottom: 16, lineHeight: 1.5 }}>
+                  Share this link with friends. When they sign up using your link, they'll be linked to you as a referral.
+                </div>
+
+                {/* Referral ID badge */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e1fdea', border: '1px solid #bbf7d0', borderRadius: 20, padding: '4px 14px', fontSize: '12px', fontWeight: 700, color: '#166534', fontFamily: 'var(--font-pp-neue-montreal)', letterSpacing: '0.04em', marginBottom: 14 }}>
+                  <CreditCard size={11} /> {referralInfo.membershipId}
+                </div>
+
+                {/* Link box */}
+                <div style={{ background: 'var(--color-subtle-ash)', borderRadius: 10, padding: '10px 14px', fontSize: '12px', fontFamily: 'var(--font-pp-neue-montreal)', color: 'var(--color-cool-gray)', wordBreak: 'break-all', marginBottom: 14 }}>
+                  {referralInfo.referralLink}
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button onClick={handleCopyLink} style={{ flex: 1, minWidth: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 16px', borderRadius: 12, border: '1px solid var(--color-deep-fern-green)', background: copied ? 'var(--color-deep-fern-green)' : 'var(--color-canvas-white)', color: copied ? '#fff' : 'var(--color-deep-fern-green)', fontWeight: 700, fontSize: '13px', fontFamily: 'var(--font-pp-neue-montreal)', cursor: 'pointer', transition: 'all .2s' }}>
+                    {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Link</>}
+                  </button>
+                  {'share' in navigator && (
+                    <button onClick={handleShareLink} style={{ flex: 1, minWidth: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 16px', borderRadius: 12, border: 'none', background: 'var(--color-deep-fern-green)', color: '#fff', fontWeight: 700, fontSize: '13px', fontFamily: 'var(--font-pp-neue-montreal)', cursor: 'pointer' }}>
+                      <Share2 size={14} /> Share
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Referred by */}
+              {referralInfo.referredBy && (
+                <div style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 16, padding: 20 }}>
+                  <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '13px', color: 'var(--color-cool-gray)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+                    Referred by
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: referralInfo.referredBy.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
+                      {referralInfo.referredBy.photoUrl
+                        ? <img src={referralInfo.referredBy.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(referralInfo.referredBy.name || 'M').charAt(0).toUpperCase()}</span>
+                      }
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)' }}>{referralInfo.referredBy.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 2 }}>{referralInfo.referredBy.membershipId}</div>
+                      {(referralInfo.referredBy.assemblyName || referralInfo.referredBy.district) && (
+                        <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>
+                          {[referralInfo.referredBy.assemblyName, referralInfo.referredBy.district].filter(Boolean).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Members referred by me */}
+              <div>
+                <h4 style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Users size={14} /> Members You Referred
+                  <span style={{ background: 'var(--color-subtle-ash)', borderRadius: 20, padding: '2px 10px', fontSize: '12px', fontWeight: 700, color: 'var(--color-cool-gray)' }}>
+                    {referralInfo.referredMembers?.length || 0}
+                  </span>
+                </h4>
+                {!referralInfo.referredMembers?.length ? (
+                  <EmptyState icon="🤝" title="No referrals yet" sub="Share your referral link and invite friends to join Vanigan. They'll appear here once they sign up." />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {referralInfo.referredMembers.map((m, i) => (
+                      <div key={m._id || i} style={{ background: 'var(--color-canvas-white)', border: '1px solid var(--color-subtle-ash)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: m.photoUrl ? 'transparent' : 'var(--color-rich-black)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--color-subtle-ash)' }}>
+                          {m.photoUrl
+                            ? <img src={m.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)' }}>{(m.name || 'M').charAt(0).toUpperCase()}</span>
+                          }
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontWeight: 700, fontSize: '14px', color: 'var(--color-rich-black)' }}>{m.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--color-deep-fern-green)', fontWeight: 700, fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>{m.membershipId}</div>
+                          {(m.assemblyName || m.district) && (
+                            <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', marginTop: 1 }}>
+                              {[m.assemblyName, m.district].filter(Boolean).join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', whiteSpace: 'nowrap' }}>
+                          {m.createdAt ? new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
         </div>
       )}
     </div>

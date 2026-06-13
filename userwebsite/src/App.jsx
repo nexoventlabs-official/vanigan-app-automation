@@ -24,6 +24,8 @@ export default function App() {
     try {
       const sp = new URLSearchParams(window.location.search);
       const p  = sp.get('page');
+      // If a referral link (?ref=TNVS-XXXXXXXX) is in the URL, send directly to signup
+      if (sp.get('ref')) return { name: 'signup', params: {} };
       if (p && ['home','categories','list','detail','add','my','login','signup','gallery','membercard','profile','members','organizers'].includes(p)) {
         return { name: p, params: {} };
       }

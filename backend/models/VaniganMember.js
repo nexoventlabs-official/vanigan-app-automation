@@ -53,6 +53,11 @@ const VaniganMemberSchema = new mongoose.Schema(
     /* ── Status ── */
     active:        { type: Boolean, default: true },
     isOrganizer:   { type: Boolean, default: false }, // true after admin promotes to organizer
+
+    /* ── Referral ── */
+    referralCode:  { type: String, default: '', trim: true, index: true }, // unique shareable code e.g. TNVS-A3F2B7C1
+    referredBy:    { type: String, default: '', trim: true },              // membershipId of the person who referred
+    referralCount: { type: Number, default: 0 },                          // count of members who joined via this member's link
   },
   { timestamps: true }
 );

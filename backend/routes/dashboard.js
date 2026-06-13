@@ -1,17 +1,18 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const Business = require('../models/Business');
-const Organizer = require('../models/Organizer');
-const Member = require('../models/Member');
 const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const InboundMessage = require('../models/InboundMessage');
+const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
 
 const router = express.Router();
 
 router.get('/stats', auth, async (_req, res) => {
   try {
+    const Organizer = await getOrganizerModel();
+    const Member = await getMemberListingModel();
     const [businesses, organizers, members, plans, reviews, users, contacts] = await Promise.all([
       Business.countDocuments({ active: true }),
       Organizer.countDocuments({ active: true }),

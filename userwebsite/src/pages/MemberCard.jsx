@@ -437,7 +437,7 @@ function Card3D({ member }) {
       const uid   = member.membershipId || 'vanigan-card';
       const link  = document.createElement('a');
       link.download = `${uid}_card.png`;
-      link.href = combo.toDataURL('image/png', 1.0); // no compression
+      link.href = combo.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -454,7 +454,6 @@ function Card3D({ member }) {
     try {
       const combo = await buildComboCanvas(frontRef.current, backRef.current);
       const uid   = member.membershipId || 'vanigan-card';
-
       if (navigator.canShare) {
         const blob = await new Promise(res => combo.toBlob(res, 'image/png', 1.0));
         const file = new File([blob], `${uid}_card.png`, { type: 'image/png' });
