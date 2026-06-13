@@ -707,7 +707,7 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div className="spinner-wrap"><div className="spinner" /></div>
+            <div className="spinner-wrap"><div className="loader"></div></div>
           ) : (
             <div className="marquee-container">
               <div className="marquee-track">

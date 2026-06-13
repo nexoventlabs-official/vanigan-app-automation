@@ -68,7 +68,7 @@ export default function MemberList() {
 
       {/* List */}
       {loading && members.length === 0 ? (
-        <div className="spinner-wrap"><div className="spinner" /></div>
+        <div className="spinner-wrap"><div className="loader"></div></div>
       ) : members.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--color-cool-gray)', fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '14px' }}>
           No members found.

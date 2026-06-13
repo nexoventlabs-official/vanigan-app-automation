@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Phone, ArrowRight, Upload, Camera } from 'lucide-react';
+
 import {
   memberCheckPhone, memberLookupEpic, memberSendOtp, memberVerifyOtp,
   memberUploadPhoto, memberSignup,
@@ -54,10 +54,16 @@ function PinBoxes({ value, onChange, disabled }) {
           onChange={e=>handleChange(i,e)} onKeyDown={e=>handleKeyDown(i,e)} onPaste={handlePaste}
           disabled={disabled}
           style={{width:52,height:60,border:'2px solid var(--color-subtle-ash)',borderRadius:12,
-            background:'var(--color-subtle-ash)',fontSize:'1.5rem',fontWeight:700,textAlign:'center',
-            color:'var(--color-rich-black)',outline:'none',transition:'border-color .15s'}}
-          onFocus={e=>(e.target.style.borderColor='var(--color-deep-fern-green)')}
-          onBlur={e=>(e.target.style.borderColor='var(--color-subtle-ash)')} />
+            background:'var(--color-canvas-white)',fontSize:'1.5rem',fontWeight:700,textAlign:'center',
+            color:'var(--color-rich-black)',outline:'none',transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'}}
+          onFocus={e=>{
+            e.target.style.borderColor='var(--color-deep-fern-green)';
+            e.target.style.boxShadow='0 0 0 4px rgba(34, 197, 94, 0.12)';
+          }}
+          onBlur={e=>{
+            e.target.style.borderColor='var(--color-subtle-ash)';
+            e.target.style.boxShadow='none';
+          }} />
       ))}
     </div>
   );
@@ -90,10 +96,16 @@ function OtpBoxes({ value, onChange, disabled }) {
           onChange={e=>handleChange(i,e)} onKeyDown={e=>handleKeyDown(i,e)} onPaste={handlePaste}
           disabled={disabled}
           style={{width:44,height:52,border:'2px solid var(--color-subtle-ash)',borderRadius:10,
-            background:'var(--color-subtle-ash)',fontSize:'1.25rem',fontWeight:700,textAlign:'center',
-            color:'var(--color-rich-black)',outline:'none',transition:'border-color .15s'}}
-          onFocus={e=>(e.target.style.borderColor='var(--color-deep-fern-green)')}
-          onBlur={e=>(e.target.style.borderColor='var(--color-subtle-ash)')} />
+            background:'var(--color-canvas-white)',fontSize:'1.25rem',fontWeight:700,textAlign:'center',
+            color:'var(--color-rich-black)',outline:'none',transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'}}
+          onFocus={e=>{
+            e.target.style.borderColor='var(--color-deep-fern-green)';
+            e.target.style.boxShadow='0 0 0 4px rgba(34, 197, 94, 0.12)';
+          }}
+          onBlur={e=>{
+            e.target.style.borderColor='var(--color-subtle-ash)';
+            e.target.style.boxShadow='none';
+          }} />
       ))}
     </div>
   );
@@ -470,35 +482,43 @@ export default function Signup() {
 
   /* ── Render ── */
   return (
-    <div className="container section" style={{ maxWidth:480 }}>
-
-      {/* Back */}
-      {step < successStep && (
-        <div style={{ display:'flex',alignItems:'center',marginBottom:24 }}>
-          <button onClick={() => { if (step > 1) setStep(s => s - 1); else navigate('home'); setError(''); }}
-            style={{ background:'none',border:'none',color:'var(--color-cool-gray)',cursor:'pointer',
-              fontSize:'14px',fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:4 }}>
-            ← {step > 1 ? 'Back' : 'Home'}
-          </button>
-        </div>
-      )}
-
-      {/* Header */}
-      {step < successStep && (
-        <div style={{ marginBottom:24 }}>
-          <div style={{ width:56,height:56,borderRadius:12,background:'var(--color-rich-black)',
-            display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:16 }}>
-            <User size={24} style={{ color:'var(--color-canvas-white)' }} />
+    <div style={{
+      minHeight: 'calc(100vh - 64px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      padding: '24px 20px',
+      boxSizing: 'border-box',
+    }} className="signup-bg-container">
+      <div style={{ width: '100%', maxWidth: 480 }}>
+        {/* Back */}
+        {step < successStep && (
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+            <button className="btn-back" onClick={() => { if (step > 1) setStep(s => s - 1); else navigate('home'); setError(''); }}>
+              <svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1024 1024"><path d="M874.690416 495.52477c0 11.2973-9.168824 20.466124-20.466124 20.466124l-604.773963 0 188.083679 188.083679c7.992021 7.992021 7.992021 20.947078 0 28.939099-4.001127 3.990894-9.240455 5.996574-14.46955 5.996574-5.239328 0-10.478655-1.995447-14.479783-5.996574l-223.00912-223.00912c-3.837398-3.837398-5.996574-9.046027-5.996574-14.46955 0-5.433756 2.159176-10.632151 5.996574-14.46955l223.019353-223.029586c7.992021-7.992021 20.957311-7.992021 28.949332 0 7.992021 8.002254 7.992021 20.957311 0 28.949332l-188.073446 188.073446 604.753497 0C865.521592 475.058646 874.690416 484.217237 874.690416 495.52477z"></path></svg>
+              <span>{step > 1 ? 'Back' : 'Home'}</span>
+            </button>
           </div>
-          <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'28px',fontWeight:700,
-            letterSpacing:'-0.02em',color:'var(--color-rich-black)',marginBottom:6 }}>
-            Create Membership
-          </h1>
-          <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',margin:0 }}>
-            {stepLabel ? `Step ${currentStepNum} of ${totalSteps} — ${stepLabel}` : ''}
-          </p>
-        </div>
-      )}
+        )}
+        {/* Header */}
+        {step < successStep && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ width:48,height:48,borderRadius:12,background:'var(--color-rich-black)',
+              display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:12 }}>
+              <i className="fa-solid fa-user" style={{ fontSize: 20, color: 'var(--color-canvas-white)' }} />
+            </div>
+            <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'28px',fontWeight:700,
+              letterSpacing:'-0.02em',color:'var(--color-rich-black)',marginBottom:6 }}>
+              Create Membership
+            </h1>
+            <p style={{ fontFamily:'var(--font-pp-neue-montreal)',color:'var(--color-cool-gray)',fontSize:'14px',margin:0 }}>
+              {stepLabel ? `Step ${currentStepNum} of ${totalSteps} — ${stepLabel}` : ''}
+            </p>
+          </div>
+        )}
 
       {/* Progress */}
       {step < successStep && (
@@ -512,12 +532,14 @@ export default function Signup() {
       {error && (
         <div style={{ background:'#fef2f2',border:'1px solid #fee2e2',borderRadius:12,
           padding:'12px 16px',color:'#ef4444',fontSize:'13px',marginBottom:20,
-          fontFamily:'var(--font-pp-neue-montreal)' }}>⚠ {error}</div>
+          fontFamily:'var(--font-pp-neue-montreal)' }}>
+          <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} /> {error}
+        </div>
       )}
 
       {/* ════════════ STEP 1 — EPIC Choice ════════════ */}
       {step === 1 && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:8 }}>
             Do you have an EPIC card?
           </h2>
@@ -528,8 +550,8 @@ export default function Signup() {
             <button onClick={() => handleEpicChoice(true)}
               style={{ padding:'16px 20px',border:'2px solid var(--color-deep-fern-green)',borderRadius:12,
                 background:'var(--color-mint-green-glow)',cursor:'pointer',textAlign:'left',fontFamily:'var(--font-pp-neue-montreal)' }}>
-              <div style={{ fontWeight:700,fontSize:'15px',color:'var(--color-deep-fern-green)',marginBottom:4 }}>
-                ✅ Yes, I have an EPIC / Voter ID card
+              <div style={{ fontWeight:700,fontSize:'15px',color:'var(--color-deep-fern-green)',marginBottom:4,display:'flex',alignItems:'center',gap:8 }}>
+                <i className="fa-solid fa-circle-check" style={{ color: '#22c55e', fontSize: '16px' }} /> Yes, I have an EPIC / Voter ID card
               </div>
               <div style={{ fontSize:'12px',color:'var(--color-cool-gray)' }}>
                 Name, district and assembly auto-filled from voter database.
@@ -538,8 +560,8 @@ export default function Signup() {
             <button onClick={() => handleEpicChoice(false)}
               style={{ padding:'16px 20px',border:'1px solid var(--color-subtle-ash)',borderRadius:12,
                 background:'var(--color-canvas-white)',cursor:'pointer',textAlign:'left',fontFamily:'var(--font-pp-neue-montreal)' }}>
-              <div style={{ fontWeight:600,fontSize:'15px',color:'var(--color-rich-black)',marginBottom:4 }}>
-                ❌ I don't have an EPIC card
+              <div style={{ fontWeight:600,fontSize:'15px',color:'var(--color-rich-black)',marginBottom:4,display:'flex',alignItems:'center',gap:8 }}>
+                <i className="fa-solid fa-circle-xmark" style={{ color: 'var(--color-cool-gray)', fontSize: '16px' }} /> I don't have an EPIC card
               </div>
               <div style={{ fontSize:'12px',color:'var(--color-cool-gray)' }}>
                 Fill in your details manually. You can link your EPIC later from your account.
@@ -558,32 +580,43 @@ export default function Signup() {
 
       {/* ════════════ STEP 2 — EPIC path: EPIC lookup ════════════ */}
       {step === 2 && hasEpic && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             Enter Your EPIC Number
           </h2>
           <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'13px',color:'var(--color-cool-gray)',marginBottom:24 }}>
             Printed on your Voter ID card (e.g., TN1234567).
           </p>
-          <form onSubmit={handleEpicLookup}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>EPIC Number *</label>
-              <input style={{ ...inputStyle,textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600 }}
-                value={epicInput}
-                onChange={e => { setEpicInput(e.target.value.toUpperCase()); setEpicLookupDone(false); setEpicData(null); setError(''); }}
-                placeholder="e.g. TN1234567" maxLength={15} />
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', gap: 16 }}>
+              <div className="loader"></div>
+              <p style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '14px', color: 'var(--color-cool-gray)', margin: 0 }}>
+                Finding voter details...
+              </p>
             </div>
-            <button type="submit" disabled={loading || !epicInput.trim()}
-              className="btn btn-primary btn-full" style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600 }}>
-              {loading ? 'Searching…' : 'Validate EPIC'}
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handleEpicLookup}>
+              <div style={fieldStyle}>
+                <label className="premium-label">EPIC Number *</label>
+                <input className="premium-input" style={{ textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600 }}
+                  value={epicInput}
+                  onChange={e => { setEpicInput(e.target.value.toUpperCase()); setEpicLookupDone(false); setEpicData(null); setError(''); }}
+                  placeholder="e.g. TN1234567" maxLength={15} />
+              </div>
+              <button type="submit" disabled={!epicInput.trim()}
+                className="btn btn-primary btn-full" style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600 }}>
+                Validate EPIC
+              </button>
+            </form>
+          )}
 
           {epicLookupDone && epicData && (
             <div style={{ marginTop:20,padding:16,background:'var(--color-mint-green-glow)',
               border:'1px solid var(--color-muted-sage)',borderRadius:12,fontFamily:'var(--font-pp-neue-montreal)' }}>
               <div style={{ fontSize:'12px',fontWeight:700,color:'var(--color-deep-fern-green)',
-                textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10 }}>✅ Voter Found</div>
+                textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10,display:'flex',alignItems:'center',gap:6 }}>
+                <i className="fa-solid fa-circle-check" /> Voter Found
+              </div>
               <div style={{ display:'grid',gap:5 }}>
                 {[
                   ['Name',     epicData.name],
@@ -596,15 +629,15 @@ export default function Signup() {
                   </div>
                 ))}
                 {epicData.mobile && (
-                  <div style={{ fontSize:'12px',color:'var(--color-cool-gray)',marginTop:4 }}>
-                    📱 Voter DB mobile: {epicData.mobile} (saved as secondary)
+                  <div style={{ fontSize:'12px',color:'var(--color-cool-gray)',marginTop:4,display:'flex',alignItems:'center',gap:6 }}>
+                    <i className="fa-solid fa-mobile-screen-button" /> Voter DB mobile: {epicData.mobile} (saved as secondary)
                   </div>
                 )}
               </div>
               <button type="button" onClick={handleEpicContinue}
                 className="btn btn-primary btn-full"
-                style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600,marginTop:16 }}>
-                Continue <ArrowRight size={14} style={{ marginLeft:4 }} />
+                style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600,marginTop:16,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+                Continue <i className="fa-solid fa-arrow-right" />
               </button>
             </div>
           )}
@@ -613,7 +646,7 @@ export default function Signup() {
 
       {/* ════════════ STEP 2 — No-EPIC path: Profile + Phone + Location ════════════ */}
       {step === 2 && !hasEpic && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             Your Profile
           </h2>
@@ -623,23 +656,23 @@ export default function Signup() {
           <form onSubmit={handleNoEpicProfileStep}>
             {/* Name */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Full Name *</label>
-              <input style={inputStyle} value={manualName}
+              <label className="premium-label">Full Name *</label>
+              <input className="premium-input" value={manualName}
                 onChange={e => setManualName(e.target.value)}
                 placeholder="Your full name" required />
             </div>
 
             {/* Phone */}
             <div style={fieldStyle}>
-              <label style={labelStyle}><Phone size={11} style={{ marginRight:4 }} />WhatsApp / Mobile Number *</label>
+              <label className="premium-label"><i className="fa-solid fa-phone" style={{ fontSize: 10 }} />WhatsApp / Mobile Number *</label>
               <div style={{ position:'relative' }}>
-                <input style={{ ...inputStyle,paddingRight:38 }} type="tel" inputMode="numeric" maxLength={15}
+                <input className="premium-input" style={{ paddingRight:38 }} type="tel" inputMode="numeric" maxLength={15}
                   value={manualPhone}
                   onChange={e => { setManualPhone(e.target.value); checkPhone(e.target.value.replace(/\D/g,''), setManualPhoneCheck); setError(''); }}
                   placeholder="10-digit mobile number" required />
                 {manualPhoneCheck === 'checking' && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',fontSize:11,color:'var(--color-cool-gray)' }}>…</span>}
-                {manualPhoneCheck === 'ok'       && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--color-deep-fern-green)',fontSize:16 }}>✓</span>}
-                {manualPhoneCheck === 'exists'   && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'#ef4444',fontSize:16 }}>✕</span>}
+                {manualPhoneCheck === 'ok'       && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--color-deep-fern-green)',fontSize:14 }}><i className="fa-solid fa-check" /></span>}
+                {manualPhoneCheck === 'exists'   && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'#ef4444',fontSize:14 }}><i className="fa-solid fa-xmark" /></span>}
               </div>
               {manualPhoneCheck === 'exists' && (
                 <p style={{ color:'#ef4444',fontSize:'12px',marginTop:6,fontFamily:'var(--font-pp-neue-montreal)' }}>
@@ -654,8 +687,8 @@ export default function Signup() {
 
             {/* District */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>District *</label>
-              <select style={{ ...inputStyle,paddingRight:36,appearance:'none',cursor:'pointer' }}
+              <label className="premium-label">District *</label>
+              <select className="premium-input" style={{ paddingRight:36,appearance:'none',cursor:'pointer' }}
                 value={manualDistrict} onChange={e => setManualDistrict(e.target.value)} required>
                 <option value="">— Select District —</option>
                 {TN_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -664,8 +697,8 @@ export default function Signup() {
 
             {/* Assembly */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Assembly / Area *</label>
-              <select style={{ ...inputStyle,paddingRight:36,appearance:'none',cursor:'pointer',opacity:!manualDistrict?0.5:1 }}
+              <label className="premium-label">Assembly / Area *</label>
+              <select className="premium-input" style={{ paddingRight:36,appearance:'none',cursor:'pointer',opacity:!manualDistrict?0.5:1 }}
                 value={manualAssembly} onChange={e => setManualAssembly(e.target.value)}
                 required disabled={!manualDistrict}>
                 <option value="">— Select Assembly —</option>
@@ -683,7 +716,7 @@ export default function Signup() {
 
       {/* ════════════ STEP 3 — EPIC path: Mobile number ════════════ */}
       {step === 3 && hasEpic && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             WhatsApp Number
           </h2>
@@ -692,15 +725,15 @@ export default function Signup() {
           </p>
           <form onSubmit={handleEpicPhoneStep}>
             <div style={fieldStyle}>
-              <label style={labelStyle}><Phone size={11} style={{ marginRight:4 }} />Mobile / WhatsApp *</label>
+              <label className="premium-label"><i className="fa-solid fa-phone" style={{ fontSize: 10 }} />Mobile / WhatsApp *</label>
               <div style={{ position:'relative' }}>
-                <input style={{ ...inputStyle,paddingRight:38 }} type="tel" inputMode="numeric" maxLength={15}
+                <input className="premium-input" style={{ paddingRight:38 }} type="tel" inputMode="numeric" maxLength={15}
                   value={phone}
                   onChange={e => { setPhone(e.target.value); checkPhone(e.target.value.replace(/\D/g,''), setPhoneCheck); setError(''); }}
                   placeholder="10-digit mobile number" required />
                 {phoneCheck === 'checking' && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',fontSize:11,color:'var(--color-cool-gray)' }}>…</span>}
-                {phoneCheck === 'ok'       && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--color-deep-fern-green)',fontSize:16 }}>✓</span>}
-                {phoneCheck === 'exists'   && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'#ef4444',fontSize:16 }}>✕</span>}
+                {phoneCheck === 'ok'       && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--color-deep-fern-green)',fontSize:14 }}><i className="fa-solid fa-check" /></span>}
+                {phoneCheck === 'exists'   && <span style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'#ef4444',fontSize:14 }}><i className="fa-solid fa-xmark" /></span>}
               </div>
               {phoneCheck === 'exists' && (
                 <p style={{ color:'#ef4444',fontSize:'12px',marginTop:6,fontFamily:'var(--font-pp-neue-montreal)' }}>
@@ -722,7 +755,7 @@ export default function Signup() {
 
       {/* ════════════ OTP step — EPIC=4, NoEPIC=3 ════════════ */}
       {((hasEpic && step === 4) || (!hasEpic && step === 3)) && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             Verify OTP
           </h2>
@@ -752,7 +785,7 @@ export default function Signup() {
 
       {/* ════════════ Personal details — EPIC=5, NoEPIC=4 ════════════ */}
       {((hasEpic && step === 5) || (!hasEpic && step === 4)) && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             Personal Details
           </h2>
@@ -762,8 +795,8 @@ export default function Signup() {
           <form onSubmit={handlePersonalStep}>
             {/* DOB */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Date of Birth *</label>
-              <input type="date" style={inputStyle} value={dob}
+              <label className="premium-label"><i className="fa-solid fa-calendar-days" style={{ fontSize: 10 }} />Date of Birth *</label>
+              <input type="date" className="premium-input" value={dob}
                 onChange={e => setDob(e.target.value)} required
                 max={new Date().toISOString().split('T')[0]} />
               {dob && <p style={{ fontSize:'12px',color:'var(--color-deep-fern-green)',marginTop:4,fontFamily:'var(--font-pp-neue-montreal)' }}>
@@ -773,7 +806,7 @@ export default function Signup() {
 
             {/* Blood group */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Blood Group *</label>
+              <label className="premium-label"><i className="fa-solid fa-droplet" style={{ fontSize: 10 }} />Blood Group *</label>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
                 {BLOOD_GROUPS.map(bg => (
                   <button type="button" key={bg} onClick={() => setBloodGroup(bg)}
@@ -791,15 +824,15 @@ export default function Signup() {
 
             {/* Address */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Business / Home Address *</label>
-              <textarea style={{ ...inputStyle,minHeight:80,resize:'vertical' }}
+              <label className="premium-label"><i className="fa-solid fa-location-dot" style={{ fontSize: 10 }} />Business / Home Address *</label>
+              <textarea className="premium-input" style={{ minHeight:80,resize:'vertical' }}
                 value={businessAddress} onChange={e => setBusinessAddress(e.target.value)}
                 placeholder="Your business or home address" required />
             </div>
 
             {/* Photo */}
             <div style={fieldStyle}>
-              <label style={labelStyle}>Profile Photo</label>
+              <label className="premium-label"><i className="fa-solid fa-image" style={{ fontSize: 10 }} />Profile Photo</label>
               <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:12 }}>
 
                 {/* Preview — shows cropped result */}
@@ -813,7 +846,9 @@ export default function Signup() {
                       <span style={{ position:'absolute',bottom:-8,right:-8,
                         background:'var(--color-deep-fern-green)',color:'#fff',
                         borderRadius:'50%',width:22,height:22,display:'flex',
-                        alignItems:'center',justifyContent:'center',fontSize:12 }}>✓</span>
+                        alignItems:'center',justifyContent:'center',fontSize:10 }}>
+                        <i className="fa-solid fa-check" />
+                      </span>
                     )}
                   </div>
                 ) : (
@@ -822,7 +857,7 @@ export default function Signup() {
                     border:'2px dashed var(--color-subtle-ash)',
                     display:'flex',flexDirection:'column',alignItems:'center',
                     justifyContent:'center',background:'var(--color-subtle-ash)',gap:6 }}>
-                    <Camera size={32} style={{ color:'var(--color-cool-gray)' }} />
+                    <i className="fa-solid fa-camera" style={{ fontSize: 32, color:'var(--color-cool-gray)' }} />
                     <span style={{ fontSize:10,color:'var(--color-cool-gray)',
                       fontFamily:'var(--font-pp-neue-montreal)' }}>137 × 136</span>
                   </div>
@@ -837,7 +872,7 @@ export default function Signup() {
                     style={{ padding:'8px 16px',border:'1px solid var(--color-subtle-ash)',borderRadius:10,
                       background:'var(--color-canvas-white)',cursor:'pointer',fontSize:'13px',
                       fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:6 }}>
-                    <Upload size={14} /> {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                    <i className="fa-solid fa-image" /> {photoPreview ? 'Change Photo' : 'Upload Photo'}
                   </button>
 
                   {/* Re-crop button — shown when preview exists but not yet uploaded */}
@@ -850,7 +885,7 @@ export default function Signup() {
                       style={{ padding:'8px 16px',border:'1px solid var(--color-subtle-ash)',borderRadius:10,
                         background:'var(--color-canvas-white)',cursor:'pointer',fontSize:'13px',
                         fontFamily:'var(--font-pp-neue-montreal)',display:'flex',alignItems:'center',gap:6 }}>
-                      ✂ Re-crop
+                      <i className="fa-solid fa-crop" /> Re-crop
                     </button>
                   )}
 
@@ -859,8 +894,9 @@ export default function Signup() {
                     <button type="button" onClick={handlePhotoUpload} disabled={loading}
                       style={{ padding:'8px 16px',border:'none',borderRadius:10,
                         background:'var(--color-deep-fern-green)',color:'#fff',
-                        cursor:'pointer',fontSize:'13px',fontFamily:'var(--font-pp-neue-montreal)' }}>
-                      {loading ? 'Uploading…' : '⬆ Upload'}
+                        cursor:'pointer',fontSize:'13px',fontFamily:'var(--font-pp-neue-montreal)',
+                        display:'flex',alignItems:'center',gap:6 }}>
+                      {loading ? 'Uploading…' : <><i className="fa-solid fa-arrow-up-from-bracket" /> Upload</>}
                     </button>
                   )}
                 </div>
@@ -874,8 +910,8 @@ export default function Signup() {
             </div>
 
             <button type="submit" disabled={loading}
-              className="btn btn-primary btn-full" style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600 }}>
-              Continue <ArrowRight size={14} style={{ marginLeft:4 }} />
+              className="btn btn-primary btn-full" style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+              Continue <i className="fa-solid fa-arrow-right" />
             </button>
           </form>
         </div>
@@ -883,7 +919,7 @@ export default function Signup() {
 
       {/* ════════════ PIN — EPIC=6, NoEPIC=5 ════════════ */}
       {((hasEpic && step === 6) || (!hasEpic && step === 5)) && (
-        <div className="card" style={{ padding:28,background:'var(--color-canvas-white)',borderRadius:12,border:'1px solid var(--color-subtle-ash)' }}>
+        <div className="premium-card">
           <h2 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'18px',fontWeight:700,color:'var(--color-rich-black)',marginBottom:4 }}>
             Set Your PIN
           </h2>
@@ -892,18 +928,19 @@ export default function Signup() {
           </p>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom:24 }}>
-              <label style={{ ...labelStyle,textAlign:'center',display:'block',marginBottom:12 }}>Create PIN</label>
+              <label className="premium-label" style={{ textAlign:'center',display:'block',marginBottom:12 }}><i className="fa-solid fa-key" style={{ marginRight: 6 }} />Create PIN</label>
               <PinBoxes value={pin} onChange={setPin} disabled={loading} />
             </div>
             <div style={{ marginBottom:24 }}>
-              <label style={{ ...labelStyle,textAlign:'center',display:'block',marginBottom:12 }}>Confirm PIN</label>
+              <label className="premium-label" style={{ textAlign:'center',display:'block',marginBottom:12 }}><i className="fa-solid fa-lock" style={{ marginRight: 6 }} />Confirm PIN</label>
               <PinBoxes value={confirmPin} onChange={setConfirmPin} disabled={loading} />
             </div>
             {/* Summary */}
             <div style={{ background:'var(--color-subtle-ash)',borderRadius:10,padding:'12px 14px',
               marginBottom:20,fontFamily:'var(--font-pp-neue-montreal)',fontSize:'12px',
               color:'var(--color-cool-gray)',lineHeight:1.6 }}>
-              📝 <strong style={{ color:'var(--color-rich-black)' }}>{memberName}</strong>
+              <i className="fa-solid fa-address-card" style={{ marginRight: 6, color: 'var(--color-deep-fern-green)' }} />
+              <strong style={{ color:'var(--color-rich-black)' }}>{memberName}</strong>
               {' · '}{activePhone.replace(/\D/g,'')}
               {memberDistrict && ` · ${memberDistrict}`}
               {memberAssembly && `, ${memberAssembly}`}
@@ -911,8 +948,8 @@ export default function Signup() {
             </div>
             <button type="submit" disabled={loading || pin.length < 4 || confirmPin.length < 4}
               className="btn btn-primary btn-full"
-              style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600 }}>
-              {loading ? 'Creating Account…' : '🎉 Complete Membership'}
+              style={{ height:44,borderRadius:12,fontSize:'14px',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+              {loading ? 'Creating Account…' : <><i className="fa-solid fa-circle-check" /> Complete Membership</>}
             </button>
           </form>
         </div>
@@ -921,7 +958,9 @@ export default function Signup() {
       {/* ════════════ SUCCESS — EPIC=7, NoEPIC=6 ════════════ */}
       {step === successStep && signedMember && (
         <div style={{ textAlign:'center' }}>
-          <div style={{ fontSize:'4rem',marginBottom:16 }}>🎉</div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: 'var(--color-mint-green-glow)', color: 'var(--color-deep-fern-green)', fontSize: '40px', marginBottom: 20 }}>
+            <i className="fa-solid fa-circle-check" />
+          </div>
           <h1 style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'28px',fontWeight:700,
             color:'var(--color-rich-black)',marginBottom:8 }}>Welcome to Vanigan!</h1>
           <p style={{ fontFamily:'var(--font-pp-neue-montreal)',fontSize:'15px',
@@ -935,8 +974,8 @@ export default function Signup() {
           {!hasEpic && (
             <div style={{ background:'#fffbeb',border:'1px solid #fde68a',borderRadius:12,
               padding:16,marginBottom:20,fontFamily:'var(--font-pp-neue-montreal)',
-              fontSize:'13px',color:'#92400e',lineHeight:1.6 }}>
-              💡 <strong>Tip:</strong> You registered without an EPIC card. You can link your EPIC later
+              fontSize:'13px',color:'#92400e',lineHeight:1.6,textAlign:'left' }}>
+              <i className="fa-solid fa-lightbulb" style={{ color: '#d97706', marginRight: 6 }} /> <strong>Tip:</strong> You registered without an EPIC card. You can link your EPIC later
               from <strong>My Business → Link EPIC</strong> to upgrade your profile with voter-verified details
               and get a regenerated membership card.
             </div>
@@ -944,19 +983,19 @@ export default function Signup() {
 
           <div style={{ background:'var(--color-mint-green-glow)',border:'1px solid var(--color-muted-sage)',
             borderRadius:12,padding:16,marginBottom:24,fontFamily:'var(--font-pp-neue-montreal)' }}>
-            <p style={{ fontSize:'13px',color:'var(--color-deep-fern-green)',fontWeight:600,margin:0 }}>
-              🪪 Your membership card is ready! View it from "My Card" in the menu.
+            <p style={{ fontSize:'13px',color:'var(--color-deep-fern-green)',fontWeight:600,margin:0,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+              <i className="fa-solid fa-id-card" /> Your membership card is ready! View it from "My Card" in the menu.
             </p>
           </div>
 
           <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             <button onClick={() => navigate('membercard')}
-              className="btn btn-primary btn-full" style={{ height:48,borderRadius:12,fontSize:'15px',fontWeight:700 }}>
-              🪪 View My Membership Card
+              className="btn btn-primary btn-full" style={{ height:48,borderRadius:12,fontSize:'15px',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+              <i className="fa-solid fa-id-card" /> View My Membership Card
             </button>
             <button onClick={() => navigate('home')}
-              className="btn btn-outline btn-full" style={{ height:44,borderRadius:12,fontSize:'14px' }}>
-              Go to Home
+              className="btn btn-outline btn-full" style={{ height:44,borderRadius:12,fontSize:'14px',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+              <i className="fa-solid fa-house" /> Go to Home
             </button>
           </div>
         </div>
@@ -970,6 +1009,79 @@ export default function Signup() {
           onCancel={handleCropCancel}
         />
       )}
+      </div>
+
+      <style>{`
+        .signup-bg-container {
+          background-image: url('/hero-bg.svg');
+        }
+        @media (max-width: 768px) {
+          .signup-bg-container {
+            background-image: url('/hero-bg-mobile.svg') !important;
+          }
+        }
+        .premium-card {
+          padding: 32px;
+          background: var(--color-canvas-white);
+          border-radius: 16px;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        .premium-input {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1.5px solid var(--color-subtle-ash);
+          border-radius: 12px;
+          font-size: 14px;
+          font-family: var(--font-pp-neue-montreal);
+          color: var(--color-rich-black);
+          background: var(--color-canvas-white);
+          outline: none;
+          box-sizing: border-box;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-input:hover {
+          border-color: #cbd5e1;
+        }
+
+        .premium-input:focus {
+          border-color: #22c55e;
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+        }
+
+        .premium-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--color-cool-gray);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 6px;
+          font-family: var(--font-pp-neue-montreal);
+        }
+
+        .btn-primary {
+          background: #22c55e !important;
+          border-color: #22c55e !important;
+          color: #fff !important;
+        }
+
+        .btn-primary:hover {
+          background: #16a34a !important;
+          border-color: #16a34a !important;
+        }
+
+        .btn-primary:disabled {
+          background: #22c55e !important;
+          border-color: #22c55e !important;
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+      `}</style>
     </div>
   );
 }

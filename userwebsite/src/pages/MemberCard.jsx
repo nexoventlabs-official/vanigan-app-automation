@@ -16,7 +16,7 @@ const CARD_W = 421;
 /* ─────────────────────────────────────────────────────────
    CardFront — interactive (320×480) and capture (421×auto)
 ───────────────────────────────────────────────────────── */
-function CardFront({ member, display = 'interactive' }) {
+function CardFront({ member, display = 'interactive', flipped = false }) {
   const isCapture = display === 'capture';
 
   if (isCapture) {
@@ -96,16 +96,24 @@ function CardFront({ member, display = 'interactive' }) {
   // Interactive display (320×480, percentage-based positions)
   return (
     <div style={{
-      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+      position: 'absolute', inset: 0,
+      backfaceVisibility: 'hidden',
+      WebkitBackfaceVisibility: 'hidden',
       borderRadius: 18, overflow: 'hidden',
       backgroundImage: `url(${FRONT_BG})`,
       backgroundSize: 'cover', backgroundPosition: 'center',
       boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+      transform: 'rotateY(0deg)',
+      opacity: flipped ? 0 : 1,
+      visibility: flipped ? 'hidden' : 'visible',
+      transition: 'opacity 0s linear 0.3s, visibility 0s linear 0.3s',
     }}>
       {/* Photo */}
       <div style={{
         position: 'absolute', top: '31%', left: '50%',
         transform: 'translateX(-50%)', width: 110, height: 110,
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}>
         {member.photoUrl ? (
           <img src={member.photoUrl} alt={member.name}
@@ -124,6 +132,8 @@ function CardFront({ member, display = 'interactive' }) {
         position: 'absolute', top: '57%', left: 0, right: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         gap: 5, padding: '0 14px',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}>
         <p style={{ margin: 0, fontFamily: 'Arial, sans-serif', fontWeight: 700,
           fontSize: 18, color: '#009245', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>
@@ -160,7 +170,7 @@ function CardFront({ member, display = 'interactive' }) {
 /* ─────────────────────────────────────────────────────────
    CardBack — interactive (320×480) and capture (421×auto)
 ───────────────────────────────────────────────────────── */
-function CardBack({ member, display = 'interactive' }) {
+function CardBack({ member, display = 'interactive', flipped = false }) {
   const isCapture = display === 'capture';
 
   const qrData = member.membershipId || 'TNV-000000';
@@ -273,13 +283,22 @@ function CardBack({ member, display = 'interactive' }) {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+      position: 'absolute', inset: 0,
+      backfaceVisibility: 'hidden',
+      WebkitBackfaceVisibility: 'hidden',
       transform: 'rotateY(180deg)', borderRadius: 18, overflow: 'hidden',
       backgroundImage: `url(${BACK_BG})`, backgroundSize: '100% 100%',
       backgroundPosition: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
       fontFamily: 'Arial, Helvetica, sans-serif',
+      opacity: flipped ? 1 : 0,
+      visibility: flipped ? 'visible' : 'hidden',
+      transition: 'opacity 0s linear 0.3s, visibility 0s linear 0.3s',
     }}>
-      <div style={{ position: 'absolute', top: '28%', left: 22, right: 20 }}>
+      <div style={{
+        position: 'absolute', top: '28%', left: 22, right: 20,
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+      }}>
         <div>
           <div style={rowSingle}>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>DATE OF BIRTH</div>
@@ -517,11 +536,12 @@ function Card3D({ member }) {
         <div style={{
           width: '100%', height: '100%', position: 'relative',
           transformStyle: 'preserve-3d',
+          WebkitTransformStyle: 'preserve-3d',
           transition: dragging ? 'none' : 'transform 0.6s cubic-bezier(0.4,0,0.2,1)',
           transform: `rotateX(${rotateX}deg) rotateY(${flipped ? 180 + rotateY : rotateY}deg)`,
         }}>
-          <CardFront member={member} />
-          <CardBack  member={member} />
+          <CardFront member={member} flipped={flipped} />
+          <CardBack  member={member} flipped={flipped} />
         </div>
       </div>
 
@@ -605,10 +625,9 @@ export default function MemberCard() {
   return (
     <div className="container section" style={{ maxWidth: 480 }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-        <button onClick={() => navigate('home')}
-          style={{ background: 'none', border: 'none', color: 'var(--color-cool-gray)', cursor: 'pointer',
-            fontSize: '14px', fontFamily: 'var(--font-pp-neue-montreal)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          ← Home
+        <button className="btn-back" onClick={() => navigate('home')}>
+          <svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1024 1024"><path d="M874.690416 495.52477c0 11.2973-9.168824 20.466124-20.466124 20.466124l-604.773963 0 188.083679 188.083679c7.992021 7.992021 7.992021 20.947078 0 28.939099-4.001127 3.990894-9.240455 5.996574-14.46955 5.996574-5.239328 0-10.478655-1.995447-14.479783-5.996574l-223.00912-223.00912c-3.837398-3.837398-5.996574-9.046027-5.996574-14.46955 0-5.433756 2.159176-10.632151 5.996574-14.46955l223.019353-223.029586c7.992021-7.992021 20.957311-7.992021 28.949332 0 7.992021 8.002254 7.992021 20.957311 0 28.949332l-188.073446 188.073446 604.753497 0C865.521592 475.058646 874.690416 484.217237 874.690416 495.52477z"></path></svg>
+          <span>Home</span>
         </button>
       </div>
 

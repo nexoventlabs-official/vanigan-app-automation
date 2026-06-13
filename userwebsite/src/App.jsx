@@ -77,7 +77,7 @@ export default function App() {
         <div className="page">
           {pages[page.name] || <Home />}
         </div>
-        <Footer />
+        {page.name !== 'login' && page.name !== 'signup' && <Footer />}
       </NavCtx.Provider>
     </AuthProvider>
   );

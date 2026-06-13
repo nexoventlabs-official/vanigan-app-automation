@@ -256,7 +256,7 @@ export default function BusinessList({ params = {} }) {
 
       {/* Results */}
       {loading ? (
-        <div className="spinner-wrap"><div className="spinner" /></div>
+        <div className="spinner-wrap"><div className="loader"></div></div>
       ) : businesses.length === 0 ? (
         <div className="empty">
           <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>

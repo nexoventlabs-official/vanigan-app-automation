@@ -59,7 +59,7 @@ export default function Profile() {
     );
   }
 
-  if (loading) return <div className="spinner-wrap"><div className="spinner" /></div>;
+  if (loading) return <div className="spinner-wrap"><div className="loader"></div></div>;
 
   const displayName  = profile?.name || user?.name || 'User';
   const displayPhone = profile?.phone || phone;
@@ -329,7 +329,7 @@ export default function Profile() {
           </h3>
 
           {!referralInfo ? (
-            <div className="spinner-wrap"><div className="spinner" /></div>
+            <div className="spinner-wrap"><div className="loader"></div></div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 

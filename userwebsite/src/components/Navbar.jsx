@@ -35,16 +35,18 @@ export default function Navbar() {
 
   /* Nav links — only show My Business if logged in */
   const links = [
-    { label: 'Home',       page: 'home',       icon: Store },
-    { label: 'Categories', page: 'categories', icon: Grid3X3 },
-    { label: 'Gallery',    page: 'gallery',    icon: Images },
+    { label: 'Home',       page: 'home',       iconClass: 'fa-solid fa-store' },
+    { label: 'Categories', page: 'categories', iconClass: 'fa-solid fa-table-cells' },
+    { label: 'Gallery',    page: 'gallery',    iconClass: 'fa-solid fa-images' },
     ...(isLoggedIn ? [
-      { label: 'Members',    page: 'members',    icon: Users },
-      { label: 'Organizers', page: 'organizers', icon: Star },
-      { label: 'My Profile',  page: 'profile',   icon: User },
-      { label: 'My Business', page: 'my',        icon: Store },
+      { label: 'Members',    page: 'members',    iconClass: 'fa-solid fa-users' },
+      { label: 'Organizers', page: 'organizers', iconClass: 'fa-solid fa-star' },
+      { label: 'My Profile',  page: 'profile',   iconClass: 'fa-solid fa-user' },
+      { label: 'My Business', page: 'my',        iconClass: 'fa-solid fa-store' },
     ] : []),
   ];
+
+  const desktopLinks = links.filter(l => l.page !== 'profile' && l.page !== 'my');
 
   const isHome = current.name === 'home';
   const showBg = !isHome || scrolled;
@@ -75,83 +77,21 @@ export default function Navbar() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 4,
           flexWrap: 'nowrap',
           overflow: 'hidden',
         }} className="desktop-nav">
-          <button
-            onClick={() => go('home')}
-            className={`uiverse-nav-btn ${current.name === 'home' ? 'active' : ''}`}
-            style={{ '--clr': current.name === 'home' ? '#22c55e' : '#000000' }}
-          >
-            <span className="uiverse-nav-btn-decor"></span>
-            <div className="uiverse-nav-btn-content">
-              <div className="uiverse-nav-btn-icon">
-                <Store size={16} color="#ffffff" />
-              </div>
-              <span className="uiverse-nav-btn-text">Home</span>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => go('categories')}
-            className={`uiverse-nav-btn ${current.name === 'categories' ? 'active' : ''}`}
-            style={{ '--clr': current.name === 'categories' ? '#22c55e' : '#000000' }}
-          >
-            <span className="uiverse-nav-btn-decor"></span>
-            <div className="uiverse-nav-btn-content">
-              <div className="uiverse-nav-btn-icon">
-                <Grid3X3 size={16} color="#ffffff" />
-              </div>
-              <span className="uiverse-nav-btn-text">Categories</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => go('gallery')}
-            className={`uiverse-nav-btn ${current.name === 'gallery' ? 'active' : ''}`}
-            style={{ '--clr': current.name === 'gallery' ? '#22c55e' : '#000000' }}
-          >
-            <span className="uiverse-nav-btn-decor"></span>
-            <div className="uiverse-nav-btn-content">
-              <div className="uiverse-nav-btn-icon">
-                <Images size={16} color="#ffffff" />
-              </div>
-              <span className="uiverse-nav-btn-text">Gallery</span>
-            </div>
-          </button>
-
-          {isLoggedIn && (
-            <>
-              <button
-                onClick={() => go('members')}
-                className={`uiverse-nav-btn ${current.name === 'members' ? 'active' : ''}`}
-                style={{ '--clr': current.name === 'members' ? '#22c55e' : '#000000' }}
-              >
-                <span className="uiverse-nav-btn-decor"></span>
-                <div className="uiverse-nav-btn-content">
-                  <div className="uiverse-nav-btn-icon">
-                    <Users size={16} color="#ffffff" />
-                  </div>
-                  <span className="uiverse-nav-btn-text">Members</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => go('organizers')}
-                className={`uiverse-nav-btn ${current.name === 'organizers' ? 'active' : ''}`}
-                style={{ '--clr': current.name === 'organizers' ? '#22c55e' : '#000000' }}
-              >
-                <span className="uiverse-nav-btn-decor"></span>
-                <div className="uiverse-nav-btn-content">
-                  <div className="uiverse-nav-btn-icon">
-                    <Star size={16} color="#ffffff" />
-                  </div>
-                  <span className="uiverse-nav-btn-text">Organizers</span>
-                </div>
-              </button>
-            </>
-          )}
+          {desktopLinks.map(({ label, page, iconClass }) => (
+            <button
+              key={page}
+              onClick={() => go(page)}
+              className={`nav-tab ${current.name === page ? 'active' : ''}`}
+            >
+              <i className={`${iconClass} nav-tab-icon`} />
+              <span className="nav-tab-text">{label}</span>
+              <span className="nav-tab-dot"></span>
+            </button>
+          ))}
         </div>
 
         {/* Right Desktop Actions */}
@@ -160,17 +100,14 @@ export default function Navbar() {
             <>
               {canAddBusiness && (
                 <button onClick={() => go('add')} className="btn btn-primary btn-sm"
-                  style={{ fontWeight: 500, marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <Plus size={14} /> Add Business
+                  style={{ fontWeight: 500, marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fa-solid fa-plus" /> Add Business
                 </button>
               )}
               {/* Membership Card — only for members (new signup) */}
               {member && (
-                <button onClick={() => go('membercard')} className="btn btn-outline btn-sm"
-                  style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4,
-                    fontWeight: 600, borderColor: 'var(--color-deep-fern-green)',
-                    color: 'var(--color-deep-fern-green)' }}>
-                  <CreditCard size={14} /> My Card
+                <button onClick={() => go('membercard')} className="my-card-btn">
+                  <i className="fa-solid fa-id-card" /> My Card
                 </button>
               )}
               {/* Logout button */}
@@ -206,42 +143,42 @@ export default function Navbar() {
                       <div style={{ fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '11px', color: 'var(--color-cool-gray)' }}>{user?.phone}</div>
                     </div>
                     <button onClick={() => go('profile')}
-                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <User size={13} /> My Profile
+                      <i className="fa-solid fa-user" style={{ fontSize: 13, width: 14, color: 'var(--color-cool-gray)' }} /> My Profile
                     </button>
                     <button onClick={() => go('my')}
-                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <User size={13} /> My Business
+                      <i className="fa-solid fa-store" style={{ fontSize: 13, width: 14, color: 'var(--color-cool-gray)' }} /> My Business
                     </button>
                     <button onClick={() => go('members')}
-                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <Users size={13} /> Members
+                      <i className="fa-solid fa-users" style={{ fontSize: 13, width: 14, color: 'var(--color-cool-gray)' }} /> Members
                     </button>
                     <button onClick={() => go('organizers')}
-                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-rich-black)', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <Star size={13} /> Organizers
+                      <i className="fa-solid fa-star" style={{ fontSize: 13, width: 14, color: 'var(--color-cool-gray)' }} /> Organizers
                     </button>
                     {member && (
                       <button onClick={() => go('membercard')}
-                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-deep-fern-green)', fontWeight: 600, transition: 'background .15s' }}
+                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: 'var(--color-deep-fern-green)', fontWeight: 600, transition: 'background .15s' }}
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--color-subtle-ash)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <CreditCard size={13} /> My Membership Card
+                        <i className="fa-solid fa-id-card" style={{ fontSize: 13, width: 14 }} /> My Membership Card
                       </button>
                     )}
                     <button onClick={handleLogout}
-                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: '#dc2626', transition: 'background .15s' }}
+                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-pp-neue-montreal)', fontSize: '13px', color: '#dc2626', transition: 'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <LogOut size={13} /> Logout
+                      <i className="fa-solid fa-right-from-bracket" style={{ fontSize: 13, width: 14 }} /> Logout
                     </button>
                   </div>
                 )}
@@ -249,21 +186,28 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <button onClick={() => go('login')} className="nav-uiverse-btn" style={{ marginLeft: 8 }}>
-                <LogIn size={14} /> Login
+              <button onClick={() => go('login')} className="btn-login" style={{ marginLeft: 8 }}>
+                <i className="fa-solid fa-right-to-bracket" /> Login
               </button>
-              <button onClick={() => go('signup')} className="nav-uiverse-btn" style={{ marginLeft: 8 }}>
-                <User size={14} /> Sign Up
+              <button onClick={() => go('signup')} className="btn-signup" style={{ marginLeft: 8 }}>
+                <i className="fa-solid fa-user-plus" /> Sign Up
               </button>
             </>
           )}
         </div>
 
         {/* Mobile menu toggle */}
-        <button onClick={() => setOpen(!open)} className="mobile-menu-btn btn btn-ghost btn-sm"
-          style={{ display: 'none' }}>
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <label className="burger" htmlFor="burger">
+          <input
+            type="checkbox"
+            id="burger"
+            checked={open}
+            onChange={(e) => setOpen(e.target.checked)}
+          />
+          <span></span>
+          <span></span>
+          <span></span>
+        </label>
       </div>
 
       {/* Mobile drawer */}
@@ -274,10 +218,10 @@ export default function Navbar() {
           borderBottom: '1px solid var(--color-subtle-ash)',
           padding: '16px', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 99,
         }}>
-          {links.map(({ label, page, icon: Icon }) => (
+          {links.map(({ label, page, iconClass }) => (
             <button key={page} onClick={() => go(page)}
               className={`mobile-nav-link ${current.name === page ? 'active' : ''}`}>
-              <Icon size={16} /> {label}
+              <i className={iconClass} style={{ width: 18, textAlign: 'center' }} /> {label}
             </button>
           ))}
 
@@ -285,8 +229,8 @@ export default function Navbar() {
             <>
               {canAddBusiness && (
                 <button onClick={() => go('add')} className="btn btn-primary btn-full"
-                  style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Plus size={16} /> Add Business
+                  style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <i className="fa-solid fa-plus" /> Add Business
                 </button>
               )}
               <div style={{ borderTop: '1px solid var(--color-subtle-ash)', paddingTop: 8, marginTop: 4 }}>
@@ -296,22 +240,22 @@ export default function Navbar() {
                 {member && (
                   <button onClick={() => go('membercard')} className="mobile-nav-link"
                     style={{ color: 'var(--color-deep-fern-green)', fontWeight: 600 }}>
-                    <CreditCard size={16} /> My Membership Card
+                    <i className="fa-solid fa-id-card" style={{ width: 18, textAlign: 'center' }} /> My Membership Card
                   </button>
                 )}
                 <button onClick={handleLogout} className="mobile-nav-link" style={{ color: '#dc2626' }}>
-                  <LogOut size={16} /> Logout
+                  <i className="fa-solid fa-right-from-bracket" style={{ width: 18, textAlign: 'center' }} /> Logout
                 </button>
               </div>
             </>
           ) : (
             <>
               <button onClick={() => go('login')} className="mobile-nav-link">
-                <LogIn size={16} /> Login
+                <i className="fa-solid fa-right-to-bracket" style={{ width: 18, textAlign: 'center' }} /> Login
               </button>
               <button onClick={() => go('signup')} className="btn btn-primary btn-full"
-                style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <User size={16} /> Sign Up Free
+                style={{ fontWeight: 500, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <i className="fa-solid fa-user-plus" /> Sign Up Free
               </button>
             </>
           )}
@@ -319,17 +263,113 @@ export default function Navbar() {
       )}
 
       <style>{`
-        .nav-uiverse-btn {
-          background-color: white;
-          color: black;
-          border-radius: 10em;
+        .nav-tab {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          position: relative;
+          padding: 8px 16px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--color-cool-gray);
+          font-family: var(--font-pp-neue-montreal);
+          font-size: 14px;
+          font-weight: 500;
+          border-radius: 99px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          outline: none;
+          user-select: none;
+        }
+
+        .nav-tab-icon {
+          font-size: 15px;
+          width: 15px;
+          height: 15px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+          color: var(--color-cool-gray);
+        }
+
+        .nav-tab-text {
+          transition: color 0.3s ease;
+        }
+
+        /* Hover state */
+        .nav-tab:hover {
+          color: var(--color-rich-black);
+          background-color: rgba(34, 197, 94, 0.05);
+        }
+
+        .nav-tab:hover .nav-tab-icon {
+          color: #22c55e;
+          transform: translateY(-2px);
+        }
+
+        /* Active state */
+        .nav-tab.active {
+          color: #22c55e;
+          background-color: rgba(34, 197, 94, 0.08);
+          font-weight: 600;
+        }
+
+        .nav-tab.active .nav-tab-icon {
+          color: #22c55e;
+          transform: translateY(0) scale(1.1);
+        }
+
+        /* Active dot indicator */
+        .nav-tab-dot {
+          position: absolute;
+          bottom: 2px;
+          left: 50%;
+          transform: translateX(-50%) scale(0);
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background-color: #22c55e;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-tab.active .nav-tab-dot {
+          transform: translateX(-50%) scale(1);
+        }
+
+        .btn-login {
+          background: transparent;
+          color: var(--color-rich-black);
+          border: none;
           font-size: 13px;
           font-weight: 600;
-          padding: 6px 16px;
+          padding: 8px 18px;
           cursor: pointer;
-          transition: all 0.25s ease-in-out;
-          border: 1.5px solid black;
-          box-shadow: 0 0 0 0 black;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          outline: none;
+          font-family: var(--font-pp-neue-montreal);
+          border-radius: 99px;
+        }
+
+        .btn-login:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+          transform: translateY(-1px);
+        }
+
+        .btn-signup {
+          background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+          color: white;
+          border: none;
+          border-radius: 99px;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 8px 20px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -337,91 +377,15 @@ export default function Navbar() {
           font-family: var(--font-pp-neue-montreal);
         }
 
-        .nav-uiverse-btn:hover {
-          transform: translateY(-2px) translateX(-1px);
-          box-shadow: 2px 3px 0 0 black;
-          background-color: white;
-          color: black;
+        .btn-signup:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+          background: linear-gradient(135deg, #25d366 0%, #16a34a 100%);
         }
 
-        .nav-uiverse-btn:active {
-          transform: translateY(1px) translateX(0.5px);
-          box-shadow: 0 0 0 0 black;
-        }
-
-        .uiverse-nav-btn {
-          text-decoration: none;
-          line-height: 1;
-          border-radius: 1.5rem;
-          overflow: hidden;
-          position: relative;
-          box-shadow: 10px 10px 20px rgba(0,0,0,.02);
-          background-color: #fff;
-          color: #121212;
-          border: 1px solid var(--color-subtle-ash);
-          cursor: pointer;
-          font-family: var(--font-pp-neue-montreal);
-          padding: 0;
-          height: 38px;
-          display: inline-flex;
-          align-items: center;
-          transition: border-color 0.3s;
-        }
-
-        .uiverse-nav-btn-decor {
-          position: absolute;
-          inset: 0;
-          background-color: var(--clr);
-          transform: translateX(-100%);
-          transition: transform .3s ease;
-          z-index: 0;
-        }
-
-        .uiverse-nav-btn-content {
-          display: flex;
-          align-items: center;
-          font-weight: 600;
-          position: relative;
-          z-index: 1;
-          overflow: hidden;
-          height: 100%;
-        }
-
-        .uiverse-nav-btn-icon {
-          width: 38px;
-          height: 38px;
-          background-color: var(--clr);
-          display: grid;
-          place-items: center;
-          flex-shrink: 0;
-        }
-
-        .uiverse-nav-btn-text {
-          display: inline-block;
-          transition: color .2s;
-          padding: 2px 1.25rem 2px;
-          padding-left: .75rem;
-          overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          max-width: 150px;
-          font-size: 13px;
-        }
-
-        .uiverse-nav-btn:hover .uiverse-nav-btn-text {
-          color: #fff;
-        }
-
-        .uiverse-nav-btn:hover .uiverse-nav-btn-decor {
-          transform: translate(0);
-        }
-
-        /* Active styling */
-        .uiverse-nav-btn.active .uiverse-nav-btn-text {
-          color: #fff;
-        }
-        .uiverse-nav-btn.active .uiverse-nav-btn-decor {
-          transform: translate(0);
+        .btn-signup:active {
+          transform: translateY(0);
+          box-shadow: 0 4px 10px rgba(34, 197, 94, 0.2);
         }
 
         .nav-link {
@@ -516,9 +480,69 @@ export default function Navbar() {
           transform: translate(1px ,1px);
         }
 
+        .burger {
+          position: relative;
+          width: 30px;
+          height: 22px;
+          background: transparent;
+          cursor: pointer;
+          display: none;
+        }
+
+        .burger input {
+          display: none;
+        }
+
+        .burger span {
+          display: block;
+          position: absolute;
+          height: 3px;
+          width: 100%;
+          background: black;
+          border-radius: 9px;
+          opacity: 1;
+          left: 0;
+          transform: rotate(0deg);
+          transition: .25s ease-in-out;
+        }
+
+        .burger span:nth-of-type(1) {
+          top: 0px;
+          transform-origin: left center;
+        }
+
+        .burger span:nth-of-type(2) {
+          top: 50%;
+          transform: translateY(-50%);
+          transform-origin: left center;
+        }
+
+        .burger span:nth-of-type(3) {
+          top: 100%;
+          transform-origin: left center;
+          transform: translateY(-100%);
+        }
+
+        .burger input:checked ~ span:nth-of-type(1) {
+          transform: rotate(45deg);
+          top: 0px;
+          left: 4px;
+        }
+
+        .burger input:checked ~ span:nth-of-type(2) {
+          width: 0%;
+          opacity: 0;
+        }
+
+        .burger input:checked ~ span:nth-of-type(3) {
+          transform: rotate(-45deg);
+          top: 20px;
+          left: 4px;
+        }
+
         @media (max-width: 640px) {
           .desktop-nav { display: none !important; }
-          .mobile-menu-btn { display: flex !important; }
+          .burger { display: block !important; }
         }
       `}</style>
     </nav>
