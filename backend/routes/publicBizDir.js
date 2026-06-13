@@ -8,6 +8,7 @@
 const express = require('express');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
+const { findSeedBusinesses, findSeedBusinessById } = require('../services/seedDb');
 
 const router = express.Router();
 
@@ -534,7 +535,18 @@ router.get('/', async (req, res) => {
   if (category) filter.category = category;
   if (subcategory && subcategory !== 'All') filter.subCategory = subcategory;
 
-  const businesses = await Business.find(filter).sort({ name: 1 }).limit(100).lean().catch(() => []);
+  // Query both new DB and seed DB in parallel
+  const [newDocs, seedDocs] = await Promise.all([
+    Business.find(filter).sort({ name: 1 }).limit(100).lean().catch(() => []),
+    findSeedBusinesses(filter, { sort: { name: 1 }, skip: 0, limit: 100 }),
+  ]);
+
+  // Merge: deduplicate by phone, new listings take priority
+  const seenPhones = new Set(newDocs.map(b => b.phone).filter(Boolean));
+  const filteredSeed = seedDocs.filter(b => !b.phone || !seenPhones.has(b.phone));
+  const businesses = [...newDocs, ...filteredSeed]
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    .slice(0, 100);
 
   const locLabel = [assembly, district].filter(Boolean).join(', ') || 'All Areas';
   const subLabel = (subcategory && subcategory !== 'All') ? ` → ${subcategory}` : '';
@@ -599,6 +611,8 @@ router.get('/:id', async (req, res) => {
 
   let biz;
   try { biz = await Business.findById(req.params.id).lean(); } catch { biz = null; }
+  // Fall back to seed DB if not found in new DB
+  if (!biz) biz = await findSeedBusinessById(req.params.id).catch(() => null);
   if (!biz) {
     return res.status(404).setHeader('Content-Type','text/html').send(
       shell('Not Found', `<div class="wrap"><div class="empty"><div class="icon">❌</div><p>Business not found.</p></div></div>`, backUrl, false)

@@ -153,7 +153,11 @@ async function start() {
     }
   }
 
-  // BUSINESS_MONGODB_URI is now READ-ONLY seed data (18k records) — no warm-up needed
+  // BUSINESS_MONGODB_URI — seed data (18k records) — warm up read-only connection
+  if (process.env.BUSINESS_MONGODB_URI) {
+    const { getSeedConnection } = require('./services/seedDb');
+    getSeedConnection().catch(() => {});
+  }
 
   // Seed default admin if none exists
   try {

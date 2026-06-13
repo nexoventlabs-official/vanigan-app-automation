@@ -5,6 +5,7 @@ const bcrypt   = require('bcryptjs');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
 const { uploadBuffer: memberUpload, destroy } = require('../services/memberCloudinary');
+const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById } = require('../services/seedDb');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
@@ -24,6 +25,7 @@ router.get('/businesses', async (req, res) => {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: re }, { description: re }, { address: re }, { serviceLocations: re }, { subCategory: re }];
     }
+
     /* ── sort=rating: query Review first, then fetch those businesses ── */
     if (sort === 'rating') {
       const topStats = await Review.aggregate([
@@ -41,7 +43,6 @@ router.get('/businesses', async (req, res) => {
       const statsMap2 = {};
       topStats.forEach((s) => { statsMap2[s._id.toString()] = { avgRating: parseFloat(s.avg.toFixed(1)), reviewCount: s.count }; });
 
-      /* Filter by active + any extra filters (category etc.) the caller may have passed */
       const bizDocs2 = await Business.find({ ...filter, _id: { $in: topIds } })
         .select('-ownerPhone').lean();
 
@@ -52,33 +53,45 @@ router.get('/businesses', async (req, res) => {
       return res.json({ businesses: businesses2, total: businesses2.length, page: 1, limit: PAGE_LIMIT });
     }
 
-    /* ── default path: paginated alphabetical ── */
-    const skip = (parseInt(page, 10) - 1) * PAGE_LIMIT;
-    const [bizDocs, total] = await Promise.all([
-      Business.find(filter)
-        .select('-ownerPhone')
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(PAGE_LIMIT)
-        .lean(),
+    /* ── default path: merge new + seed businesses, paginated ── */
+    const pg   = Math.max(1, parseInt(page, 10));
+    const skip = (pg - 1) * PAGE_LIMIT;
+
+    // Query both DBs in parallel
+    const [newDocs, newTotal, seedDocs, seedTotal] = await Promise.all([
+      Business.find(filter).select('-ownerPhone -ownerPin').sort({ name: 1 }).skip(skip).limit(PAGE_LIMIT).lean(),
       Business.countDocuments(filter),
+      findSeedBusinesses(filter, { sort: { name: 1 }, skip, limit: PAGE_LIMIT }),
+      countSeedBusinesses(filter),
     ]);
 
-    const bizIds = bizDocs.map((b) => b._id);
+    // Merge: new listings first, then seed — deduplicate by phone
+    const seenPhones = new Set(newDocs.map(b => b.phone).filter(Boolean));
+    const filteredSeed = seedDocs.filter(b => !b.phone || !seenPhones.has(b.phone));
+
+    // Simple merge: interleave alphabetically up to PAGE_LIMIT
+    const merged = [...newDocs, ...filteredSeed]
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, PAGE_LIMIT);
+
+    const total = newTotal + seedTotal;
+
+    // Attach review stats for new businesses
+    const newIds = newDocs.map(b => b._id);
     const stats  = await Review.aggregate([
-      { $match: { targetKind: 'business', targetId: { $in: bizIds } } },
+      { $match: { targetKind: 'business', targetId: { $in: newIds } } },
       { $group: { _id: '$targetId', avg: { $avg: '$rating' }, count: { $sum: 1 } } },
     ]).catch(() => []);
     const statsMap = {};
     stats.forEach((s) => { statsMap[s._id.toString()] = { avgRating: parseFloat(s.avg.toFixed(1)), reviewCount: s.count }; });
 
-    const businesses = bizDocs.map((b) => ({
+    const businesses = merged.map((b) => ({
       ...b,
-      avgRating:   statsMap[b._id.toString()]?.avgRating   ?? 0,
-      reviewCount: statsMap[b._id.toString()]?.reviewCount ?? 0,
+      avgRating:   statsMap[b._id?.toString()]?.avgRating   ?? 0,
+      reviewCount: statsMap[b._id?.toString()]?.reviewCount ?? 0,
     }));
 
-    res.json({ businesses, total, page: parseInt(page, 10), limit: PAGE_LIMIT });
+    res.json({ businesses, total, page: pg, limit: PAGE_LIMIT });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,27 +100,34 @@ router.get('/businesses', async (req, res) => {
 /* ── GET /api/public/businesses/:id ── */
 router.get('/businesses/:id', async (req, res) => {
   try {
-    const biz = await Business.findById(req.params.id).select('-ownerPhone').lean();
+    // Try new DB first, then seed DB
+    let biz = await Business.findById(req.params.id).select('-ownerPhone -ownerPin').lean().catch(() => null);
+    let isSeed = false;
+    if (!biz) {
+      biz = await findSeedBusinessById(req.params.id);
+      isSeed = !!biz;
+    }
     if (!biz) return res.status(404).json({ error: 'Not found' });
 
-    // Fetch and aggregate reviews
-    const reviews = await Review.find({ targetKind: 'business', targetId: req.params.id })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const avgAgg = await Review.aggregate([
-      { $match: { targetKind: 'business', targetId: new mongoose.Types.ObjectId(req.params.id) } },
-      { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
-    ]);
-
-    const rating = avgAgg[0] ? avgAgg[0].avg : 0;
-    const reviewCount = avgAgg[0] ? avgAgg[0].count : 0;
+    // Only fetch reviews for new businesses (seed businesses have no reviews)
+    let reviews = [], rating = 0, reviewCount = 0;
+    if (!isSeed) {
+      reviews = await Review.find({ targetKind: 'business', targetId: req.params.id })
+        .sort({ createdAt: -1 }).lean();
+      const avgAgg = await Review.aggregate([
+        { $match: { targetKind: 'business', targetId: new mongoose.Types.ObjectId(req.params.id) } },
+        { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+      ]);
+      rating      = avgAgg[0] ? avgAgg[0].avg : 0;
+      reviewCount = avgAgg[0] ? avgAgg[0].count : 0;
+    }
 
     res.json({
       ...biz,
       reviews,
-      rating: parseFloat(rating.toFixed(1)),
-      reviewCount
+      rating:      parseFloat(rating.toFixed(1)),
+      reviewCount,
+      isSeed,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

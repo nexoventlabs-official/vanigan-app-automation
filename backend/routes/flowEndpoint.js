@@ -22,6 +22,7 @@ const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const CategoryImage   = require('../models/CategoryImage');
 const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
+const { findSeedBusinesses, findSeedBusinessById } = require('../services/seedDb');
 const SUB_CATEGORIES  = require('../utils/subCategories');
 
 const router = express.Router();
@@ -233,6 +234,34 @@ function buildAssemblyOptions(district) {
 }
 
 async function buildItemList(kind, district, assembly) {
+  if (kind === 'business') {
+    // Merge new businesses (MEMBER_MONGODB_URI) + seed businesses (BUSINESS_MONGODB_URI)
+    const filter = { district, assembly, active: true };
+    const [newDocs, seedDocs] = await Promise.all([
+      Business.find(filter).sort({ name: 1 }).limit(20).lean().catch(() => []),
+      findSeedBusinesses(filter, { sort: { name: 1 }, skip: 0, limit: 20 }),
+    ]);
+    // Deduplicate by phone, new listings take priority
+    const seenPhones = new Set(newDocs.map(b => b.phone).filter(Boolean));
+    const filteredSeed = seedDocs.filter(b => !b.phone || !seenPhones.has(b.phone));
+    const merged = [...newDocs, ...filteredSeed]
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 20);
+
+    return Promise.all(merged.map(async (it) => {
+      const item = {
+        id: it._id.toString(),
+        title: (it.name || 'Business').substring(0, 30),
+        description: (it.description || it.category || '').substring(0, 60),
+      };
+      if (it.image) {
+        const b64 = await urlToBase64(it.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
+        if (b64) item.image = b64;
+      }
+      return item;
+    }));
+  }
+
   const M = await modelFor(kind);
   if (!M) return [];
   const items = await M.find({ district, assembly, active: true }).sort({ name: 1 }).limit(20).lean();
@@ -723,6 +752,10 @@ async function handleDataExchange({ screen, data, flow_token }) {
     } catch {
       doc = null;
     }
+    // Fall back to seed DB for business listings
+    if (!doc && kind === 'business') {
+      doc = await findSeedBusinessById(itemId).catch(() => null);
+    }
     if (!doc) {
       return { screen: 'INFO', data: { info_title: 'Not available', info_body: 'This listing is no longer available.' } };
     }
@@ -776,6 +809,10 @@ async function handleDataExchange({ screen, data, flow_token }) {
     let doc = null;
     if (M && itemId) {
       try { doc = await M.findById(itemId).lean(); } catch {}
+    }
+    // Fall back to seed DB for business
+    if (!doc && kind === 'business' && itemId) {
+      doc = await findSeedBusinessById(itemId).catch(() => null);
     }
 
     return {
