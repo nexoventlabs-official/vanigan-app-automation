@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Users, MapPin, Store, ChevronRight } from 'lucide-react';
+import { Search, Users, MapPin, Store, ChevronRight, Phone } from 'lucide-react';
 import { useNav } from '../App.jsx';
 import api from '../api.js';
 
@@ -114,6 +114,29 @@ export default function MemberList() {
               </div>
 
               {m.business?._id && <ChevronRight size={16} style={{ color: 'var(--color-cool-gray)', flexShrink: 0 }} />}
+
+              {/* Call button */}
+              {m.phone && (
+                <a
+                  href={`tel:${m.phone}`}
+                  onClick={e => e.stopPropagation()}
+                  title={`Call ${m.name}`}
+                  style={{
+                    flexShrink: 0,
+                    width: 36, height: 36,
+                    borderRadius: '50%',
+                    background: 'var(--color-deep-fern-green)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    transition: 'opacity .2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  <Phone size={15} strokeWidth={2.2} />
+                </a>
+              )}
             </div>
           ))}
 
