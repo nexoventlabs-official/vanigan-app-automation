@@ -5,7 +5,7 @@ const bcrypt   = require('bcryptjs');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
 const { uploadBuffer: memberUpload, destroy } = require('../services/memberCloudinary');
-const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById, findSeedOrganizers, countSeedOrganizers } = require('../services/seedDb');
+const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById, findSeedOrganizers, countSeedOrganizers, findSeedMembers, countSeedMembers } = require('../services/seedDb');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
@@ -354,29 +354,60 @@ router.get('/members', async (req, res) => {
     const { page = 1, q = '', district = '' } = req.query;
     const { getMemberModel } = require('../services/memberDb');
     const VaniganMember = await getMemberModel();
-    const filter = { active: true, isOrganizer: { $ne: true } };
-    if (district) filter.district = district;
+
+    const liveFilter = { active: true, isOrganizer: { $ne: true } };
+    if (district) liveFilter.district = district;
     if (q) {
       const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [{ name: rx }, { assemblyName: rx }, { district: rx }];
+      liveFilter.$or = [{ name: rx }, { assemblyName: rx }, { district: rx }];
     }
-    const skip = (Math.max(1, parseInt(page)) - 1) * 50;
-    const [members, total] = await Promise.all([
-      VaniganMember.find(filter)
+
+    const seedFilter = { active: true };
+    if (district) seedFilter.district = new RegExp(district, 'i');
+    if (q) {
+      const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      seedFilter.$or = [{ name: rx }, { district: rx }];
+    }
+
+    const pg   = Math.max(1, parseInt(page));
+    const skip = (pg - 1) * 50;
+
+    const [liveMembers, seedMembers, liveTotal, seedTotal] = await Promise.all([
+      VaniganMember.find(liveFilter)
         .select('name phone photoUrl membershipId district assemblyName bizCategory hasEpic businessId createdAt')
         .sort({ createdAt: -1 })
         .skip(skip).limit(50).lean(),
-      VaniganMember.countDocuments(filter),
+      findSeedMembers(seedFilter, { sort: { name: 1 }, skip, limit: 50 }),
+      VaniganMember.countDocuments(liveFilter),
+      countSeedMembers(seedFilter),
     ]);
-    // Enrich with business
-    const phones = members.map(m => m.phone).filter(Boolean);
-    const bizDocs = phones.length
-      ? await Business.find({ ownerPhone: { $in: phones }, active: true }).select('_id name ownerPhone category image').lean()
+
+    const total = liveTotal + seedTotal;
+
+    // Deduplicate seed by phone — live members take priority
+    const livePhones = new Set(liveMembers.map(m => m.phone).filter(Boolean));
+    const filteredSeed = seedMembers.filter(m => !m.phone || !livePhones.has(m.phone));
+
+    // Merge: live first, then seed — up to 50 total
+    const merged = [...liveMembers, ...filteredSeed]
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 50);
+
+    // Enrich live members with their linked business
+    const livePhonesList = liveMembers.map(m => m.phone).filter(Boolean);
+    const bizDocs = livePhonesList.length
+      ? await Business.find({ ownerPhone: { $in: livePhonesList }, active: true })
+          .select('_id name ownerPhone category image').lean()
       : [];
     const bizByPhone = {};
     bizDocs.forEach(b => { bizByPhone[b.ownerPhone] = b; });
-    const enriched = members.map(m => ({ ...m, business: bizByPhone[m.phone] || null }));
-    res.json({ members: enriched, total, page: parseInt(page) });
+
+    const enriched = merged.map(m => ({
+      ...m,
+      business: bizByPhone[m.phone] || null,
+    }));
+
+    res.json({ members: enriched, total, page: pg });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -133,8 +133,45 @@ async function findSeedOrganizerById(id) {
   }
 }
 
+let _SeedMember = null;
+const SeedMemberSchema = new mongoose.Schema({}, { strict: false, collection: 'seedmembers' });
+
+async function getSeedMemberModel() {
+  if (_SeedMember) return _SeedMember;
+  const conn = await getSeedConnection();
+  if (!conn) return null;
+  _SeedMember = conn.models['SeedMember'] || conn.model('SeedMember', SeedMemberSchema);
+  return _SeedMember;
+}
+
+async function findSeedMembers(filter = {}, { sort = { name: 1 }, skip = 0, limit = 50 } = {}) {
+  const Model = await getSeedMemberModel();
+  if (!Model) return [];
+  try {
+    const docs = await Model.find(filter)
+      .sort(sort).skip(skip).limit(limit)
+      .lean().maxTimeMS(10000);
+    return docs.map(d => ({ ...d, _id: d._id.toString(), isSeed: true }));
+  } catch (err) {
+    console.warn('[SeedDB] member query failed:', err.message);
+    return [];
+  }
+}
+
+async function countSeedMembers(filter = {}) {
+  const Model = await getSeedMemberModel();
+  if (!Model) return 0;
+  try {
+    return await Model.countDocuments(filter).maxTimeMS(10000);
+  } catch (err) {
+    console.warn('[SeedDB] member count failed:', err.message);
+    return 0;
+  }
+}
+
 module.exports = {
   findSeedBusinesses, countSeedBusinesses, findSeedBusinessById,
   findSeedOrganizers, countSeedOrganizers, findSeedOrganizerById,
+  findSeedMembers, countSeedMembers,
   getSeedConnection,
 };
