@@ -22,7 +22,7 @@ const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const CategoryImage   = require('../models/CategoryImage');
 const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
-const { findSeedBusinesses, findSeedBusinessById } = require('../services/seedDb');
+const { findSeedBusinesses, findSeedBusinessById, findSeedOrganizers, findSeedOrganizerById } = require('../services/seedDb');
 const SUB_CATEGORIES  = require('../utils/subCategories');
 
 const router = express.Router();
@@ -253,6 +253,35 @@ async function buildItemList(kind, district, assembly) {
         id: it._id.toString(),
         title: (it.name || 'Business').substring(0, 30),
         description: (it.description || it.category || '').substring(0, 60),
+      };
+      if (it.image) {
+        const b64 = await urlToBase64(it.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
+        if (b64) item.image = b64;
+      }
+      return item;
+    }));
+  }
+
+  if (kind === 'organizer') {
+    // Merge live organizers (MEMBER_MONGODB_URI) + seed organizers (BUSINESS_MONGODB_URI)
+    const Organizer = await getOrganizerModel();
+    const liveFilter = { district, active: true };
+    const seedFilter = { district: new RegExp(district, 'i'), active: true };
+    const [liveDocs, seedDocs] = await Promise.all([
+      Organizer.find(liveFilter).sort({ name: 1 }).limit(20).lean().catch(() => []),
+      findSeedOrganizers(seedFilter, { sort: { name: 1 }, skip: 0, limit: 20 }),
+    ]);
+    const livePhones = new Set(liveDocs.map(o => o.phone).filter(Boolean));
+    const filteredSeed = seedDocs.filter(o => !o.phone || !livePhones.has(o.phone));
+    const merged = [...liveDocs, ...filteredSeed]
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 20);
+
+    return Promise.all(merged.map(async (it) => {
+      const item = {
+        id: it._id.toString(),
+        title: (it.name || 'Organizer').substring(0, 30),
+        description: (it.role || it.description || it.designation || '').substring(0, 60),
       };
       if (it.image) {
         const b64 = await urlToBase64(it.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
@@ -756,6 +785,10 @@ async function handleDataExchange({ screen, data, flow_token }) {
     if (!doc && kind === 'business') {
       doc = await findSeedBusinessById(itemId).catch(() => null);
     }
+    // Fall back to seed DB for organizer listings
+    if (!doc && kind === 'organizer') {
+      doc = await findSeedOrganizerById(itemId).catch(() => null);
+    }
     if (!doc) {
       return { screen: 'INFO', data: { info_title: 'Not available', info_body: 'This listing is no longer available.' } };
     }
@@ -813,6 +846,10 @@ async function handleDataExchange({ screen, data, flow_token }) {
     // Fall back to seed DB for business
     if (!doc && kind === 'business' && itemId) {
       doc = await findSeedBusinessById(itemId).catch(() => null);
+    }
+    // Fall back to seed DB for organizer
+    if (!doc && kind === 'organizer' && itemId) {
+      doc = await findSeedOrganizerById(itemId).catch(() => null);
     }
 
     return {

@@ -85,4 +85,56 @@ async function findSeedBusinessById(id) {
   }
 }
 
-module.exports = { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById, getSeedConnection };
+let _SeedOrganizer = null;
+const SeedOrganizerSchema = new mongoose.Schema({}, { strict: false, collection: 'seedorganizers' });
+
+async function getSeedOrganizerModel() {
+  if (_SeedOrganizer) return _SeedOrganizer;
+  const conn = await getSeedConnection();
+  if (!conn) return null;
+  _SeedOrganizer = conn.models['SeedOrganizer'] || conn.model('SeedOrganizer', SeedOrganizerSchema);
+  return _SeedOrganizer;
+}
+
+async function findSeedOrganizers(filter = {}, { sort = { name: 1 }, skip = 0, limit = 50 } = {}) {
+  const Model = await getSeedOrganizerModel();
+  if (!Model) return [];
+  try {
+    const docs = await Model.find(filter)
+      .sort(sort).skip(skip).limit(limit)
+      .lean().maxTimeMS(10000);
+    return docs.map(d => ({ ...d, _id: d._id.toString(), isSeed: true }));
+  } catch (err) {
+    console.warn('[SeedDB] organizer query failed:', err.message);
+    return [];
+  }
+}
+
+async function countSeedOrganizers(filter = {}) {
+  const Model = await getSeedOrganizerModel();
+  if (!Model) return 0;
+  try {
+    return await Model.countDocuments(filter).maxTimeMS(10000);
+  } catch (err) {
+    console.warn('[SeedDB] organizer count failed:', err.message);
+    return 0;
+  }
+}
+
+async function findSeedOrganizerById(id) {
+  const Model = await getSeedOrganizerModel();
+  if (!Model) return null;
+  try {
+    const doc = await Model.findById(id).lean().maxTimeMS(8000);
+    if (!doc) return null;
+    return { ...doc, _id: doc._id.toString(), isSeed: true };
+  } catch {
+    return null;
+  }
+}
+
+module.exports = {
+  findSeedBusinesses, countSeedBusinesses, findSeedBusinessById,
+  findSeedOrganizers, countSeedOrganizers, findSeedOrganizerById,
+  getSeedConnection,
+};

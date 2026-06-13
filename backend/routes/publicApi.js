@@ -5,7 +5,7 @@ const bcrypt   = require('bcryptjs');
 const Business = require('../models/Business');
 const Review   = require('../models/Review');
 const { uploadBuffer: memberUpload, destroy } = require('../services/memberCloudinary');
-const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById } = require('../services/seedDb');
+const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById, findSeedOrganizers, countSeedOrganizers } = require('../services/seedDb');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
@@ -388,26 +388,59 @@ router.get('/organizers', async (req, res) => {
     const { page = 1, q = '', district = '' } = req.query;
     const { getOrganizerModel } = require('../services/memberDb');
     const Organizer = await getOrganizerModel();
+
     const filter = { active: true };
     if (district) filter.district = district;
     if (q) {
       const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: rx }, { role: rx }, { district: rx }];
     }
-    const skip = (Math.max(1, parseInt(page)) - 1) * 50;
-    const [organizers, total] = await Promise.all([
+
+    const seedFilter = { active: true };
+    if (district) seedFilter.district = new RegExp(district, 'i'); // seed has messy district strings
+    if (q) {
+      const rx = new RegExp(String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      seedFilter.$or = [{ name: rx }, { role: rx }, { district: rx }];
+    }
+
+    const pg   = Math.max(1, parseInt(page));
+    const skip = (pg - 1) * 50;
+
+    // Query live organizers (MEMBER_MONGODB_URI) + seed organizers (BUSINESS_MONGODB_URI) in parallel
+    const [liveOrgs, seedOrgs, seedTotal] = await Promise.all([
       Organizer.find(filter).sort({ createdAt: -1 }).skip(skip).limit(50).lean(),
-      Organizer.countDocuments(filter),
+      findSeedOrganizers(seedFilter, { sort: { name: 1 }, skip, limit: 50 }),
+      countSeedOrganizers(seedFilter),
     ]);
-    // Enrich with business
-    const phones = organizers.map(o => o.phone).filter(Boolean);
-    const bizDocs = phones.length
-      ? await Business.find({ ownerPhone: { $in: phones }, active: true }).select('_id name ownerPhone category image').lean()
+
+    const liveTotal = await Organizer.countDocuments(filter);
+
+    // Deduplicate seed by phone (live takes priority)
+    const livePhones = new Set(liveOrgs.map(o => o.phone).filter(Boolean));
+    const filteredSeed = seedOrgs.filter(o => !o.phone || !livePhones.has(o.phone));
+
+    // Merge: live first, then seed — up to 50 total
+    const merged = [...liveOrgs, ...filteredSeed]
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 50);
+
+    const total = liveTotal + seedTotal;
+
+    // Enrich live organizers with their linked business
+    const livePhonesList = liveOrgs.map(o => o.phone).filter(Boolean);
+    const bizDocs = livePhonesList.length
+      ? await Business.find({ ownerPhone: { $in: livePhonesList }, active: true })
+          .select('_id name ownerPhone category image').lean()
       : [];
     const bizByPhone = {};
     bizDocs.forEach(b => { bizByPhone[b.ownerPhone] = b; });
-    const enriched = organizers.map(o => ({ ...o, business: bizByPhone[o.phone] || null }));
-    res.json({ organizers: enriched, total, page: parseInt(page) });
+
+    const enriched = merged.map(o => ({
+      ...o,
+      business: bizByPhone[o.phone] || null,
+    }));
+
+    res.json({ organizers: enriched, total, page: pg });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
