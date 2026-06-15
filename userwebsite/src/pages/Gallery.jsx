@@ -179,60 +179,7 @@ export default function Gallery() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#fafafa" }}>
-      {/* Hero */}
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%)",
-          borderBottom: "1px solid var(--color-subtle-ash)",
-          padding: "44px 0 32px",
-        }}
-      >
-        <div className="container">
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: "var(--color-deep-fern-green)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Images size={24} color="#fff" />
-            </div>
-            <div>
-              <h1
-                style={{
-                  fontFamily: "var(--font-pp-neue-montreal)",
-                  fontSize: "clamp(24px, 5vw, 40px)",
-                  fontWeight: 800,
-                  color: "var(--color-rich-black)",
-                  lineHeight: 1.15,
-                  margin: 0,
-                }}
-              >
-                Gallery
-              </h1>
-              {!loading && allImages.length > 0 && (
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: "var(--color-cool-gray)",
-                    marginTop: 4,
-                    fontWeight: 600,
-                  }}
-                >
-                  {allImages.length} photo{allImages.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Content */}
       <div className="container" style={{ padding: "36px 24px" }}>
