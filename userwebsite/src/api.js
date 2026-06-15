@@ -1,6 +1,12 @@
 import axios from "axios";
 
-const BASE = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
+// FIX 10.4: Fail loudly at build time if VITE_BACKEND_URL is not set in production
+const _backendUrl = import.meta.env.VITE_BACKEND_URL;
+if (!_backendUrl && import.meta.env.PROD) {
+  throw new Error("VITE_BACKEND_URL must be set for production builds. Add it to your .env or Render env vars.");
+}
+
+const BASE = (_backendUrl || "").replace(/\/+$/, "");
 
 const api = axios.create({ baseURL: BASE });
 
@@ -135,9 +141,41 @@ export const getMemberSession = () => {
     return null;
   }
 };
+
+// FIX 10.2: Strip full PII from localStorage — only store the minimum
+// needed for UI state. Sensitive fields (epicNo, bloodGroup, etc.) are
+// never persisted to localStorage.
 export const setMemberSession = (data) => {
-  if (data) localStorage.setItem(LS_MEMBER, JSON.stringify(data));
-  else localStorage.removeItem(LS_MEMBER);
+  if (!data) {
+    localStorage.removeItem(LS_MEMBER);
+    return;
+  }
+  const m = data.member || {};
+  const b = data.business || null;
+  const safe = {
+    member: {
+      phone:        m.phone        || "",
+      membershipId: m.membershipId || "",
+      name:         m.name         || "",
+      hasEpic:      !!m.hasEpic,
+      businessId:   m.businessId   || null,
+      photoUrl:     m.photoUrl     || "",
+      district:     m.district     || "",
+      assemblyName: m.assemblyName || "",
+      zone:         m.zone         || "",
+      active:       m.active       !== false,
+    },
+    // Only keep non-sensitive business fields needed for UI display
+    business: b ? {
+      _id:        b._id,
+      name:       b.name        || "",
+      category:   b.category    || "",
+      image:      b.image       || "",
+      active:     b.active      !== false,
+      listingCode: b.listingCode || "",
+    } : null,
+  };
+  localStorage.setItem(LS_MEMBER, JSON.stringify(safe));
 };
 
 export default api;

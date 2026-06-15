@@ -21,6 +21,8 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 ReviewSchema.index({ targetKind: 1, targetId: 1, createdAt: -1 });
+// FIX 8.2: Index to support the sort=rating aggregate path without full collection scan
+ReviewSchema.index({ targetKind: 1, rating: -1 });
 
 const rawSchema = ReviewSchema;
 

@@ -2,6 +2,8 @@
  * Re-seed the admin user (uses ADMIN_USERNAME / ADMIN_PASSWORD from .env).
  * Useful if you forgot the password.
  *
+ * FIX C4: Blocks execution in production if ADMIN_PASSWORD is not set.
+ *
  * Usage: npm run seed:admin
  */
 require('dotenv').config();
@@ -11,9 +13,21 @@ const Admin = require('../models/Admin');
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URI);
+
   const username = process.env.ADMIN_USERNAME || 'admin';
-  const password = process.env.ADMIN_PASSWORD || 'admin';
-  const passwordHash = await bcrypt.hash(password, 10);
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ ADMIN_PASSWORD must be set in production. Refusing to seed with a default password.');
+      await mongoose.disconnect();
+      process.exit(1);
+    }
+    console.warn('⚠️  ADMIN_PASSWORD not set — using insecure default "admin". DO NOT use in production.');
+  }
+
+  const finalPassword = password || 'admin';
+  const passwordHash = await bcrypt.hash(finalPassword, 10);
   const updated = await Admin.findOneAndUpdate(
     { username },
     { $set: { passwordHash, role: 'superadmin' } },

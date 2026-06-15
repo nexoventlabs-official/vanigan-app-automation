@@ -3,6 +3,7 @@ const auth = require('../middleware/auth');
 const Review = require('../models/Review');
 const Business = require('../models/Business');
 const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
 
@@ -18,7 +19,6 @@ router.get('/', auth, async (req, res) => {
     if (targetId) filter.targetId = targetId;
     const reviews = await Review.find(filter).sort({ createdAt: -1 }).limit(500).lean();
 
-    // Hydrate target name for the table
     const idsByKind = reviews.reduce((acc, r) => {
       (acc[r.targetKind] = acc[r.targetKind] || []).push(r.targetId);
       return acc;
@@ -37,7 +37,7 @@ router.get('/', auth, async (req, res) => {
     }));
     res.json({ reviews: hydrated });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -46,7 +46,7 @@ router.delete('/:id', auth, async (req, res) => {
     await Review.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

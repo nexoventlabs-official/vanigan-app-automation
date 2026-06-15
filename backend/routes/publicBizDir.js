@@ -889,19 +889,26 @@ router.post('/:id/review', async (req, res) => {
   const listQ = `?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}${userName ? '&name=' + encodeURIComponent(userName) : ''}${userPhone ? '&phone=' + encodeURIComponent(userPhone) : ''}`;
   const { reviewerName, rating, text } = req.body;
   const ratingNum = parseInt(rating, 10);
-  if (reviewerName && ratingNum >= 1 && ratingNum <= 5) {
-    /* one review per phone per business */
-    const duplicate = userPhone
-      ? await Review.findOne({ targetKind: 'business', targetId: req.params.id, phone: userPhone }).lean()
-      : null;
+  // FIX 12.2: Only allow reviews when we have a phone to deduplicate against
+  // FIX 4.1: Cap field lengths to prevent oversized payloads
+  if (reviewerName && ratingNum >= 1 && ratingNum <= 5 && userPhone) {
+    const cleanName = String(reviewerName).trim().substring(0, 100);
+    const cleanText = String(text || '').trim().substring(0, 1000);
+    const cleanPhone = String(userPhone).replace(/\D/g, '');
+    /* one review per phone per business — always enforced */
+    const duplicate = await Review.findOne({
+      targetKind: 'business',
+      targetId: req.params.id,
+      phone: cleanPhone,
+    }).lean().catch(() => null);
     if (!duplicate) {
       await Review.create({
-        targetKind: 'business',
-        targetId: req.params.id,
-        rating: ratingNum,
-        text: (text || '').trim(),
-        reviewerName: reviewerName.trim(),
-        phone: userPhone || '',
+        targetKind:   'business',
+        targetId:     req.params.id,
+        rating:       ratingNum,
+        text:         cleanText,
+        reviewerName: cleanName,
+        phone:        cleanPhone,
       }).catch(() => {});
     }
   }

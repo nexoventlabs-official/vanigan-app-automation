@@ -8,10 +8,21 @@
  */
 const express  = require('express');
 const bcrypt   = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const Business = require('../models/Business');
 const VaniganUser = require('../models/VaniganUser');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
+
+// FIX H1 / H4: Rate-limit login — max 10 attempts per 15 min per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+});
 
 /* ── POST /api/web-auth/signup ── */
 router.post('/signup', async (req, res) => {
@@ -61,12 +72,12 @@ router.post('/signup', async (req, res) => {
     });
   } catch (err) {
     console.error('[web-auth/signup]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
 /* ── POST /api/web-auth/login ── */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { phone, pin } = req.body;
     const digits = String(phone || '').replace(/\D/g, '');
@@ -116,7 +127,7 @@ router.post('/login', async (req, res) => {
     res.json({ user: safeUser, business: safeBiz });
   } catch (err) {
     console.error('[web-auth/login]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -153,7 +164,7 @@ router.get('/me', async (req, res) => {
 
     res.json({ user: safeUser, business: safeBiz });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -179,7 +190,7 @@ router.post('/link-business', async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -191,7 +202,7 @@ router.get('/check-phone', async (req, res) => {
     const user = await VaniganUser.findOne({ phone: digits }).select('_id name phone').lean();
     res.json({ exists: !!user, name: user?.name || '' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

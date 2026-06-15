@@ -34,7 +34,7 @@ function makeApp(Model, opts = {}) {
 }
 
 function authHeader() {
-  return `Bearer ${jwt.sign({ id: '1', username: 'admin', role: 'superadmin' }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '1h' })}`;
+  return `Bearer ${jwt.sign({ id: '1', username: 'admin', role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '1h' })}`;
 }
 
 afterEach(() => jest.clearAllMocks());
@@ -51,6 +51,7 @@ describe('GET /items', () => {
   test('200 returns paginated items', async () => {
     const Model = makeModel();
     Model.find.mockReturnValue({
+      select: jest.fn().mockReturnThis(), // FIX: support .select('-ownerPin -__v')
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
@@ -70,6 +71,7 @@ describe('GET /items', () => {
   test('filters by district and assembly', async () => {
     const Model = makeModel();
     Model.find.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
@@ -89,6 +91,7 @@ describe('GET /items', () => {
   test('builds $or filter when search query q is provided', async () => {
     const Model = makeModel();
     Model.find.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),

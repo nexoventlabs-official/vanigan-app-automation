@@ -18,7 +18,7 @@
 
 function buildFlowJSON() {
   return {
-    version: '7.0',
+    version: '7.3',
     data_api_version: '3.0',
     routing_model: {
       SERVICE_SELECT: ['SELECT_DISTRICT', 'MY_BUSINESS_LIST', 'ADD_BUSINESS', 'INFO'],

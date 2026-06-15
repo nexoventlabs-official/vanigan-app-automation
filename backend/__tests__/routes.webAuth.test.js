@@ -5,6 +5,9 @@ const request = require('supertest');
 const express = require('express');
 const bcrypt  = require('bcryptjs');
 
+// Mock rate limiter to skip IP-based throttling in tests
+jest.mock('express-rate-limit', () => () => (_req, _res, next) => next());
+
 jest.mock('../models/VaniganUser', () => ({
   findOne:           jest.fn(),
   create:            jest.fn(),

@@ -46,7 +46,9 @@ if (backendSelf && !allowedOrigins.includes(backendSelf)) {
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || origin === 'null') return cb(null, true);
+      // FIX M10: Do NOT allow null origin (sandboxed iframes exploit vector)
+      if (!origin) return cb(null, true); // same-origin / server-to-server — allow
+      if (origin === 'null') return cb(new Error('CORS blocked: null origin')); // sandboxed iframe — block
       if (allowedOrigins.includes(origin)) return cb(null, true);
       if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
         return cb(null, true);
@@ -74,21 +76,23 @@ app.get('/', (_req, res) =>
 );
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-/* Debug endpoint — shows which env vars are present (values masked) */
-app.get('/api/env-check', (_req, res) => {
-  const keys = [
-    'MONGODB_URI', 'BUSINESS_MONGODB_URI', 'MEMBER_MONGODB_URI',
-    'MEMBER_CLOUDINARY_NAME', 'TWO_FACTOR_API_KEY', 'BACKEND_URL',
-  ];
-  const result = {};
-  for (const k of keys) {
-    const v = process.env[k] || '';
-    result[k] = v
-      ? `SET (len=${v.length}, starts="${v.substring(0, 12)}...")`
-      : 'NOT SET';
-  }
-  res.json(result);
-});
+/* Debug endpoint — DISABLED in production. Only available in development. */
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/env-check', (_req, res) => {
+    const keys = [
+      'MONGODB_URI', 'BUSINESS_MONGODB_URI', 'MEMBER_MONGODB_URI',
+      'MEMBER_CLOUDINARY_NAME', 'TWO_FACTOR_API_KEY', 'BACKEND_URL',
+    ];
+    const result = {};
+    for (const k of keys) {
+      const v = process.env[k] || '';
+      result[k] = v
+        ? `SET (len=${v.length}, starts="${v.substring(0, 12)}...")`
+        : 'NOT SET';
+    }
+    res.json(result);
+  });
+}
 
 app.use('/public', publicRegisterRoutes);
 app.use('/public/dir', publicBizDirRoutes);
@@ -126,7 +130,13 @@ async function start() {
     process.exit(1);
   }
   try {
-    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 8000 });
+    // FIX M9: Add explicit TLS, pool size, and connection timeout settings
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+      tls: true,
+    });
     console.log('[Mongo] connected');
   } catch (err) {
     console.error('[Mongo] connection failed:', err.message);
@@ -159,15 +169,23 @@ async function start() {
     getSeedConnection().catch(() => {});
   }
 
-  // Seed default admin if none exists
+// FIX C4: Block startup in production if ADMIN_PASSWORD is not set
   try {
     const Admin = require('./models/Admin');
     const bcrypt = require('bcryptjs');
     const count = await Admin.countDocuments();
     if (count === 0) {
       const username = process.env.ADMIN_USERNAME || 'admin';
-      const password = process.env.ADMIN_PASSWORD || 'admin';
-      const passwordHash = await bcrypt.hash(password, 10);
+      const password = process.env.ADMIN_PASSWORD;
+      if (!password) {
+        if (process.env.NODE_ENV === 'production') {
+          console.error('[Seed] CRITICAL: ADMIN_PASSWORD env var is not set. Refusing to seed a default admin in production. Set ADMIN_PASSWORD and restart.');
+          process.exit(1);
+        }
+        console.warn('[Seed] WARNING: ADMIN_PASSWORD not set — using insecure default "admin". DO NOT use in production.');
+      }
+      const finalPassword = password || 'admin';
+      const passwordHash = await bcrypt.hash(finalPassword, 10);
       await Admin.create({ username, passwordHash, role: 'superadmin' });
       console.log(`[Seed] Default admin created: ${username}`);
     }

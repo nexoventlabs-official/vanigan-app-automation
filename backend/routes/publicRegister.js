@@ -9,9 +9,16 @@ const SUB_CATEGORIES = require("../utils/subCategories");
 const SUB_CATEGORIES_JSON = JSON.stringify(SUB_CATEGORIES);
 
 const router = express.Router();
+// FIX 4.4: Add fileFilter to reject non-image uploads server-side
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, WebP and GIF images are allowed'));
+    }
+    cb(null, true);
+  },
 });
 const uploadFields = upload.fields([
   { name: "image", maxCount: 1 },

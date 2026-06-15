@@ -10,6 +10,10 @@ jest.mock('../models/Admin', () => ({
   findOne:  jest.fn(),
   findById: jest.fn(),
 }));
+
+// Mock rate limiter to skip it in tests (it uses IP-based counters)
+jest.mock('express-rate-limit', () => () => (_req, _res, next) => next());
+
 const Admin = require('../models/Admin');
 
 let app;
@@ -60,8 +64,24 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(200);
     expect(res.body.token).toBeDefined();
     expect(res.body.user.username).toBe('admin');
-    const decoded = jwt.verify(res.body.token, process.env.JWT_SECRET || 'dev-secret');
+    // JWT_SECRET is set in jest.setup.js — verify against it
+    const decoded = jwt.verify(res.body.token, process.env.JWT_SECRET);
     expect(decoded.username).toBe('admin');
+  });
+
+  test('token expiry is 24h (not 7d)', async () => {
+    Admin.findOne.mockResolvedValue({
+      _id: 'adminId1', username: 'admin', passwordHash: adminPasswordHash, role: 'superadmin',
+    });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'admin', password: 'secret' });
+    expect(res.status).toBe(200);
+    const decoded = jwt.decode(res.body.token);
+    const ttl = decoded.exp - decoded.iat;
+    // Should be exactly 24h (86400s) — allow ±5s for test timing
+    expect(ttl).toBeGreaterThanOrEqual(86395);
+    expect(ttl).toBeLessThanOrEqual(86405);
   });
 });
 
@@ -82,10 +102,9 @@ describe('GET /api/auth/verify', () => {
   test('200 with valid token and existing admin', async () => {
     const token = jwt.sign(
       { id: 'adminId1', username: 'admin', role: 'superadmin' },
-      process.env.JWT_SECRET || 'dev-secret',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    // findById returns object with .lean() chain
     Admin.findById.mockReturnValue({
       lean: jest.fn().mockResolvedValue({ _id: 'adminId1', username: 'admin', role: 'superadmin' }),
     });
@@ -99,7 +118,7 @@ describe('GET /api/auth/verify', () => {
   test('401 when admin no longer exists in DB', async () => {
     const token = jwt.sign(
       { id: 'adminId1', username: 'admin', role: 'superadmin' },
-      process.env.JWT_SECRET || 'dev-secret',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
     Admin.findById.mockReturnValue({

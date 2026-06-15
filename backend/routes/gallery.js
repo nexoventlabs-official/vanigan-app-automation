@@ -3,11 +3,19 @@ const multer  = require('multer');
 const auth    = require('../middleware/auth');
 const GalleryEvent = require('../models/GalleryEvent');
 const { uploadBuffer, destroy } = require('../services/galleryCloudinary');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
+// FIX 4.4 + 4.3: fileFilter restricts to images only
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB per file
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, WebP and GIF images are allowed'));
+    }
+    cb(null, true);
+  },
 });
 
 /* ── GET /api/gallery  (public — no auth required) ──────────────────────── */
@@ -18,7 +26,7 @@ router.get('/', async (_req, res) => {
       .lean();
     res.json({ events });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -28,7 +36,7 @@ router.get('/all', auth, async (_req, res) => {
     const events = await GalleryEvent.find().sort({ eventDate: -1 }).lean();
     res.json({ events });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -56,7 +64,7 @@ router.post('/', auth, upload.array('images', 20), async (req, res) => {
 
     res.status(201).json({ ok: true, event });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -78,7 +86,7 @@ router.put('/:id', auth, async (req, res) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
     res.json({ ok: true, event });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -99,7 +107,7 @@ router.post('/:id/images', auth, upload.array('images', 20), async (req, res) =>
     await event.save();
     res.json({ ok: true, event });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -109,7 +117,6 @@ router.delete('/:id/images/:publicId', auth, async (req, res) => {
     const event = await GalleryEvent.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    // publicId may contain slashes — client should encode it
     const pid = decodeURIComponent(req.params.publicId);
     const img  = event.images.find((i) => i.publicId === pid);
     if (!img) return res.status(404).json({ error: 'Image not found' });
@@ -120,7 +127,7 @@ router.delete('/:id/images/:publicId', auth, async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -137,7 +144,7 @@ router.delete('/:id', auth, async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

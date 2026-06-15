@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// FIX 10.3: Fail loudly at build time if VITE_API_URL is not set in production
+const _apiUrl = import.meta.env.VITE_API_URL;
+if (!_apiUrl && import.meta.env.PROD) {
+  throw new Error('VITE_API_URL must be set for production builds. Add it to your .env or Render env vars.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050/api',
+  baseURL: _apiUrl || 'http://localhost:5050/api',
   timeout: 5 * 60 * 1000,
   maxContentLength: Infinity,
   maxBodyLength: Infinity,

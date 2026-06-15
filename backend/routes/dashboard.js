@@ -6,6 +6,7 @@ const Review = require('../models/Review');
 const User = require('../models/User');
 const InboundMessage = require('../models/InboundMessage');
 const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.get('/stats', auth, async (_req, res) => {
       recentUsers,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

@@ -17,8 +17,9 @@ jest.mock('../services/flowImages', () => ({
   getUrl: jest.fn().mockResolvedValue('https://cdn/banner.jpg'),
 }));
 jest.mock('../models/User', () => ({
-  findOne:   jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(null) }),
-  updateOne: jest.fn().mockResolvedValue({}),
+  findOne:          jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(null) }),
+  findOneAndUpdate: jest.fn().mockResolvedValue({}),
+  updateOne:        jest.fn().mockResolvedValue({}),
 }));
 jest.mock('../models/Business', () => ({
   findById: jest.fn().mockResolvedValue(null),
@@ -79,13 +80,13 @@ function makeSignature(body) {
   return 'sha256=' + crypto.createHmac('sha256', 'test-app-secret').update(body).digest('hex');
 }
 
-function buildPayload(text) {
+function buildPayload(text, wamid = 'wamid.test.001') {
   return {
     object: 'whatsapp_business_account',
     entry: [{
       changes: [{
         value: {
-          messages: [{ from: '919876543210', type: 'text', text: { body: text } }],
+          messages: [{ id: wamid, from: '919876543210', type: 'text', text: { body: text } }],
           contacts: [{ profile: { name: 'Alice' } }],
         },
       }],
@@ -106,8 +107,8 @@ test('200 immediately (Meta expects fast ack)', async () => {
   expect(res.status).toBe(200);
 });
 
-test('calls chatbot.handleInbound for text messages', async () => {
-  const body = JSON.stringify(buildPayload('hello'));
+test('calls chatbot.handleInbound for text messages with valid signature', async () => {
+  const body = JSON.stringify(buildPayload('hello', 'wamid.test.002'));
   const sig  = makeSignature(body);
 
   await request(app)
@@ -116,17 +117,78 @@ test('calls chatbot.handleInbound for text messages', async () => {
     .set('x-hub-signature-256', sig)
     .send(body);
 
-  // handleInbound is async — give it a tick to run
   await new Promise(r => setImmediate(r));
   expect(chatbot.handleInbound).toHaveBeenCalledWith(
     expect.objectContaining({ phone: '919876543210', text: 'hello' })
   );
 });
 
+test('drops payload with invalid signature (FIX 1.2)', async () => {
+  const body = JSON.stringify(buildPayload('should-be-dropped', 'wamid.test.003'));
+  // Wrong signature
+  await request(app)
+    .post('/api/webhook/meta')
+    .set('Content-Type', 'application/json')
+    .set('x-hub-signature-256', 'sha256=badhash')
+    .send(body);
+
+  await new Promise(r => setImmediate(r));
+  expect(chatbot.handleInbound).not.toHaveBeenCalled();
+});
+
+test('deduplicates messages with same wamid (FIX 1.3)', async () => {
+  const payload = buildPayload('dup-message', 'wamid.DUPLICATE');
+  const body = JSON.stringify(payload);
+  const sig  = makeSignature(body);
+
+  // First delivery
+  await request(app)
+    .post('/api/webhook/meta')
+    .set('Content-Type', 'application/json')
+    .set('x-hub-signature-256', sig)
+    .send(body);
+
+  // Simulated Meta retry — same wamid
+  await request(app)
+    .post('/api/webhook/meta')
+    .set('Content-Type', 'application/json')
+    .set('x-hub-signature-256', sig)
+    .send(body);
+
+  await new Promise(r => setImmediate(r));
+  // handleInbound should only be called ONCE despite two deliveries
+  expect(chatbot.handleInbound).toHaveBeenCalledTimes(1);
+});
+
 test('ignores payload with wrong object type', async () => {
   const payload = { object: 'page', entry: [] };
   const body    = JSON.stringify(payload);
   const sig     = makeSignature(body);
+
+  await request(app)
+    .post('/api/webhook/meta')
+    .set('Content-Type', 'application/json')
+    .set('x-hub-signature-256', sig)
+    .send(body);
+
+  await new Promise(r => setImmediate(r));
+  expect(chatbot.handleInbound).not.toHaveBeenCalled();
+});
+
+test('skips status update entries (FIX 9.2)', async () => {
+  const payload = {
+    object: 'whatsapp_business_account',
+    entry: [{
+      changes: [{
+        value: {
+          statuses: [{ id: 'wamid.status.001', status: 'delivered', timestamp: '12345' }],
+          messages: [],
+        },
+      }],
+    }],
+  };
+  const body = JSON.stringify(payload);
+  const sig  = makeSignature(body);
 
   await request(app)
     .post('/api/webhook/meta')

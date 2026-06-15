@@ -5,11 +5,13 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
+    # FIX 11.1: Explicit health check path so Render detects hung processes
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        generateValue: false
+        value: 10000
       - key: MONGODB_URI
         sync: false
       - key: ADMIN_USERNAME
@@ -40,6 +42,9 @@ services:
         sync: false
       - key: WHATSAPP_FLOW_STATUS
         sync: false
+      # FIX H8: FLOW_PRIVATE_KEY — migrate this to a Render Secret File
+      # Upload flow_keys/private.pem as a Secret File at /etc/secrets/flow_private.pem
+      # and update flowEndpoint.js to read it with fs.readFileSync
       - key: FLOW_PRIVATE_KEY
         sync: false
       - key: FLOW_PUBLIC_KEY

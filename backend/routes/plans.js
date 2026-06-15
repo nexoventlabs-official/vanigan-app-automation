@@ -3,6 +3,7 @@ const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const Plan = require('../models/Plan');
 const { uploadBuffer, destroy, ROOT } = require('../services/cloudinary');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
 
@@ -47,7 +48,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     res.json({ plan });
   } catch (err) {
     console.error('[plans.create]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -80,7 +81,7 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     await plan.save();
     res.json({ plan });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -92,7 +93,7 @@ router.delete('/:id', auth, async (req, res) => {
     await plan.deleteOne();
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

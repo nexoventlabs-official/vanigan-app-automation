@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const defaultCloud = require('../services/cloudinary');
+const safeError = require('../utils/safeError');
 
 const SPECIAL_TYPES = new Set(['gallery', 'services', 'coverimage', 'latlng', '_latlng_pair', 'dayspicker', 'textarea', 'time', 'email', 'url']);
 
@@ -116,13 +117,14 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       const skip = (Math.max(1, parseInt(page)) - 1) * Math.min(200, parseInt(limit));
       const take = Math.min(200, parseInt(limit));
       const [items, total] = await Promise.all([
-        Model.find(filter).sort({ createdAt: -1 }).skip(skip).limit(take).lean().maxTimeMS(15000),
+        // FIX L5: Exclude ownerPin (bcrypt hash) and __v from listing responses
+        Model.find(filter).select('-ownerPin -__v').sort({ createdAt: -1 }).skip(skip).limit(take).lean().maxTimeMS(15000),
         Model.countDocuments(filter).maxTimeMS(15000),
       ]);
       res.json({ items, total, page: parseInt(page), limit: take });
     } catch (err) {
       console.error('[listing.list]', err.message);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     }
   });
 
@@ -133,7 +135,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       if (!item) return res.status(404).json({ error: 'Not found' });
       res.json({ item });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     }
   });
 
@@ -185,7 +187,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       res.json({ item: created });
     } catch (err) {
       console.error('[listing.create]', err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     }
   });
 
@@ -228,7 +230,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       res.json({ item });
     } catch (err) {
       console.error('[listing.update]', err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     }
   });
 
@@ -279,7 +281,7 @@ function listingRouter({ Model, folder, extraFields = [], multiImage = false, cl
       await item.deleteOne();
       res.json({ ok: true });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     }
   });
 

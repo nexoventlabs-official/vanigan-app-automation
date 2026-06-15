@@ -19,7 +19,9 @@ function cfg() {
   };
 }
 
-const api = axios.create({ timeout: 30000 });
+// FIX H9: Reduced timeout from 30s to 8s — a hung Meta API call must not
+// block the Node event loop for extended periods under load.
+const api = axios.create({ timeout: 8000 });
 
 /** Send a plain text WhatsApp message. */
 async function sendText(to, text) {

@@ -29,6 +29,8 @@ const router = express.Router();
 
 const LOG_PATH = path.join(__dirname, '..', 'flow-debug.log');
 function dbg(...args) {
+  // FIX 6.2: Never log PII (phone, flow payloads) in production
+  if (process.env.NODE_ENV === 'production') return;
   const line =
     `[${new Date().toISOString()}] ` +
     args
@@ -43,16 +45,29 @@ function dbg(...args) {
 
 /* ───────── Encryption helpers ───────── */
 
-const FLOW_PRIVATE_KEY_RAW = process.env.FLOW_PRIVATE_KEY || '';
-const FLOW_PRIVATE_KEY = FLOW_PRIVATE_KEY_RAW.split('\\n').join('\n');
+// FIX 7.3: Support Render Secret File path for FLOW_PRIVATE_KEY.
+// Preferred: upload flow_keys/private.pem as a Render Secret File at /etc/secrets/flow_private.pem
+// Fallback: FLOW_PRIVATE_KEY env var (with escaped newlines, as before)
+let FLOW_PRIVATE_KEY = '';
+const SECRET_FILE_PATH = '/etc/secrets/flow_private.pem';
+try {
+  if (fs.existsSync(SECRET_FILE_PATH)) {
+    FLOW_PRIVATE_KEY = fs.readFileSync(SECRET_FILE_PATH, 'utf8').trim();
+  }
+} catch { /* file doesn't exist yet — fall through to env var */ }
+
+if (!FLOW_PRIVATE_KEY) {
+  const raw = process.env.FLOW_PRIVATE_KEY || '';
+  FLOW_PRIVATE_KEY = raw.split('\\n').join('\n');
+}
 
 function decryptRequest(body) {
-  const { encrypted_aes_key, encrypted_flow_data, initial_vector } = body || {};
-
+  // FIX C3: Remove plain JSON fallback — always require encryption
   if (!FLOW_PRIVATE_KEY) {
-    // Development fallback: accept plain JSON
-    return { decryptedBody: body, aesKeyBuffer: null, ivBuffer: null };
+    throw new Error('FLOW_PRIVATE_KEY is not configured — cannot decrypt flow request');
   }
+
+  const { encrypted_aes_key, encrypted_flow_data, initial_vector } = body || {};
   if (!encrypted_aes_key || !encrypted_flow_data || !initial_vector) {
     throw new Error('Missing encryption fields');
   }
@@ -73,7 +88,9 @@ function decryptRequest(body) {
   const authTag = flowDataBuffer.slice(-TAG_LEN);
   const ciphertext = flowDataBuffer.slice(0, -TAG_LEN);
 
-  const decipher = crypto.createDecipheriv('aes-128-gcm', aesKeyBuffer, ivBuffer);
+  // FIX 2.2: Detect AES key length — support both 128-bit (16 bytes) and 256-bit (32 bytes)
+  const alg = aesKeyBuffer.length === 32 ? 'aes-256-gcm' : 'aes-128-gcm';
+  const decipher = crypto.createDecipheriv(alg, aesKeyBuffer, ivBuffer);
   decipher.setAuthTag(authTag);
   const plain = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
   const decryptedBody = JSON.parse(plain.toString('utf-8'));
@@ -88,7 +105,9 @@ function encryptResponse(obj, aesKeyBuffer, ivBuffer) {
   const flipped = Buffer.alloc(ivBuffer.length);
   for (let i = 0; i < ivBuffer.length; i++) flipped[i] = ~ivBuffer[i] & 0xff;
 
-  const cipher = crypto.createCipheriv('aes-128-gcm', aesKeyBuffer, flipped);
+  // Match cipher algorithm to key length
+  const alg = aesKeyBuffer.length === 32 ? 'aes-256-gcm' : 'aes-128-gcm';
+  const cipher = crypto.createCipheriv(alg, aesKeyBuffer, flipped);
   const out = Buffer.concat([
     cipher.update(JSON.stringify(obj), 'utf-8'),
     cipher.final(),
@@ -238,15 +257,16 @@ async function buildItemList(kind, district, assembly) {
     // Merge new businesses (MEMBER_MONGODB_URI) + seed businesses (BUSINESS_MONGODB_URI)
     const filter = { district, assembly, active: true };
     const [newDocs, seedDocs] = await Promise.all([
-      Business.find(filter).sort({ name: 1 }).limit(20).lean().catch(() => []),
-      findSeedBusinesses(filter, { sort: { name: 1 }, skip: 0, limit: 20 }),
+      Business.find(filter).sort({ name: 1 }).limit(10).lean().catch(() => []),
+      findSeedBusinesses(filter, { sort: { name: 1 }, skip: 0, limit: 10 }),
     ]);
     // Deduplicate by phone, new listings take priority
     const seenPhones = new Set(newDocs.map(b => b.phone).filter(Boolean));
     const filteredSeed = seedDocs.filter(b => !b.phone || !seenPhones.has(b.phone));
+    // FIX 5.2: Cap at 10 items to stay well under Meta's ~256 KB response limit
     const merged = [...newDocs, ...filteredSeed]
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-      .slice(0, 20);
+      .slice(0, 10);
 
     return Promise.all(merged.map(async (it) => {
       const item = {
@@ -255,7 +275,8 @@ async function buildItemList(kind, district, assembly) {
         description: (it.description || it.category || '').substring(0, 60),
       };
       if (it.image) {
-        const b64 = await urlToBase64(it.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
+        // FIX 5.2: Reduced dimensions and quality to keep payload small
+        const b64 = await urlToBase64(it.image, { width: 150, height: 150, crop: 'fill', quality: 50, format: 'jpg' });
         if (b64) item.image = b64;
       }
       return item;
@@ -268,14 +289,14 @@ async function buildItemList(kind, district, assembly) {
     const liveFilter = { district, active: true };
     const seedFilter = { district: new RegExp(district, 'i'), active: true };
     const [liveDocs, seedDocs] = await Promise.all([
-      Organizer.find(liveFilter).sort({ name: 1 }).limit(20).lean().catch(() => []),
-      findSeedOrganizers(seedFilter, { sort: { name: 1 }, skip: 0, limit: 20 }),
+      Organizer.find(liveFilter).sort({ name: 1 }).limit(10).lean().catch(() => []),
+      findSeedOrganizers(seedFilter, { sort: { name: 1 }, skip: 0, limit: 10 }),
     ]);
     const livePhones = new Set(liveDocs.map(o => o.phone).filter(Boolean));
     const filteredSeed = seedDocs.filter(o => !o.phone || !livePhones.has(o.phone));
     const merged = [...liveDocs, ...filteredSeed]
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-      .slice(0, 20);
+      .slice(0, 10);
 
     return Promise.all(merged.map(async (it) => {
       const item = {
@@ -284,7 +305,7 @@ async function buildItemList(kind, district, assembly) {
         description: (it.role || it.description || it.designation || '').substring(0, 60),
       };
       if (it.image) {
-        const b64 = await urlToBase64(it.image, { width: 200, height: 200, crop: 'fill', quality: 75, format: 'jpg' });
+        const b64 = await urlToBase64(it.image, { width: 150, height: 150, crop: 'fill', quality: 50, format: 'jpg' });
         if (b64) item.image = b64;
       }
       return item;
@@ -293,7 +314,7 @@ async function buildItemList(kind, district, assembly) {
 
   const M = await modelFor(kind);
   if (!M) return [];
-  const items = await M.find({ district, assembly, active: true }).sort({ name: 1 }).limit(20).lean();
+  const items = await M.find({ district, assembly, active: true }).sort({ name: 1 }).limit(10).lean();
 
   return Promise.all(
     items.map(async (it) => {
@@ -304,10 +325,10 @@ async function buildItemList(kind, district, assembly) {
       };
       if (it.image) {
         const b64 = await urlToBase64(it.image, {
-          width: 200,
-          height: 200,
+          width: 150,
+          height: 150,
           crop: 'fill',
-          quality: 75,
+          quality: 50,
           format: 'jpg',
         });
         if (b64) item.image = b64;
@@ -553,7 +574,13 @@ async function handleDataExchange({ screen, data, flow_token }) {
   // ─── SELECT_DISTRICT → SELECT_ASSEMBLY ───
   if (screen === 'SELECT_DISTRICT') {
     const kind = data?.kind || 'business';
-    const district = data?.district || '';
+    // FIX 2.3: Validate district against allowlist before querying DB
+    const rawDistrict = String(data?.district || '').trim();
+    const validDistricts = districts.getDistricts();
+    const district = validDistricts.includes(rawDistrict) ? rawDistrict : '';
+    if (!district) {
+      return { screen: 'INFO', data: { info_title: 'Invalid selection', info_body: 'Please go back and select a valid district.' } };
+    }
     const bannerKey = kindBannerKey(kind);
     const assemblies = buildAssemblyOptions(district);
 
@@ -592,8 +619,19 @@ async function handleDataExchange({ screen, data, flow_token }) {
   // ─── SELECT_ASSEMBLY → SELECT_CATEGORY (business) or ITEM_LIST (others) ───
   if (screen === 'SELECT_ASSEMBLY') {
     const kind = data?.kind || 'business';
-    const district = data?.district || '';
-    const assembly = data?.assembly || '';
+    // FIX 2.3: Validate district and assembly against allowlists
+    const rawDistrict = String(data?.district || '').trim();
+    const rawAssembly = String(data?.assembly || '').trim();
+    const validDistricts = districts.getDistricts();
+    const district = validDistricts.includes(rawDistrict) ? rawDistrict : '';
+    if (!district) {
+      return { screen: 'INFO', data: { info_title: 'Invalid selection', info_body: 'Please go back and select a valid district.' } };
+    }
+    const validAssemblies = districts.getAssemblies(district);
+    const assembly = validAssemblies.includes(rawAssembly) ? rawAssembly : '';
+    if (!assembly) {
+      return { screen: 'INFO', data: { info_title: 'Invalid selection', info_body: 'Please go back and select a valid assembly.' } };
+    }
     const bannerKey = kindBannerKey(kind);
 
     if (phone) {
@@ -871,18 +909,42 @@ async function handleDataExchange({ screen, data, flow_token }) {
     const kind = data?.kind || 'business';
     const itemId = data?.item_id;
     const ratingNum = parseInt(data?.rating, 10);
-    const text = (data?.review_text || '').trim();
-    const reviewerName = (data?.reviewer_name || '').trim();
+    const text = (data?.review_text || '').trim().substring(0, 1000); // cap length
+    const reviewerName = (data?.reviewer_name || '').trim().substring(0, 100);
     const M = await modelFor(kind);
 
-    if (!M || !itemId || !ratingNum || !reviewerName) {
+    if (!M || !itemId || !ratingNum || ratingNum < 1 || ratingNum > 5 || !reviewerName) {
       return {
         screen: 'INFO',
         data: { info_title: 'Missing details', info_body: 'Please fill in name, rating and review text.' },
       };
     }
 
+    // FIX 12.1: Verify the listing still exists before creating a review
     try {
+      let listingExists = false;
+      try {
+        const existsCheck = await M.exists({ _id: itemId });
+        listingExists = !!existsCheck;
+      } catch { listingExists = false; }
+
+      // Fall back to seed DBs for business/organizer
+      if (!listingExists && kind === 'business') {
+        const seedDoc = await findSeedBusinessById(itemId).catch(() => null);
+        listingExists = !!seedDoc;
+      }
+      if (!listingExists && kind === 'organizer') {
+        const seedDoc = await findSeedOrganizerById(itemId).catch(() => null);
+        listingExists = !!seedDoc;
+      }
+
+      if (!listingExists) {
+        return {
+          screen: 'INFO',
+          data: { info_title: 'Listing not found', info_body: 'This listing was removed. Type *hi* to browse other listings.' },
+        };
+      }
+
       await Review.create({
         targetKind: kind,
         targetId: itemId,

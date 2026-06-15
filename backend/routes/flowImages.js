@@ -4,6 +4,7 @@ const upload = require('../middleware/upload');
 const FlowImage = require('../models/FlowImage');
 const { IMAGE_KEYS, ensureKeysExist } = require('../services/flowImages');
 const { uploadBuffer, destroy, ROOT } = require('../services/cloudinary');
+const safeError = require('../utils/safeError');
 
 // Lazy require avoids circular import; we just need the cache buster.
 function bustFlowCache() {
@@ -54,7 +55,7 @@ router.post('/:key', auth, upload.single('image'), async (req, res) => {
     res.json({ image: doc });
   } catch (err) {
     console.error('[flowImages] upload error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -67,7 +68,7 @@ router.delete('/:key', auth, async (req, res) => {
     bustFlowCache();
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

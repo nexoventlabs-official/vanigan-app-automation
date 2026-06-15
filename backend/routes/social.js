@@ -11,6 +11,7 @@ const express  = require('express');
 const mongoose = require('mongoose');
 const Business = require('../models/Business');
 const { getMemberModel, getVaniganUserModel } = require('../services/memberDb');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ router.post('/follow', async (req, res) => {
     res.json({ ok: true, followed, followingCount: following.length });
   } catch (err) {
     console.error('[social/follow]', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -88,7 +89,7 @@ router.post('/save', async (req, res) => {
     res.json({ ok: true, saved: isSaved, savedCount: saved.length });
   } catch (err) {
     console.error('[social/save]', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -181,7 +182,7 @@ router.get('/profile', async (req, res) => {
     });
   } catch (err) {
     console.error('[social/profile]', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -194,7 +195,7 @@ router.get('/biz-by-phone', async (req, res) => {
     if (!biz) return res.json({ found: false });
     res.json({ found: true, biz });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

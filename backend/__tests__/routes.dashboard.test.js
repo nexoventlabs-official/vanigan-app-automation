@@ -35,7 +35,7 @@ jest.mock('../services/memberDb', () => ({
 }));
 
 function authHeader() {
-  return `Bearer ${jwt.sign({ id: '1', username: 'admin', role: 'superadmin' }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '1h' })}`;
+  return `Bearer ${jwt.sign({ id: '1', username: 'admin', role: 'superadmin' }, process.env.JWT_SECRET, { expiresIn: '1h' })}`;
 }
 
 let app;

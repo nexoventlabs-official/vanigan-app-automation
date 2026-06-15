@@ -16,8 +16,17 @@ router.get('/meta', (req, res) => {
   const verifyToken = process.env.META_VERIFY_TOKEN;
   if (!verifyToken) return res.sendStatus(500);
 
-  if (mode === 'subscribe' && token === verifyToken) {
-    return res.status(200).send(challenge);
+  // FIX 1.1: Use constant-time comparison to prevent timing attacks
+  if (mode === 'subscribe' && token) {
+    try {
+      const tokBuf = Buffer.from(token);
+      const verBuf = Buffer.from(verifyToken);
+      if (tokBuf.length === verBuf.length && crypto.timingSafeEqual(tokBuf, verBuf)) {
+        return res.status(200).send(challenge);
+      }
+    } catch {
+      // length mismatch or other error — fall through to 403
+    }
   }
   if (!mode && !token) {
     return res.json({ status: 'webhook active' });
@@ -41,12 +50,18 @@ function verifySignature(req) {
 }
 
 /* ─── Webhook receiver (Meta POST) ─── */
+// FIX 1.3: In-process wamid dedup set (resets on restart — acceptable for single-instance)
+const processedWamids = new Set();
+// Prune old entries every 30 min to prevent unbounded memory growth
+setInterval(() => processedWamids.clear(), 30 * 60 * 1000);
+
 router.post('/meta', async (req, res) => {
   // Acknowledge immediately so Meta does not retry
   res.sendStatus(200);
 
-  if (process.env.META_APP_SECRET && !verifySignature(req)) {
-    console.warn('[webhook] invalid signature');
+  // FIX 1.2: Always verify signature — no conditional skip based on env presence
+  if (!verifySignature(req)) {
+    console.warn('[webhook] invalid or missing signature — dropping request');
     return;
   }
 
@@ -57,10 +72,19 @@ router.post('/meta', async (req, res) => {
     for (const entry of body.entry || []) {
       for (const change of entry.changes || []) {
         const value = change.value || {};
+
+        // FIX 9.2: Explicitly skip status updates (delivery/read receipts)
+        if (value.statuses && value.statuses.length > 0) continue;
+
         const messages = value.messages || [];
         const contacts = value.contacts || [];
 
         for (const msg of messages) {
+          // FIX 1.3: Deduplicate by wamid to prevent double-processing on Meta retries
+          const wamid = msg.id;
+          if (!wamid || processedWamids.has(wamid)) continue;
+          processedWamids.add(wamid);
+
           const from = msg.from;
           const profileName = contacts[0]?.profile?.name || '';
           let text = '';

@@ -1,5 +1,9 @@
 /**
  * middleware/auth.js  —  unit tests
+ *
+ * FIX H2: JWT_SECRET is now required — no dev-secret fallback.
+ * The middleware returns 500 when JWT_SECRET is missing in production,
+ * but tests always have JWT_SECRET set via jest.setup.js.
  */
 const jwt = require('jsonwebtoken');
 
@@ -17,7 +21,7 @@ function mockRes() {
 }
 
 describe('authMiddleware', () => {
-  const SECRET = 'test-secret';
+  const SECRET = 'test-secret'; // matches jest.setup.js JWT_SECRET
   const payload = { id: 'user1', username: 'admin', role: 'superadmin' };
 
   beforeEach(() => {
@@ -84,15 +88,21 @@ describe('authMiddleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  test('falls back to dev-secret when JWT_SECRET is not set', () => {
+  test('returns 500 when JWT_SECRET is not set (FIX H2 — no dev-secret fallback)', () => {
     delete process.env.JWT_SECRET;
-    const token = jwt.sign(payload, 'dev-secret');
+    // Token signed with any secret — should be rejected when secret is missing
+    const token = jwt.sign(payload, 'some-old-secret');
     const req  = { headers: { authorization: `Bearer ${token}` } };
     const res  = mockRes();
     const next = jest.fn();
 
     makeMiddleware()(req, res, next);
 
-    expect(next).toHaveBeenCalledTimes(1);
+    // Must return 500 Server Misconfiguration — not 401, not calling next()
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(next).not.toHaveBeenCalled();
+
+    // Restore for subsequent tests
+    process.env.JWT_SECRET = SECRET;
   });
 });

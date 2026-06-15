@@ -18,18 +18,54 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const axios = require("axios");
+const rateLimit = require("express-rate-limit");
 
 const { getMemberModel } = require("../services/memberDb");
 const Business = require("../models/Business");
 const { findByEpicNo } = require("../services/voterDb");
 const { uploadBuffer } = require("../services/memberCloudinary");
 const { getZoneByDistrict, calculateAge } = require("../utils/zoneData");
+const auth = require("../middleware/auth");
 const crypto = require("crypto");
+const safeError = require("../utils/safeError");
+
+/* ── Rate limiters ── */
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  skipSuccessfulRequests: false,
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many OTP requests. Please wait before requesting again." },
+});
+
+const epicLookupLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many EPIC lookups. Please slow down." },
+});
 
 const router = express.Router();
+// FIX 4.4: fileFilter rejects non-image uploads server-side
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, WebP and GIF images are allowed'));
+    }
+    cb(null, true);
+  },
 });
 
 // In-memory OTP store: phone → { sessionId, expiry }
@@ -81,7 +117,7 @@ router.get("/check-phone", async (req, res) => {
     res.json({ exists: !!m, name: m?.name || "" });
   } catch (err) {
     console.error("[member-auth/check-phone]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -89,7 +125,7 @@ router.get("/check-phone", async (req, res) => {
    POST /lookup-epic
    Body: { epic }
 ───────────────────────────────────────────────────────────── */
-router.post("/lookup-epic", async (req, res) => {
+router.post("/lookup-epic", epicLookupLimiter, async (req, res) => {
   try {
     const epic = String(req.body.epic || "")
       .toUpperCase()
@@ -134,7 +170,7 @@ router.post("/lookup-epic", async (req, res) => {
     });
   } catch (err) {
     console.error("[member-auth/lookup-epic]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -142,7 +178,7 @@ router.post("/lookup-epic", async (req, res) => {
    POST /send-otp
    Body: { phone }
 ───────────────────────────────────────────────────────────── */
-router.post("/send-otp", async (req, res) => {
+router.post("/send-otp", otpLimiter, async (req, res) => {
   try {
     const digits = String(req.body.phone || "").replace(/\D/g, "");
     if (digits.length < 10) {
@@ -163,7 +199,8 @@ router.post("/send-otp", async (req, res) => {
         sessionId: data.Details,
         expiry: Date.now() + 10 * 60 * 1000,
       });
-      console.log(`[otp] Sent to ${digits}, session: ${data.Details}`);
+      // Mask phone in logs — never log full number
+      console.log(`[otp] Sent to ***${digits.slice(-4)}, session: ${String(data.Details).slice(0, 6)}...`);
       return res.json({ ok: true, message: "OTP sent successfully." });
     }
 
@@ -386,14 +423,14 @@ router.post("/signup", async (req, res) => {
     res.json({ member: safeUser(member), business: safeBiz });
   } catch (err) {
     console.error("[member-auth/signup]", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
 /* ─────────────────────────────────────────────────────────────
    POST /login   Body: { phone, pin }
 ───────────────────────────────────────────────────────────── */
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { phone, pin } = req.body;
     const digits = String(phone || "").replace(/\D/g, "");
@@ -470,7 +507,7 @@ router.post("/login", async (req, res) => {
     res.json({ member: safeUser(member), business: safeBiz });
   } catch (err) {
     console.error("[member-auth/login]", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -525,7 +562,7 @@ router.get("/me", async (req, res) => {
 
     res.json({ member: safeMember, business: safeBiz });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -607,7 +644,7 @@ router.post("/link-epic", async (req, res) => {
     });
   } catch (err) {
     console.error("[member-auth/link-epic]", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -631,7 +668,7 @@ router.post("/link-business", async (req, res) => {
     await member.save();
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -693,7 +730,7 @@ router.post("/verify-business-pin", async (req, res) => {
     res.json({ ok: true, businessId: biz._id, businessName: biz.name });
   } catch (err) {
     console.error("[member-auth/verify-business-pin]", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -701,7 +738,7 @@ router.post("/verify-business-pin", async (req, res) => {
    POST /admin-promote/:phone
    Admin: promote VaniganMember → Organizer (copies data)
 ───────────────────────────────────────────────────────────── */
-router.post("/admin-promote/:phone", async (req, res) => {
+router.post("/admin-promote/:phone", auth, async (req, res) => {
   const phone = String(req.params.phone || "").replace(/\D/g, "");
   if (!phone) return res.status(400).json({ error: "phone required" });
   try {
@@ -738,7 +775,7 @@ router.post("/admin-promote/:phone", async (req, res) => {
     res.json({ ok: true, organizer: org });
   } catch (err) {
     console.error("[admin-promote]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -752,7 +789,7 @@ router.post("/admin-promote/:phone", async (req, res) => {
      - Their following / savedBusinesses references in others' docs
      - Member photo folder from memberCloudinary
 ───────────────────────────────────────────────────────────── */
-router.delete("/admin-delete/:phone", async (req, res) => {
+router.delete("/admin-delete/:phone", auth, async (req, res) => {
   const phone = String(req.params.phone || "").replace(/\D/g, "");
   if (!phone) return res.status(400).json({ error: "phone required" });
 
@@ -835,7 +872,7 @@ router.delete("/admin-delete/:phone", async (req, res) => {
     res.json({ ok: true, log });
   } catch (err) {
     console.error("[admin-delete]", err.message);
-    res.status(500).json({ error: err.message, log });
+    res.status(500).json({ error: safeError(err), log });
   }
 });
 
@@ -843,7 +880,7 @@ router.delete("/admin-delete/:phone", async (req, res) => {
    GET /admin-list  — Admin: list all VaniganMembers (paginated)
    Query: page, limit, q (search by name/phone/membershipId)
 ───────────────────────────────────────────────────────────── */
-router.get("/admin-list", async (req, res) => {
+router.get("/admin-list", auth, async (req, res) => {
   try {
     const { q = "", page = 1, limit = 50 } = req.query;
     const VaniganMember = await getMemberModel();
@@ -900,7 +937,7 @@ router.get("/admin-list", async (req, res) => {
     res.json({ members: enriched, total, page: parseInt(page), limit: take });
   } catch (err) {
     console.error("[member-auth/admin-list]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -954,7 +991,7 @@ router.get("/referral-info", async (req, res) => {
     });
   } catch (err) {
     console.error("[referral-info]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -993,7 +1030,7 @@ router.post("/verify-card", async (req, res) => {
     res.json({ ok: true, member: safeMember });
   } catch (err) {
     console.error("[verify-card]", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

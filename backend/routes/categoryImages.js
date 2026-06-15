@@ -4,9 +4,20 @@ const auth    = require('../middleware/auth');
 const CategoryImage = require('../models/CategoryImage');
 const { uploadBuffer, destroy } = require('../services/cloudinary');
 const CATEGORIES = require('../services/categories');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+// FIX 4.4: fileFilter restricts to images only
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, WebP and GIF images are allowed'));
+    }
+    cb(null, true);
+  },
+});
 
 /* ── GET /api/category-images  ─────────────────────────────── */
 router.get('/', async (_req, res) => {
@@ -22,7 +33,7 @@ router.get('/', async (_req, res) => {
     }));
     res.json({ images });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -52,7 +63,7 @@ router.post('/:category', auth, upload.single('image'), async (req, res) => {
 
     res.json({ ok: true, imageUrl: result.secure_url });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -65,7 +76,7 @@ router.delete('/:category', auth, async (req, res) => {
     await CategoryImage.updateOne({ category }, { $set: { imageUrl: '', publicId: '' } });
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 

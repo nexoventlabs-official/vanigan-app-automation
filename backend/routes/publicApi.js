@@ -6,6 +6,7 @@ const Business = require('../models/Business');
 const Review   = require('../models/Review');
 const { uploadBuffer: memberUpload, destroy } = require('../services/memberCloudinary');
 const { findSeedBusinesses, countSeedBusinesses, findSeedBusinessById, findSeedOrganizers, countSeedOrganizers, findSeedMembers, countSeedMembers } = require('../services/seedDb');
+const safeError = require('../utils/safeError');
 
 const router = express.Router();
 const PAGE_LIMIT = 60;
@@ -93,7 +94,7 @@ router.get('/businesses', async (req, res) => {
 
     res.json({ businesses, total, page: pg, limit: PAGE_LIMIT });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -130,7 +131,7 @@ router.get('/businesses/:id', async (req, res) => {
       isSeed,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -142,28 +143,38 @@ router.post('/businesses/:id/review', async (req, res) => {
     if (!reviewerName || !ratingNum || ratingNum < 1 || ratingNum > 5) {
       return res.status(400).json({ error: 'Name and a valid rating (1-5 stars) are required.' });
     }
-
-    const phone = req.body.phone ? String(req.body.phone).replace(/\D/g, '') : '';
-
-    /* One review per phone per business */
-    if (phone) {
-      let oid;
-      try { oid = new mongoose.Types.ObjectId(req.params.id); } catch { return res.status(400).json({ error: 'Invalid id' }); }
-      const dup = await Review.findOne({ targetKind: 'business', targetId: oid, phone }).lean();
-      if (dup) return res.status(409).json({ error: 'already_reviewed' });
+    // FIX 4.1: Cap field lengths
+    if (String(reviewerName).trim().length > 100) {
+      return res.status(400).json({ error: 'Reviewer name must be 100 characters or less.' });
     }
+    if (text && String(text).trim().length > 1000) {
+      return res.status(400).json({ error: 'Review text must be 1000 characters or less.' });
+    }
+
+    // FIX 12.2: Require phone for deduplication — anonymous reviews are not accepted
+    const phone = req.body.phone ? String(req.body.phone).replace(/\D/g, '') : '';
+    if (!phone) {
+      return res.status(400).json({ error: 'phone is required to submit a review.' });
+    }
+
+    let oid;
+    try { oid = new mongoose.Types.ObjectId(req.params.id); } catch { return res.status(400).json({ error: 'Invalid id' }); }
+
+    // Always check for duplicate — phone is now required
+    const dup = await Review.findOne({ targetKind: 'business', targetId: oid, phone }).lean();
+    if (dup) return res.status(409).json({ error: 'already_reviewed' });
 
     const newReview = await Review.create({
       targetKind:   'business',
       targetId:     req.params.id,
       rating:       ratingNum,
-      text:         text ? String(text).trim() : '',
-      reviewerName: String(reviewerName).trim(),
+      text:         text ? String(text).trim().substring(0, 1000) : '',
+      reviewerName: String(reviewerName).trim().substring(0, 100),
       phone,
     });
     res.json(newReview);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -186,7 +197,7 @@ router.post('/owner/set-pin', async (req, res) => {
     res.json({ ok: true, businessId: biz._id });
   } catch (err) {
     console.error('[owner/set-pin] error:', err.message, err.stack);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -220,7 +231,7 @@ router.post('/owner/verify-pin', async (req, res) => {
       reviewCount: avgAgg[0] ? avgAgg[0].count : 0,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -233,7 +244,7 @@ router.post('/owner/check-phone', async (req, res) => {
     if (!biz) return res.json({ found: false });
     res.json({ found: true, hasPin: !!biz.ownerPin, name: biz.name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -344,7 +355,7 @@ router.put('/owner/update/:id', _ownerUpload, async (req, res) => {
     res.json({ item: safeDoc });
   } catch (err) {
     console.error('[owner.update]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -409,7 +420,7 @@ router.get('/members', async (req, res) => {
 
     res.json({ members: enriched, total, page: pg });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -473,7 +484,7 @@ router.get('/organizers', async (req, res) => {
 
     res.json({ organizers: enriched, total, page: pg });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
