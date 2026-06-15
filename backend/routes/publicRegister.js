@@ -1,128 +1,211 @@
-const express = require('express');
-const multer = require('multer');
-const { uploadBuffer: memberUpload } = require('../services/memberCloudinary');
-const districts = require('../services/districts');
-const Business = require('../models/Business');
-const meta = require('../services/metaCloud');
-const generateListingCode = require('../utils/generateListingCode');
-const SUB_CATEGORIES = require('../utils/subCategories');
+const express = require("express");
+const multer = require("multer");
+const { uploadBuffer: memberUpload } = require("../services/memberCloudinary");
+const districts = require("../services/districts");
+const Business = require("../models/Business");
+const meta = require("../services/metaCloud");
+const generateListingCode = require("../utils/generateListingCode");
+const SUB_CATEGORIES = require("../utils/subCategories");
 const SUB_CATEGORIES_JSON = JSON.stringify(SUB_CATEGORIES);
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 const uploadFields = upload.fields([
-  { name: 'image',        maxCount: 1 },
-  { name: 'coverImage',   maxCount: 1 },
-  { name: 'galleryImages', maxCount: 10 },
-  ...Array.from({ length: 6 }, (_, i) => ({ name: `service${i + 1}Image`, maxCount: 1 })),
+  { name: "image", maxCount: 1 },
+  { name: "coverImage", maxCount: 1 },
+  { name: "galleryImages", maxCount: 10 },
+  ...Array.from({ length: 6 }, (_, i) => ({
+    name: `service${i + 1}Image`,
+    maxCount: 1,
+  })),
 ]);
 
 /* ── Public: district map (no auth) ── */
-router.get('/districts', (_req, res) => {
+router.get("/districts", (_req, res) => {
   res.json({ map: districts.getMap() });
 });
 
 /* ── Registration form HTML ── */
-router.get('/register', async (req, res) => {
-  const phone       = String(req.query.phone       || '').replace(/\D/g, '');
-  const category    = String(req.query.category    || '').trim();
-  const subCategory = String(req.query.subCategory || '').trim();
-  const district    = String(req.query.district    || '').trim();
-  const assembly    = String(req.query.assembly    || '').trim();
-  const bizName     = String(req.query.bizName     || '').trim();
-  const ownerName   = String(req.query.ownerName   || '').trim();
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+router.get("/register", async (req, res) => {
+  const phone = String(req.query.phone || "").replace(/\D/g, "");
+  const category = String(req.query.category || "").trim();
+  const subCategory = String(req.query.subCategory || "").trim();
+  const district = String(req.query.district || "").trim();
+  const assembly = String(req.query.assembly || "").trim();
+  const bizName = String(req.query.bizName || "").trim();
+  const ownerName = String(req.query.ownerName || "").trim();
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
 
   if (phone) {
-    const existing = await Business.findOne({ ownerPhone: phone }).lean().catch(() => null);
+    const existing = await Business.findOne({ ownerPhone: phone })
+      .lean()
+      .catch(() => null);
     if (existing) {
-      return res.send(pageShell('Already Registered', `
+      return res.send(
+        pageShell(
+          "Already Registered",
+          `
         <div class="icon">🏪</div>
         <h1>Already Registered!</h1>
         <p><strong>${escHtml(existing.name)}</strong> is already registered on Vanigan.</p>
         <p class="sub">You can manage your listing anytime in the My Business section. 🙏</p>
-      `));
+      `,
+        ),
+      );
     }
   }
 
-  res.send(buildFormHtml(phone, { category, subCategory, district, assembly, bizName, ownerName }));
+  res.send(
+    buildFormHtml(phone, {
+      category,
+      subCategory,
+      district,
+      assembly,
+      bizName,
+      ownerName,
+    }),
+  );
 });
 
 /* ── Handle form submission ── */
-router.post('/register', uploadFields, async (req, res) => {
+router.post("/register", uploadFields, async (req, res) => {
   try {
-    const { name, category, subCategory, description, district, assembly, address,
-            phone, whatsappNo, landline, ownerPhone, ownerName, phone2, email, website, landmark,
-            serviceLocations, city, pincode, openTime, closeTime, lat, lng,
-            fbLink, twitterLink, instaLink, googleMap, videoUrl, infoQuestion, infoAnswer,
-            service1Name, service1Price, service1Detail,
-            service2Name, service2Price, service2Detail,
-            service3Name, service3Price, service3Detail,
-            service4Name, service4Price, service4Detail,
-            service5Name, service5Price, service5Detail,
-            service6Name, service6Price, service6Detail } = req.body;
+    const {
+      name,
+      category,
+      subCategory,
+      description,
+      district,
+      assembly,
+      address,
+      phone,
+      whatsappNo,
+      landline,
+      ownerPhone,
+      ownerName,
+      phone2,
+      email,
+      website,
+      landmark,
+      serviceLocations,
+      city,
+      pincode,
+      openTime,
+      closeTime,
+      lat,
+      lng,
+      fbLink,
+      twitterLink,
+      instaLink,
+      googleMap,
+      videoUrl,
+      infoQuestion,
+      infoAnswer,
+      service1Name,
+      service1Price,
+      service1Detail,
+      service2Name,
+      service2Price,
+      service2Detail,
+      service3Name,
+      service3Price,
+      service3Detail,
+      service4Name,
+      service4Price,
+      service4Detail,
+      service5Name,
+      service5Price,
+      service5Detail,
+      service6Name,
+      service6Price,
+      service6Detail,
+    } = req.body;
 
     if (!name || !address) {
-      return res.status(400).setHeader('Content-Type', 'text/html').send(
-        pageShell('Missing Fields', `<div class="icon">⚠️</div><h1>Missing Required Fields</h1><p>Please go back and fill in Business Name and Address.</p><a href="javascript:history.back()" class="btn">Go Back</a>`)
-      );
+      return res
+        .status(400)
+        .setHeader("Content-Type", "text/html")
+        .send(
+          pageShell(
+            "Missing Fields",
+            `<div class="icon">⚠️</div><h1>Missing Required Fields</h1><p>Please go back and fill in Business Name and Address.</p><a href="javascript:history.back()" class="btn">Go Back</a>`,
+          ),
+        );
     }
 
     /* openDays checkboxes come as array or single string */
     const rawDays = req.body.openDays;
-    const openDays = Array.isArray(rawDays) ? rawDays.join(',') : (rawDays || '');
+    const openDays = Array.isArray(rawDays) ? rawDays.join(",") : rawDays || "";
 
     const doc = {
-      name:             name.trim(),
-      category:         (category || '').trim(),
-      subCategory:      (subCategory || '').trim(),
-      description:      (description || '').trim(),
-      district:         (district || '').trim(),
-      assembly:         (assembly || '').trim(),
-      address:          (address || '').trim(),
-      landmark:         (landmark || '').trim(),
-      serviceLocations: (serviceLocations || '').trim(),
-      city:             (city || '').trim(),
-      pincode:          (pincode || '').trim(),
-      phone:            (phone || '').trim(),
-      whatsappNo:       (whatsappNo || '').trim(),
-      landline:         (landline || '').trim(),
-      phone2:           (phone2 || '').trim(),
-      email:            (email || '').trim(),
-      website:          (website || '').trim(),
-      fbLink:           (fbLink || '').trim(),
-      twitterLink:      (twitterLink || '').trim(),
-      instaLink:        (instaLink || '').trim(),
-      googleMap:        (googleMap || '').trim(),
-      videoUrl:         (videoUrl || '').trim(),
+      name: name.trim(),
+      category: (category || "").trim(),
+      subCategory: (subCategory || "").trim(),
+      description: (description || "").trim(),
+      district: (district || "").trim(),
+      assembly: (assembly || "").trim(),
+      address: (address || "").trim(),
+      landmark: (landmark || "").trim(),
+      serviceLocations: (serviceLocations || "").trim(),
+      city: (city || "").trim(),
+      pincode: (pincode || "").trim(),
+      phone: (phone || "").trim(),
+      whatsappNo: (whatsappNo || "").trim(),
+      landline: (landline || "").trim(),
+      phone2: (phone2 || "").trim(),
+      email: (email || "").trim(),
+      website: (website || "").trim(),
+      fbLink: (fbLink || "").trim(),
+      twitterLink: (twitterLink || "").trim(),
+      instaLink: (instaLink || "").trim(),
+      googleMap: (googleMap || "").trim(),
+      videoUrl: (videoUrl || "").trim(),
       openDays,
-      openTime:         (openTime || '').trim(),
-      closeTime:        (closeTime || '').trim(),
-      lat:              (lat || '').trim(),
-      lng:              (lng || '').trim(),
-      infoQuestion:     (infoQuestion || '').trim(),
-      infoAnswer:       (infoAnswer || '').trim(),
-      ownerPhone:       (ownerPhone || '').trim(),
-      ownerName:        String(ownerName  || '').trim(),
-      active:           true,
+      openTime: (openTime || "").trim(),
+      closeTime: (closeTime || "").trim(),
+      lat: (lat || "").trim(),
+      lng: (lng || "").trim(),
+      infoQuestion: (infoQuestion || "").trim(),
+      infoAnswer: (infoAnswer || "").trim(),
+      ownerPhone: (ownerPhone || "").trim(),
+      ownerName: String(ownerName || "").trim(),
+      active: true,
     };
 
     /* ── Profile image ── */
-    if (req.body.croppedImage && req.body.croppedImage.startsWith('data:image')) {
-      const base64Data = req.body.croppedImage.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
-      const result = await memberUpload(buffer, { phone: doc.ownerPhone, subfolder: 'business' });
+    if (
+      req.body.croppedImage &&
+      req.body.croppedImage.startsWith("data:image")
+    ) {
+      const base64Data = req.body.croppedImage.replace(
+        /^data:image\/\w+;base64,/,
+        "",
+      );
+      const buffer = Buffer.from(base64Data, "base64");
+      const result = await memberUpload(buffer, {
+        phone: doc.ownerPhone,
+        subfolder: "business",
+      });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
     } else if (req.files?.image?.[0]) {
-      const result = await memberUpload(req.files.image[0].buffer, { phone: doc.ownerPhone, subfolder: 'business' });
+      const result = await memberUpload(req.files.image[0].buffer, {
+        phone: doc.ownerPhone,
+        subfolder: "business",
+      });
       doc.image = result.secure_url;
       doc.imagePublicId = result.public_id;
     }
 
     /* ── Cover image ── */
     if (req.files?.coverImage?.[0]) {
-      const result = await memberUpload(req.files.coverImage[0].buffer, { phone: doc.ownerPhone, subfolder: 'business/cover' });
+      const result = await memberUpload(req.files.coverImage[0].buffer, {
+        phone: doc.ownerPhone,
+        subfolder: "business/cover",
+      });
       doc.coverImage = result.secure_url;
       doc.coverImagePublicId = result.public_id;
     }
@@ -131,28 +214,64 @@ router.post('/register', uploadFields, async (req, res) => {
     if (req.files?.galleryImages?.length) {
       doc.galleryImages = await Promise.all(
         req.files.galleryImages.map(async (f) => {
-          const r = await memberUpload(f.buffer, { phone: doc.ownerPhone, subfolder: 'business/gallery' });
+          const r = await memberUpload(f.buffer, {
+            phone: doc.ownerPhone,
+            subfolder: "business/gallery",
+          });
           return { url: r.secure_url, publicId: r.public_id };
-        })
+        }),
       );
     }
 
     /* ── Services ── */
-    const svcNames   = [service1Name,service2Name,service3Name,service4Name,service5Name,service6Name];
-    const svcPrices  = [service1Price,service2Price,service3Price,service4Price,service5Price,service6Price];
-    const svcDetails = [service1Detail,service2Detail,service3Detail,service4Detail,service5Detail,service6Detail];
+    const svcNames = [
+      service1Name,
+      service2Name,
+      service3Name,
+      service4Name,
+      service5Name,
+      service6Name,
+    ];
+    const svcPrices = [
+      service1Price,
+      service2Price,
+      service3Price,
+      service4Price,
+      service5Price,
+      service6Price,
+    ];
+    const svcDetails = [
+      service1Detail,
+      service2Detail,
+      service3Detail,
+      service4Detail,
+      service5Detail,
+      service6Detail,
+    ];
     const services = [];
     for (let i = 0; i < 6; i++) {
-      const n = (svcNames[i] || '').trim();
-      const p = (svcPrices[i] || '').trim();
-      const d = (svcDetails[i] || '').trim();
-      let img = '', imgId = '';
+      const n = (svcNames[i] || "").trim();
+      const p = (svcPrices[i] || "").trim();
+      const d = (svcDetails[i] || "").trim();
+      let img = "",
+        imgId = "";
       const imgFile = req.files?.[`service${i + 1}Image`]?.[0];
       if (imgFile) {
-        const r = await memberUpload(imgFile.buffer, { phone: doc.ownerPhone, subfolder: 'business/services' });
-        img = r.secure_url; imgId = r.public_id;
+        const r = await memberUpload(imgFile.buffer, {
+          phone: doc.ownerPhone,
+          subfolder: "business/services",
+        });
+        img = r.secure_url;
+        imgId = r.public_id;
       }
-      if (n || p || d || img) services.push({ name: n, price: p, detail: d, image: img, imagePublicId: imgId });
+      if (n || p || d || img)
+        services.push({
+          name: n,
+          price: p,
+          detail: d,
+          image: img,
+          imagePublicId: imgId,
+        });
     }
     if (services.length) doc.services = services;
 
@@ -160,27 +279,45 @@ router.post('/register', uploadFields, async (req, res) => {
     await Business.create(doc);
 
     if (doc.ownerPhone) {
-      meta.sendText(
-        doc.ownerPhone,
-        `✅ *${doc.name}* is now live on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nPlease set your 4-digit security PIN at the registration link to manage your listing.\n\nThank you 🙏`
-      ).catch(() => {});
+      meta
+        .sendText(
+          doc.ownerPhone,
+          `✅ *${doc.name}* is now live on Vanigan!\n\n📋 Your Listing Code: *${doc.listingCode}*\n\nPlease set your 4-digit security PIN at the registration link to manage your listing.\n\nThank you 🙏`,
+        )
+        .catch(() => {});
     }
 
     /* ── Show PIN setup page ── */
-    res.setHeader('Content-Type', 'text/html').send(
-      buildPinSetupHtml({ name: doc.name, listingCode: doc.listingCode, ownerPhone: doc.ownerPhone || '' })
-    );
+    res
+      .setHeader("Content-Type", "text/html")
+      .send(
+        buildPinSetupHtml({
+          name: doc.name,
+          listingCode: doc.listingCode,
+          ownerPhone: doc.ownerPhone || "",
+        }),
+      );
   } catch (err) {
-    console.error('[publicRegister] error:', err.message);
-    res.status(500).setHeader('Content-Type', 'text/html').send(
-      pageShell('Error', `<div class="icon">❌</div><h1>Something went wrong</h1><p>${escHtml(err.message)}</p><a href="javascript:history.back()" class="btn">Go Back</a>`)
-    );
+    console.error("[publicRegister] error:", err.message);
+    res
+      .status(500)
+      .setHeader("Content-Type", "text/html")
+      .send(
+        pageShell(
+          "Error",
+          `<div class="icon">❌</div><h1>Something went wrong</h1><p>${escHtml(err.message)}</p><a href="javascript:history.back()" class="btn">Go Back</a>`,
+        ),
+      );
   }
 });
 
 /* ── Helpers ── */
 function escHtml(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function pageShell(title, bodyContent) {
@@ -273,46 +410,109 @@ function pageShell(title, bodyContent) {
 }
 
 function buildFormHtml(phone, prefill = {}) {
-  const { category = '', subCategory = '', bizName = '', ownerName = '' } = prefill;
-  const rawDistrict = prefill.district || '';
-  const rawAssembly = prefill.assembly || '';
-  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+  const {
+    category = "",
+    subCategory = "",
+    bizName = "",
+    ownerName = "",
+  } = prefill;
+  const rawDistrict = prefill.district || "";
+  const rawAssembly = prefill.assembly || "";
+  const backendUrl = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
 
   /* ── Normalise district to match tn-districts.json casing ── */
   const allDistricts = districts.getDistricts();
   const district = rawDistrict
-    ? (allDistricts.find(d => d.toLowerCase() === rawDistrict.toLowerCase()) || rawDistrict)
-    : '';
+    ? allDistricts.find((d) => d.toLowerCase() === rawDistrict.toLowerCase()) ||
+      rawDistrict
+    : "";
 
   /* ── Normalise assembly casing against the actual list for this district ── */
-  const assembliesForDistrict = district ? districts.getAssemblies(district) : [];
+  const assembliesForDistrict = district
+    ? districts.getAssemblies(district)
+    : [];
   const assembly = rawAssembly
-    ? (assembliesForDistrict.find(a => a.toLowerCase() === rawAssembly.toLowerCase()) || rawAssembly)
-    : '';
+    ? assembliesForDistrict.find(
+        (a) => a.toLowerCase() === rawAssembly.toLowerCase(),
+      ) || rawAssembly
+    : "";
 
   /* ── Server-side render: category options with selected ── */
-  const ALL_CATEGORIES = ['Hospitals & Clinics','Transport','Electricals & Electronics','Education','Sports','Real Estate','Spa & Beauty','Digital & IT Products','Hire Services','Automobile','B2B Services','Banquets & Event Halls','Bills & Recharge','Caterers','Civil Contractors','Daily Needs','Doctors','Jobs','Jewellery','Labs & Diagnostics','Banking & Finance','Packers & Movers','Wedding Services','Hotels & Restaurants','Repairs','IT & Software','Construction Materials','Pest Control','Agriculture','Printing Services','Textiles & Garments','Travel & Tourism','Home Appliances','Demand Services','Religious','Organic Products','Advertising','Insurance','Advocate & Legal','Courier Services'];
-  const categoryOptionsHtml = ALL_CATEGORIES
-    .map(c => `<option value="${escHtml(c)}"${c === category ? ' selected' : ''}>${escHtml(c)}</option>`)
-    .join('');
+  const ALL_CATEGORIES = [
+    "Hospitals & Clinics",
+    "Transport",
+    "Electricals & Electronics",
+    "Education",
+    "Sports",
+    "Real Estate",
+    "Spa & Beauty",
+    "Digital & IT Products",
+    "Hire Services",
+    "Automobile",
+    "B2B Services",
+    "Banquets & Event Halls",
+    "Bills & Recharge",
+    "Caterers",
+    "Civil Contractors",
+    "Daily Needs",
+    "Doctors",
+    "Jobs",
+    "Jewellery",
+    "Labs & Diagnostics",
+    "Banking & Finance",
+    "Packers & Movers",
+    "Wedding Services",
+    "Hotels & Restaurants",
+    "Repairs",
+    "IT & Software",
+    "Construction Materials",
+    "Pest Control",
+    "Agriculture",
+    "Printing Services",
+    "Textiles & Garments",
+    "Travel & Tourism",
+    "Home Appliances",
+    "Demand Services",
+    "Religious",
+    "Organic Products",
+    "Advertising",
+    "Insurance",
+    "Advocate & Legal",
+    "Courier Services",
+  ];
+  const categoryOptionsHtml = ALL_CATEGORIES.map(
+    (c) =>
+      `<option value="${escHtml(c)}"${c === category ? " selected" : ""}>${escHtml(c)}</option>`,
+  ).join("");
 
   /* ── Server-side render: sub-category options ── */
-  const subCatsForCategory = (SUB_CATEGORIES[category] || []);
+  const subCatsForCategory = SUB_CATEGORIES[category] || [];
   const subCategoryOptionsHtml = subCatsForCategory
-    .map(s => `<option value="${escHtml(s)}"${s === subCategory ? ' selected' : ''}>${escHtml(s)}</option>`)
-    .join('');
+    .map(
+      (s) =>
+        `<option value="${escHtml(s)}"${s === subCategory ? " selected" : ""}>${escHtml(s)}</option>`,
+    )
+    .join("");
   const showSubCatWrap = subCatsForCategory.length > 0;
 
   /* ── Server-side render: district options ── */
   const districtOptionsHtml = allDistricts
-    .map(d => `<option value="${escHtml(d)}"${d === district ? ' selected' : ''}>${escHtml(d)}</option>`)
-    .join('');
+    .map(
+      (d) =>
+        `<option value="${escHtml(d)}"${d === district ? " selected" : ""}>${escHtml(d)}</option>`,
+    )
+    .join("");
 
   /* ── Server-side render: assembly options for pre-selected district ── */
   const assemblyOptionsHtml = assembliesForDistrict.length
-    ? assembliesForDistrict.map(a => `<option value="${escHtml(a)}"${a === assembly ? ' selected' : ''}>${escHtml(a)}</option>`).join('')
-    : '';
-    return `<!DOCTYPE html>
+    ? assembliesForDistrict
+        .map(
+          (a) =>
+            `<option value="${escHtml(a)}"${a === assembly ? " selected" : ""}>${escHtml(a)}</option>`,
+        )
+        .join("")
+    : "";
+  return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
@@ -364,16 +564,16 @@ function buildFormHtml(phone, prefill = {}) {
     .header{text-align: center; margin-bottom: 24px}
     .header h1{font-family: var(--font-sans); font-size: 2.2rem; font-weight: 700; color: var(--charcoal-black); letter-spacing: -0.02em}
     .header p{font-size: .95rem; color: var(--text-muted); margin-top: 6px;}
-    
+
     .card{
-      background: var(--card-bg); 
-      border: 1px solid var(--card-border); 
-      border-radius: 12px; 
-      box-shadow: none; 
-      padding: 36px 32px; 
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: none;
+      padding: 36px 32px;
       margin-bottom: 24px;
     }
-    
+
     .card-header {
       margin-bottom: 24px;
       text-align: left;
@@ -401,19 +601,19 @@ function buildFormHtml(phone, prefill = {}) {
       color: var(--text-muted);
       margin: 0;
     }
-    
+
     label{display: block; font-size: 11px; font-weight: 600; color: var(--charcoal-black); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px}
     .req{color: #ef4444}
-    
+
     input,select,textarea{
-      width: 100%; 
-      border: 1px solid var(--input-border); 
-      border-radius: 12px; 
-      padding: 10px 14px; 
-      font-size: .9rem; 
-      outline: none; 
-      background-color: var(--input-bg); 
-      color: var(--text-main); 
+      width: 100%;
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: .9rem;
+      outline: none;
+      background-color: var(--input-bg);
+      color: var(--text-main);
       transition: border-color .15s ease;
       font-family: var(--font-sans);
     }
@@ -425,7 +625,7 @@ function buildFormHtml(phone, prefill = {}) {
       .card { padding: 24px 16px; margin-bottom: 16px; }
     }
     .field{margin-bottom: 18px}
-    
+
     select{
       appearance: none;
       -webkit-appearance: none;
@@ -440,7 +640,7 @@ function buildFormHtml(phone, prefill = {}) {
       background-color: var(--card-bg);
       color: var(--text-main);
     }
-    
+
     #locBtn {
       background: none;
       border: none;
@@ -455,23 +655,23 @@ function buildFormHtml(phone, prefill = {}) {
     #locBtn:hover {
       opacity: 0.8;
     }
-    
+
     .img-upload-btn {
-      width: 100%; 
-      border: 1px dashed var(--input-border); 
-      border-radius: 12px; 
-      padding: 20px; 
-      text-align: center; 
-      font-size: .85rem; 
-      color: var(--text-muted); 
-      cursor: pointer; 
-      transition: all .2s; 
+      width: 100%;
+      border: 1px dashed var(--input-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .2s;
       background: rgba(0,0,0,0.01);
       font-family: var(--font-sans);
       font-weight: 500;
     }
     .img-upload-btn:hover{border-color: var(--accent-color); color: var(--accent-color); background: rgba(11,116,67,0.03)}
-    
+
     .crop-modal{display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 16px}
     .crop-modal.active{display: flex}
     .crop-box{background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; box-shadow: none}
@@ -484,20 +684,20 @@ function buildFormHtml(phone, prefill = {}) {
     .btn-crop:hover{opacity: 0.9}
     .btn-cancel{background: transparent; color: var(--text-main); border: 1px solid var(--input-border)}
     .btn-cancel:hover{background: var(--bg-color)}
-    
+
     .preview-wrap{display: none; margin-bottom: 10px}
     .preview-wrap img{width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 12px}
 
     .submit-btn {
-      width: 100%; 
-      background: var(--accent-color); 
-      color: #ffffff; 
-      font-weight: 600; 
-      padding: 12px 24px; 
-      border-radius: 12px; 
-      border: none; 
-      font-size: 0.95rem; 
-      cursor: pointer; 
+      width: 100%;
+      background: var(--accent-color);
+      color: #ffffff;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
       transition: opacity 0.2s ease;
       font-family: var(--font-sans);
     }
@@ -510,19 +710,19 @@ function buildFormHtml(phone, prefill = {}) {
     .img-thumb{width: 64px; height: 64px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border)}
     .gallery-preview{display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px}
     .gallery-preview img{width: 64px; height: 64px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border)}
-    
+
     .add-dyn-btn{
-      width: 100%; 
-      padding: 11px; 
-      background: transparent; 
-      color: var(--accent-color); 
-      border: 1px dashed var(--input-border); 
-      border-radius: 12px; 
-      font-size: .85rem; 
-      font-weight: 600; 
-      cursor: pointer; 
-      margin: 8px 0 20px; 
-      text-align: center; 
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: var(--accent-color);
+      border: 1px dashed var(--input-border);
+      border-radius: 12px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 8px 0 20px;
+      text-align: center;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -530,7 +730,7 @@ function buildFormHtml(phone, prefill = {}) {
       transition: all 0.2s;
     }
     .add-dyn-btn:hover{background: rgba(11,116,67,0.03); border-color: var(--accent-color)}
-    
+
     .social-item{display: flex; align-items: center; gap: 8px; margin-bottom: 10px}
     .social-item .s-label{font-size: 10px; font-weight: 800; color: var(--text-muted); width: 110px; min-width: 110px; text-transform: uppercase; letter-spacing: 0.05em}
     .social-item input{flex: 1; margin: 0}
@@ -538,7 +738,7 @@ function buildFormHtml(phone, prefill = {}) {
     .social-item .rm-btn:hover{transform: scale(1.15)}
     .svc-num{font-size: 10px; font-weight: 700; color: var(--charcoal-black); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: center}
     .svc-rm{background: none; border: none; color: #ef4444; font-size: 10px; font-weight: 700; cursor: pointer; padding: 0; text-transform: uppercase; letter-spacing: 0.05em}
-    
+
     #daysWrap{display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px}
     #daysWrap label {
       display: inline-flex !important;
@@ -584,18 +784,22 @@ function buildFormHtml(phone, prefill = {}) {
     <input type="hidden" name="ownerPhone" value="${escHtml(phone)}">
     <input type="hidden" name="ownerName"  value="${escHtml(ownerName)}">
 
-    ${ownerName || district ? `
+    ${
+      ownerName || district
+        ? `
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-family:inherit">
       <div style="font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✅ Member Details Pre-filled</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:13px;color:#374151">
-        ${ownerName ? `<div>👤 <strong>Name:</strong> ${escHtml(ownerName)}</div>` : ''}
-        ${phone     ? `<div>📱 <strong>Phone:</strong> ${escHtml(phone)}</div>` : ''}
-        ${district  ? `<div>📍 <strong>District:</strong> ${escHtml(district)}</div>` : ''}
-        ${assembly  ? `<div>🏛 <strong>Assembly:</strong> ${escHtml(assembly)}</div>` : ''}
-        ${bizName   ? `<div>🏪 <strong>Business:</strong> ${escHtml(bizName)}</div>` : ''}
+        ${ownerName ? `<div>👤 <strong>Name:</strong> ${escHtml(ownerName)}</div>` : ""}
+        ${phone ? `<div>📱 <strong>Phone:</strong> ${escHtml(phone)}</div>` : ""}
+        ${district ? `<div>📍 <strong>District:</strong> ${escHtml(district)}</div>` : ""}
+        ${assembly ? `<div>🏛 <strong>Assembly:</strong> ${escHtml(assembly)}</div>` : ""}
+        ${bizName ? `<div>🏪 <strong>Business:</strong> ${escHtml(bizName)}</div>` : ""}
       </div>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     <!-- Card 1: Basic Information -->
     <div class="card">
       <div class="card-header">
@@ -607,7 +811,7 @@ function buildFormHtml(phone, prefill = {}) {
       <div class="field">
         <label>Business Name <span class="req">*</span></label>
         <input type="text" name="name" required placeholder="e.g. Sri Lakshmi Stores" value="${escHtml(bizName)}">
-        ${bizName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your signup — you can edit this</p>' : ''}
+        ${bizName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your signup — you can edit this</p>' : ""}
       </div>
 
       <div class="row field">
@@ -618,7 +822,7 @@ function buildFormHtml(phone, prefill = {}) {
             ${categoryOptionsHtml}
           </select>
         </div>
-        <div id="subCatWrap" style="${showSubCatWrap ? '' : 'display:none'}">
+        <div id="subCatWrap" style="${showSubCatWrap ? "" : "display:none"}">
           <label>Sub-Category</label>
           <select id="subCatSel" name="subCategory">
             <option value="">— Select Sub-Category —</option>
@@ -645,21 +849,21 @@ function buildFormHtml(phone, prefill = {}) {
         <div>
           <label>District <span class="req">*</span></label>
           <select name="district" id="districtSel" required
-            ${district ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ''}>
+            ${district ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ""}>
             <option value="">— Select District —</option>
             ${districtOptionsHtml}
           </select>
-          ${district ? `<input type="hidden" name="district" value="${escHtml(district)}">` : ''}
+          ${district ? `<input type="hidden" name="district" value="${escHtml(district)}">` : ""}
         </div>
         <div>
           <label>Assembly <span class="req">*</span></label>
           <select name="assembly" id="assemblySel" required
-            ${assembly ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ''}>
+            ${assembly ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" disabled' : ""}>
             <option value="">Select district first</option>
             ${assemblyOptionsHtml}
           </select>
-          ${assembly ? `<input type="hidden" name="assembly" value="${escHtml(assembly)}">` : ''}
-          ${district && assembly ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ''}
+          ${assembly ? `<input type="hidden" name="assembly" value="${escHtml(assembly)}">` : ""}
+          ${district && assembly ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ""}
         </div>
       </div>
 
@@ -708,8 +912,8 @@ function buildFormHtml(phone, prefill = {}) {
         <label>Business Person / Owner Name <span class="req">*</span></label>
         <input type="text" name="ownerName" value="${escHtml(ownerName)}"
           placeholder="Owner or contact person name" required
-          ${ownerName ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" readonly' : ''}>
-        ${ownerName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ''}
+          ${ownerName ? 'style="background:var(--bg-color);color:var(--text-muted);border-color:var(--input-border);" readonly' : ""}>
+        ${ownerName ? '<p style="font-size:.75rem;color:#6b7280;margin-top:3px">✅ Auto-filled from your membership profile</p>' : ""}
       </div>
 
       <div class="field">
@@ -767,10 +971,14 @@ function buildFormHtml(phone, prefill = {}) {
       <div class="field">
         <label>Opening Days</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="daysWrap">
-          ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d =>
-            `<label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:.85rem;cursor:pointer">
+          ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            .map(
+              (d) =>
+                `<label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:.85rem;cursor:pointer">
               <input type="checkbox" name="openDays" value="${d}" style="width:auto;border:none;padding:0"> ${d}
-            </label>`).join('')}
+            </label>`,
+            )
+            .join("")}
         </div>
       </div>
 
@@ -1299,11 +1507,12 @@ if (regForm) {
 
 /* ── PIN Setup Page (shown after registration) ── */
 function buildPinSetupHtml({ name, listingCode, ownerPhone }) {
-  const backendUrl  = (process.env.BACKEND_URL  || '').replace(/\/+$/, '');
-  // Use the first origin from FRONTEND_URL as the user website base
-  const frontendUrl = (process.env.FRONTEND_URL || '').split(',')[0].trim().replace(/\/+$/, '');
-  // User-facing website (member portal)
-  const userWebsiteUrl = 'https://vanigan-app-automation-k3eb.vercel.app';
+  const backendUrl = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
+  // User-facing website (member portal) — set USER_WEBSITE_URL in backend .env
+  const userWebsiteUrl = (process.env.USER_WEBSITE_URL || "").replace(
+    /\/+$/,
+    "",
+  );
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
