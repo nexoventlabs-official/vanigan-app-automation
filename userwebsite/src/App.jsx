@@ -15,6 +15,8 @@ import Profile from "./pages/Profile.jsx";
 import MemberList from "./pages/MemberList.jsx";
 import OrganizerList from "./pages/OrganizerList.jsx";
 import VerifyCard from "./pages/VerifyCard.jsx";
+import TermsAndConditions from "./pages/TermsAndConditions.jsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 export const NavCtx = createContext(null);
@@ -45,6 +47,8 @@ export default function App() {
           "profile",
           "members",
           "organizers",
+          "terms",
+          "privacy",
         ].includes(p)
       ) {
         return { name: p, params: {} };
@@ -89,6 +93,8 @@ export default function App() {
     members: <MemberList />,
     organizers: <OrganizerList />,
     verify: <VerifyCard params={page.params} />,
+    terms: <TermsAndConditions />,
+    privacy: <PrivacyPolicy />,
   };
 
   return (

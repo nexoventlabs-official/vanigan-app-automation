@@ -1,4 +1,4 @@
-import { Headphones, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { useNav } from '../App.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -40,37 +40,6 @@ export default function Footer() {
               VANIGAN
             </h2>
             
-            {/* Customer Support */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 8px' }}>
-              <div style={{
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                border: '1px solid var(--color-subtle-ash)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-rich-black)',
-                background: 'var(--color-canvas-white)',
-                flexShrink: 0
-              }}>
-                <Headphones size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--color-cool-gray)', fontWeight: 500 }}>
-                  24x7 Customer Support
-                </div>
-                <a href="tel:+918680085737" style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--color-rich-black)',
-                  textDecoration: 'none',
-                  transition: 'color .2s'
-                }} className="footer-tel">
-                  +91 8680085737
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Address */}
@@ -87,9 +56,9 @@ export default function Footer() {
               Address
             </h4>
             <p style={{ color: 'var(--color-cool-gray)', lineHeight: 1.6, maxWidth: 300 }}>
-              26N, Bharathi Nagar, Near Palayapudur,<br />
-              Periyanaickenpalayam, Coimbatore,<br />
-              Tamil Nadu - 641020
+              5/79, Perumal Koil Street,<br />
+              Sadanandapuram, Thandalam,<br />
+              Tamil Nadu 600128
             </p>
           </div>
         </div>
@@ -111,8 +80,8 @@ export default function Footer() {
           <ul className="footer-links">
             <li><button onClick={() => go('home')}>Directory Policy</button></li>
             <li><button onClick={() => go('home')}>Returns & Refunds</button></li>
-            <li><button onClick={() => go('home')}>Terms & Conditions</button></li>
-            <li><button onClick={() => go('home')}>Privacy Policy</button></li>
+            <li><button onClick={() => go('terms')}>Terms & Conditions</button></li>
+            <li><button onClick={() => go('privacy')}>Privacy Policy</button></li>
           </ul>
         </div>
 
