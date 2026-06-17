@@ -21,9 +21,11 @@ const Business = require('../models/Business');
 const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const CategoryImage   = require('../models/CategoryImage');
-const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
+const { getOrganizerModel, getMemberListingModel, getMemberModel } = require('../services/memberDb');
 const { findSeedBusinesses, findSeedBusinessById, findSeedOrganizers, findSeedOrganizerById } = require('../services/seedDb');
 const SUB_CATEGORIES  = require('../utils/subCategories');
+const { getZoneByDistrict, calculateAge } = require('../utils/zoneData');
+const crypto_mod = require('crypto');
 
 const router = express.Router();
 
@@ -202,43 +204,33 @@ function kindBannerKey(kind) {
 }
 
 async function buildServiceList(images, phone = '') {
-  // Check if this phone already has a registered business (any status)
   let hasBusiness = false;
+  let isMember = false;
   if (phone) {
+    try { hasBusiness = !!(await Business.findOne({ ownerPhone: phone }).select('_id').lean()); } catch {}
     try {
-      hasBusiness = !!(await Business.findOne({ ownerPhone: phone }).select('_id').lean());
-    } catch { hasBusiness = false; }
+      const VM = await getMemberModel();
+      isMember = !!(await VM.findOne({ phone }).select('_id').lean());
+    } catch {}
   }
 
   const list = [
-    withImage(
-      { id: 'business', title: 'Business List', description: 'Local businesses by district' },
-      images.icon_business_list
-    ),
-    withImage(
-      { id: 'organizer', title: 'Organizer List', description: 'Community organizers' },
-      images.icon_organizer_list
-    ),
-    withImage(
-      { id: 'member', title: 'Members List', description: 'Vanigan members directory' },
-      images.icon_member_list
-    ),
+    withImage({ id: 'business',  title: 'Business List',  description: 'Local businesses by district' }, images.icon_business_list),
+    withImage({ id: 'organizer', title: 'Organizer List', description: 'Community organizers' },         images.icon_organizer_list),
+    withImage({ id: 'member',    title: 'Members List',   description: 'Vanigan members directory' },    images.icon_member_list),
   ];
 
-  // Only show "Add Your Business" if the user hasn't registered one yet
-  if (!hasBusiness) {
-    list.push(withImage(
-      { id: 'add_business', title: 'Add Your Business', description: 'Register your business' },
-      images.icon_add_business
-    ));
-  }
-
-  // Only show "My Business" if the user already has a registered business
-  if (hasBusiness) {
-    list.push(withImage(
-      { id: 'my_business', title: 'My Business', description: 'View your listings' },
-      images.icon_my_business
-    ));
+  if (!isMember) {
+    // Not a member yet — show "Become a Member", hide Add Business
+    list.push(withImage({ id: 'become_member', title: 'Become a Member', description: 'Get your Vanigan membership card' }, images.icon_member_list));
+  } else {
+    // Already a member — show card + business options
+    list.push(withImage({ id: 'my_card', title: 'My Membership Card', description: 'View & share your member card' }, images.icon_member_list));
+    if (!hasBusiness) {
+      list.push(withImage({ id: 'add_business', title: 'Add Your Business', description: 'Register your business' }, images.icon_add_business));
+    } else {
+      list.push(withImage({ id: 'my_business', title: 'My Business', description: 'View your listings' }, images.icon_my_business));
+    }
   }
 
   return list;
@@ -453,7 +445,7 @@ router.post('/', async (req, res) => {
     dbg('RESPONSE', { screen: response?.screen, dataKeys: Object.keys(response?.data || {}) });
     return sendResponse(res, response, aesKeyBuffer, ivBuffer);
   } catch (err) {
-    dbg('HANDLER_ERROR', { message: err.message, stack: err.stack });
+    console.error('[FlowEndpoint] HANDLER_ERROR:', err.message, err.stack?.split('\n')[1]);
     const fallback = {
       screen: 'INFO',
       data: {
@@ -499,6 +491,35 @@ async function handleDataExchange({ screen, data, flow_token }) {
   // ─── From SERVICE_SELECT — route to next screen ───
   if (screen === 'SERVICE_SELECT') {
     const sel = data?.selected_service;
+
+    if (sel === 'become_member') {
+      const bannerUrl = images.flow_welcome_banner || '';
+      return {
+        screen: 'EPIC_LOOKUP',
+        data: {
+          screen_banner:     bannerUrl,
+          has_screen_banner: !!bannerUrl,
+        },
+      };
+    }
+
+    if (sel === 'my_card') {
+      // Store pending action so webhook sends card after nfm_reply
+      if (phone) {
+        await User.findOneAndUpdate(
+          { phone },
+          { $set: { pendingAction: 'my_card' } },
+          { upsert: true }
+        ).catch(() => {});
+      }
+      return {
+        screen: 'INFO',
+        data: {
+          info_title: '🪪 Membership Card',
+          info_body: 'Your membership card is being generated and will be sent to you on WhatsApp in a moment. 🙏',
+        },
+      };
+    }
 
     if (sel === 'add_business') {
       // Save pendingAction — webhook will send the CTA after nfm_reply from ADD_BUSINESS screen
@@ -1021,7 +1042,93 @@ async function handleDataExchange({ screen, data, flow_token }) {
     };
   }
 
-  // Fallback
+  // ─── EPIC_LOOKUP → look up voter DB, return VOTER_CONFIRM ───
+  if (screen === 'EPIC_LOOKUP') {
+    const epicNo = String(data?.epic_no || '').toUpperCase().trim();
+    if (!epicNo) {
+      return { screen: 'INFO', data: { info_title: 'EPIC Required', info_body: 'Please enter a valid Voter ID number.' } };
+    }
+
+    // Check if already a member
+    const VM = await getMemberModel();
+    const existingMember = await VM.findOne({ phone }).select('_id').lean().catch(() => null);
+    if (existingMember) {
+      if (phone) await User.findOneAndUpdate({ phone }, { $set: { pendingAction: 'my_card' } }, { upsert: true }).catch(() => {});
+      return { screen: 'INFO', data: { info_title: '✅ Already a Member', info_body: 'You are already a Vanigan member! Your membership card will be sent to you on WhatsApp.' } };
+    }
+
+    // Look up voter DB
+    const { findByEpicNo } = require('../services/voterDb');
+    const voter = await findByEpicNo(epicNo).catch(() => null);
+
+    if (!voter) {
+      return {
+        screen: 'INFO',
+        data: {
+          info_title: '❌ Voter ID Not Found',
+          info_body: `We could not find EPIC number *${epicNo}* in the voter database.\n\nPlease check your Voter ID card and try again. Type *hi* to restart.`,
+        },
+      };
+    }
+
+    const bannerUrl = images.flow_welcome_banner || '';
+    // Plain text summary — no emoji, no markdown — safe for Flow TextBody (512 char limit)
+    const summary = [
+      `Name: ${voter.name}`,
+      `EPIC: ${voter.epic_no}`,
+      `Assembly: ${voter.assembly_name} (No. ${voter.assembly_no})`,
+      `District: ${voter.district}`,
+      `Gender: ${voter.gender || 'Not specified'}`,
+      voter.mobile ? `Mobile: ${voter.mobile}` : null,
+    ].filter(Boolean).join('\n');
+
+    const zone = voter.zone || getZoneByDistrict(voter.district) || '';
+
+    return {
+      screen: 'VOTER_CONFIRM',
+      data: {
+        screen_banner:     bannerUrl,
+        has_screen_banner: !!bannerUrl,
+        voter_summary:     summary.substring(0, 500),
+        epic_no:           String(voter.epic_no   || ''),
+        voter_name:        String(voter.name       || ''),
+        voter_district:    String(voter.district   || ''),
+        voter_assembly:    String(voter.assembly_name || ''),
+        voter_assembly_no: String(voter.assembly_no  || ''),
+        voter_gender:      String(voter.gender     || ''),
+        voter_zone:        String(zone),
+      },
+    };
+  }
+
+  // ─── VOTER_CONFIRM → MEMBER_DETAILS ───
+  if (screen === 'VOTER_CONFIRM') {
+    // Accept both 'confirm_voter' action and any data_exchange from VOTER_CONFIRM screen
+    const bannerUrl = images.flow_welcome_banner || '';
+    const zone = String(data?.voter_zone || '') || getZoneByDistrict(String(data?.voter_district || ''));
+    return {
+      screen: 'MEMBER_DETAILS',
+      data: {
+        screen_banner:     bannerUrl,
+        has_screen_banner: !!bannerUrl,
+        epic_no:           String(data?.epic_no           || ''),
+        voter_name:        String(data?.voter_name        || ''),
+        voter_district:    String(data?.voter_district    || ''),
+        voter_assembly:    String(data?.voter_assembly    || ''),
+        voter_assembly_no: String(data?.voter_assembly_no || ''),
+        voter_gender:      String(data?.voter_gender      || ''),
+        voter_zone:        String(zone),
+        blood_group_options: [
+          { id: 'A+', title: 'A+' }, { id: 'A-', title: 'A-' },
+          { id: 'B+', title: 'B+' }, { id: 'B-', title: 'B-' },
+          { id: 'O+', title: 'O+' }, { id: 'O-', title: 'O-' },
+          { id: 'AB+', title: 'AB+' }, { id: 'AB-', title: 'AB-' },
+        ],
+      },
+    };
+  }
+
+  // Fallback — return to main menu
   return {
     screen: 'INFO',
     data: { info_title: 'Vanakkam 🙏', info_body: 'Type *hi* to open the menu again.' },

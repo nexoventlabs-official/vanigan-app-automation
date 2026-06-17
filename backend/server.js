@@ -8,6 +8,7 @@ const compression = require('compression');
 const authRoutes = require('./routes/auth');
 const publicRegisterRoutes = require('./routes/publicRegister');
 const publicBizDirRoutes   = require('./routes/publicBizDir');
+const photoUploadRoutes    = require('./routes/photoUpload');
 const webhookRoutes = require('./routes/webhook');
 const flowEndpointRoutes = require('./routes/flowEndpoint');
 const businessRoutes = require('./routes/businesses');
@@ -43,21 +44,22 @@ if (backendSelf && !allowedOrigins.includes(backendSelf)) {
   allowedOrigins.push(backendSelf);
 }
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      // FIX M10: Do NOT allow null origin (sandboxed iframes exploit vector)
-      if (!origin) return cb(null, true); // same-origin / server-to-server — allow
-      if (origin === 'null') return cb(new Error('CORS blocked: null origin')); // sandboxed iframe — block
-      if (allowedOrigins.includes(origin)) return cb(null, true);
-      if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error('CORS blocked: ' + origin));
-    },
-    credentials: true,
-  })
-);
+// CORS only applies to /api/* routes.
+// /public/* routes serve server-rendered HTML forms (opened directly in browser
+// via WhatsApp links) — those use regular HTML form POSTs, not fetch/XHR, so
+// CORS headers are not needed and the null-origin block must not apply.
+app.use('/api', cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // same-origin / server-to-server — allow
+    if (origin === 'null') return cb(new Error('CORS blocked: null origin')); // sandboxed iframe — block
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+      return cb(null, true);
+    }
+    return cb(new Error('CORS blocked: ' + origin));
+  },
+  credentials: true,
+}));
 
 app.use(
   express.json({
@@ -95,6 +97,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.use('/public', publicRegisterRoutes);
+app.use('/public', photoUploadRoutes);
 app.use('/public/dir', publicBizDirRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/webhook', webhookRoutes);

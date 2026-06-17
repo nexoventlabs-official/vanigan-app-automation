@@ -127,6 +127,12 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       return (d.length === 12 && d.startsWith('91')) ? d.slice(2) : d;
     })();
 
+    // ── Become a Member ──────────────────────────────────────────────────────
+    if (flowPayload.action === 'become_member') {
+      await handleBecomeMember(phone, normalizedPhone, profileName, flowPayload);
+      return;
+    }
+
     // Business directory CTA — flow closed from SELECT_SUBCATEGORY screen
     if (flowPayload.selected_category !== undefined) {
       const {
@@ -162,6 +168,16 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
       phone: { $in: [phone, normalizedPhone] },
     }).lean();
     const action = user?.pendingAction || '';
+
+    // My Card — send membership card image
+    if (action === 'my_card') {
+      await User.updateOne(
+        { phone: { $in: [phone, normalizedPhone] } },
+        { $set: { pendingAction: '' } }
+      );
+      await handleSendMemberCard(phone, normalizedPhone);
+      return;
+    }
 
     // My Business — flow closed from INFO screen after my_business selection
     if (action.startsWith('my_business:')) {
@@ -251,6 +267,153 @@ async function handleNfmReply(phone, profileName, flowPayload = {}) {
     }
   } catch (err) {
     console.error('[webhook] handleNfmReply error:', err.message);
+  }
+}
+
+/* ── Become a Member handler ─────────────────────────────────────────────── */
+async function handleBecomeMember(phone, normalizedPhone, profileName, payload) {
+  const bcrypt = require('bcryptjs');
+  const cryptoN = require('crypto');
+  const { getMemberModel } = require('../services/memberDb');
+  const { getZoneByDistrict, calculateAge } = require('../utils/zoneData');
+  const { generateAndUploadCard } = require('../services/memberCard');
+
+  // 1. Validate PIN
+  const pin = String(payload.pin || '').trim();
+  const confirmPin = String(payload.confirm_pin || '').trim();
+  if (!/^\d{4}$/.test(pin)) {
+    await meta.sendText(phone, '❌ PIN must be exactly 4 digits. Please type *hi* and try again.');
+    return;
+  }
+  if (pin !== confirmPin) {
+    await meta.sendText(phone, '❌ PINs do not match. Please type *hi* and try again.');
+    return;
+  }
+
+  // 2. Extract voter-confirmed data from payload (passed through all screens)
+  const name        = String(payload.voter_name    || profileName || '').trim();
+  const epicNo      = String(payload.epic_no       || '').toUpperCase().trim();
+  const district    = String(payload.voter_district || '').trim();
+  const assemblyName= String(payload.voter_assembly || '').trim();
+  const assemblyNo  = String(payload.voter_assembly_no || '').trim();
+  const gender      = String(payload.voter_gender   || '').trim();
+  const zone        = String(payload.voter_zone     || '') || getZoneByDistrict(district);
+
+  // 3. User-entered fields — DOB from DatePicker comes as Unix ms timestamp or YYYY-MM-DD string
+  const rawDob = String(payload.dob || '').trim();
+  // Convert to DD/MM/YYYY for storage and card display
+  let dob = rawDob;
+  if (rawDob && /^\d{10,13}$/.test(rawDob)) {
+    // Unix timestamp (ms from DatePicker)
+    const ms = rawDob.length === 10 ? parseInt(rawDob) * 1000 : parseInt(rawDob);
+    const dt = new Date(ms);
+    const dd = String(dt.getUTCDate()).padStart(2, '0');
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = dt.getUTCFullYear();
+    dob = `${dd}/${mm}/${yyyy}`;
+  } else if (rawDob && rawDob.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    // ISO date string YYYY-MM-DD
+    const [y, m, d] = rawDob.split('-');
+    dob = `${d}/${m}/${y}`;
+  }
+  const bloodGroup = String(payload.blood_group || '').trim();
+  const address    = String(payload.address    || '').trim();
+  const age        = calculateAge(dob);  // auto-calculated from DOB
+
+  if (!name) {
+    await meta.sendText(phone, '❌ Name is required. Please type *hi* and try again.');
+    return;
+  }
+
+  const VaniganMember = await getMemberModel();
+
+  // 4. Check duplicate
+  const existing = await VaniganMember.findOne({ phone: normalizedPhone }).lean();
+  if (existing) {
+    await handleSendMemberCard(phone, normalizedPhone);
+    return;
+  }
+
+  // 5. Generate membership ID
+  let membershipId;
+  do {
+    membershipId = 'TNVS-' + cryptoN.randomBytes(4).toString('hex').toUpperCase();
+  } while (await VaniganMember.findOne({ membershipId }).select('_id').lean());
+
+  // 6. Generate referral code
+  let referralCode;
+  do {
+    referralCode = 'REF-' + cryptoN.randomBytes(4).toString('hex').toUpperCase();
+  } while (await VaniganMember.findOne({ referralCode }).select('_id').lean());
+
+  // 7. Hash PIN and create member
+  const pinHash = await bcrypt.hash(pin, 10);
+  const member = await VaniganMember.create({
+    membershipId, referralCode,
+    phone: normalizedPhone,
+    pinHash, name,
+    hasEpic: !!epicNo, epicNo,
+    assemblyName, assemblyNo, district, zone,
+    dob, age, bloodGroup, gender,
+    businessAddress: address,
+    photoUrl: '', photoPublicId: '',
+    active: true,
+  });
+
+  // 8. Send ONLY the photo upload CTA — welcome + card sent after photo upload
+  const backend = (process.env.BACKEND_URL || '').replace(/\/+$/, '');
+  const photoUploadUrl = `${backend}/public/upload-photo?phone=${encodeURIComponent(normalizedPhone)}`;
+  await meta.sendCtaUrlMessage(phone, {
+    bodyText:
+      `🎉 *Welcome to Vanigan, ${name}!*\n\n` +
+      `✅ Membership confirmed!\n` +
+      `🪪 ID: *${membershipId}*\n` +
+      `📍 ${assemblyName}, ${district}\n\n` +
+      `📸 *One last step* — upload your profile photo to complete your membership card.\n\n` +
+      `Tap the button below to upload and crop your photo. Your membership card will be generated and sent to you automatically after upload. 🪪`,
+    footerText: 'Vanigan Membership',
+    buttonText: '📸 Upload My Photo',
+    url: photoUploadUrl,
+  });
+}
+
+/* ── Send Membership Card handler ────────────────────────────────────────── */
+async function handleSendMemberCard(phone, normalizedPhone) {
+  const { getMemberModel } = require('../services/memberDb');
+  const { generateAndUploadCard } = require('../services/memberCard');
+
+  const VaniganMember = await getMemberModel();
+  const member = await VaniganMember.findOne({ phone: normalizedPhone }).lean();
+
+  if (!member) {
+    await meta.sendText(phone,
+      '❌ No membership found for your number.\n\nType *hi* and choose *Become a Member* to sign up!'
+    );
+    return;
+  }
+
+  await meta.sendText(phone, '⏳ Generating your membership card… please wait a moment.');
+
+  try {
+    const { url } = await generateAndUploadCard(member);
+    await meta.sendImage(phone, url,
+      `🪪 *Your Vanigan Membership Card*\n` +
+      `ID: *${member.membershipId}*\n` +
+      `${member.name}  |  ${member.assemblyName}, ${member.district}\n\n` +
+      `Type *hi* to open the menu.`
+    );
+  } catch (err) {
+    console.error('[webhook] send card failed:', err.message);
+    const siteUrl = (process.env.USER_WEBSITE_URL || 'https://vanigan.digital').replace(/\/+$/, '');
+    await meta.sendCtaUrlMessage(phone, {
+      bodyText:
+        `🪪 *Your Vanigan Membership Card*\n` +
+        `ID: *${member.membershipId}*\n\n` +
+        `View and download your card on the Vanigan website.`,
+      footerText: 'Vanigan',
+      buttonText: '🪪 View My Card',
+      url: `${siteUrl}?page=membercard`,
+    });
   }
 }
 
