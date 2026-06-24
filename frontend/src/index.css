@@ -75,3 +75,235 @@ select.input option {
   background-color: #0A0E17;
   color: #ffffff;
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Subadmin Theme (Light with #22c55e Accent) */
+.subadmin-theme {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+.subadmin-theme aside,
+.subadmin-theme nav,
+.subadmin-theme header,
+.subadmin-theme main,
+.subadmin-theme .flex-1,
+.subadmin-theme .min-h-screen {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.subadmin-theme aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.subadmin-theme aside > div,
+.subadmin-theme aside > nav,
+.subadmin-theme aside > div:last-child {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  background-color: #ffffff !important;
+}
+
+.subadmin-theme header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.subadmin-theme header button {
+  color: #1e293b !important;
+}
+
+.subadmin-theme main {
+  background-color: #f8fafc !important;
+}
+
+.subadmin-theme img[alt="TNVS Logo"] {
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.35)) !important;
+}
+
+/* Override utility colors to fit light mode */
+.subadmin-theme .text-white {
+  color: #0f172a !important;
+}
+.subadmin-theme .text-gray-300 {
+  color: #334155 !important;
+}
+.subadmin-theme .text-gray-400 {
+  color: #64748b !important;
+}
+.subadmin-theme .text-gray-500 {
+  color: #94a3b8 !important;
+}
+.subadmin-theme .text-gray-600 {
+  color: #475569 !important;
+}
+.subadmin-theme .text-slate-300 {
+  color: #334155 !important;
+}
+.subadmin-theme .text-\[\#66ff4c\] {
+  color: #22c55e !important;
+}
+
+/* Ensure buttons keep white text */
+.subadmin-theme .btn-primary,
+.subadmin-theme .btn-danger,
+.subadmin-theme .bg-red-600,
+.subadmin-theme .bg-red-500,
+.subadmin-theme .btn-primary *,
+.subadmin-theme .btn-danger *,
+.subadmin-theme .bg-red-600 *,
+.subadmin-theme .bg-red-500 * {
+  color: #ffffff !important;
+}
+
+/* Navigation Link styling */
+.subadmin-theme nav a {
+  color: #64748b !important;
+}
+.subadmin-theme nav a:hover {
+  color: #0f172a !important;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+.subadmin-theme nav a.text-\[\#66ff4c\] {
+  color: #22c55e !important;
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-left: 3px solid #22c55e !important;
+}
+.subadmin-theme nav a.active {
+  color: #22c55e !important;
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-left: 3px solid #22c55e !important;
+}
+
+/* Table overrides */
+.subadmin-theme thead {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.subadmin-theme tbody,
+.subadmin-theme tr,
+.subadmin-theme td {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+.subadmin-theme tr:hover {
+  background-color: rgba(0, 0, 0, 0.015) !important;
+}
+.subadmin-theme tr.group:hover .group-hover\:text-\[\#66ff4c\] {
+  color: #22c55e !important;
+}
+
+/* Cards */
+.subadmin-theme .card {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+}
+
+/* Form input styling */
+.subadmin-theme .input {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: #0f172a !important;
+}
+.subadmin-theme .input::placeholder {
+  color: #94a3b8 !important;
+}
+.subadmin-theme .input:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3) !important;
+}
+
+.subadmin-theme select.input {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2322c55e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+}
+.subadmin-theme select.input option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.subadmin-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+}
+
+/* Primary/Secondary button states */
+.subadmin-theme .btn-primary {
+  background-color: #22c55e !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.25) !important;
+}
+.subadmin-theme .btn-primary:hover {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+.subadmin-theme .btn-secondary {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+.subadmin-theme .btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Custom background helper overrides */
+.subadmin-theme .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+.subadmin-theme .bg-white\/\[0\.02\] {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+.subadmin-theme .bg-white\/\[0\.03\] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+.subadmin-theme .bg-white\/\[0\.04\] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+.subadmin-theme .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+.subadmin-theme .bg-\[\#000\]\/40 {
+  background-color: #f1f5f9 !important;
+}
+.subadmin-theme .bg-\[\#66ff4c\]\/10 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+.subadmin-theme .hover\:bg-\[\#66ff4c\]\/20:hover {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+}
+.subadmin-theme .border-\[\#66ff4c\]\/30 {
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Border overrides */
+.subadmin-theme .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+.subadmin-theme .border-white\/\[0\.06\] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+.subadmin-theme .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.subadmin-theme .border-gray-800\/60 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Scrollbars overrides */
+.subadmin-theme::-webkit-scrollbar-track,
+.subadmin-theme *::-webkit-scrollbar-track {
+  background: #ffffff !important;
+}
+.subadmin-theme::-webkit-scrollbar-thumb,
+.subadmin-theme *::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+.subadmin-theme::-webkit-scrollbar-thumb:hover,
+.subadmin-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.45) !important;
+}
+

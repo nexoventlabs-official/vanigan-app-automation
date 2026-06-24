@@ -168,7 +168,7 @@ export default function ListingPage({ title, resource, extraFields = [], default
     next.coverImage = it.coverImage || '';
     next.galleryImages = Array.isArray(it.galleryImages) ? it.galleryImages : [];
     next.services = Array.isArray(it.services)
-      ? it.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null, ...s, _file: null }))
+      ? it.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', ...s, _file: null }))
       : [];
     const SOCIAL_IDS = ['fbLink', 'twitterLink', 'googleMap', 'videoUrl', 'instaLink'];
     SOCIAL_IDS.forEach((k) => { next[k] = it[k] || ''; });

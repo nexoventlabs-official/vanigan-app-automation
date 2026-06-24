@@ -10,3 +10,5 @@ build/
 backend/flow_keys/
 backend/*.log
 frontend/*.log
+*.tar.gz
+

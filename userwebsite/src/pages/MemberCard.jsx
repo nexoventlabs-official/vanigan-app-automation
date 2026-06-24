@@ -114,80 +114,130 @@ function CardFront({ member, display = "interactive", flipped = false }) {
           >
             {(member.name || "").toUpperCase()}
           </p>
-          {member.assemblyName && (
-            <p
-              style={{
-                margin: "0 0 6px",
-                fontSize: 19,
-                fontWeight: 700,
-                color: "#111",
-                lineHeight: 1.06,
-              }}
-            >
-              {member.assemblyName}{" "}
-              <span
+          {member.isOrganizer ? (
+            <>
+              {/* Position/Role */}
+              <p
                 style={{
-                  display: "inline-block",
-                  fontSize: 10,
+                  margin: "0 0 6px",
+                  fontSize: 19,
                   fontWeight: 700,
-                  color: "#fff",
-                  background: "#009245",
-                  borderRadius: 4,
-                  padding: "1px 5px",
-                  marginLeft: 4,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  lineHeight: 1.4,
-                  verticalAlign: "middle",
+                  color: "#111",
+                  lineHeight: 1.06,
+                  textTransform: "capitalize",
                 }}
               >
-                Assm
-              </span>
-            </p>
-          )}
-          {member.district && (
-            <p
-              style={{
-                margin: "0 0 6px",
-                fontSize: 19,
-                fontWeight: 700,
-                color: "#111",
-                lineHeight: 1.06,
-              }}
-            >
-              {member.district}{" "}
-              <span
-                style={{
-                  display: "inline-block",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "#fff",
-                  background: "#009245",
-                  borderRadius: 4,
-                  padding: "1px 5px",
-                  marginLeft: 4,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  lineHeight: 1.4,
-                  verticalAlign: "middle",
-                }}
-              >
-                Dist
-              </span>
-            </p>
-          )}
-          {member.zone && (
-            <p
-              style={{
-                margin: "0 0 6px",
-                fontSize: 19,
-                fontWeight: 700,
-                color: "#111",
-                lineHeight: 1.06,
-              }}
-            >
-              {member.zone}
-            </p>
+                {member.bizCategory || "Organizer"}
+              </p>
+              {/* State/District */}
+              {member.district && (
+                <p
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.06,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {member.district}
+                </p>
+              )}
+              {/* Wing/Assembly */}
+              {member.assemblyName && (
+                <p
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.06,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {member.assemblyName}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              {member.assemblyName && (
+                <p
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.06,
+                  }}
+                >
+                  {member.assemblyName}{" "}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: "#fff",
+                      background: "#009245",
+                      borderRadius: 4,
+                      padding: "1px 5px",
+                      marginLeft: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      lineHeight: 1.4,
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    Assm
+                  </span>
+                </p>
+              )}
+              {member.district && (
+                <p
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.06,
+                  }}
+                >
+                  {member.district}{" "}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: "#fff",
+                      background: "#009245",
+                      borderRadius: 4,
+                      padding: "1px 5px",
+                      marginLeft: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      lineHeight: 1.4,
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    Dist
+                  </span>
+                </p>
+              )}
+              {member.zone && (
+                <p
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.06,
+                  }}
+                >
+                  {member.zone}
+                </p>
+              )}
+            </>
           )}
           <p
             style={{
@@ -299,77 +349,127 @@ function CardFront({ member, display = "interactive", flipped = false }) {
         >
           {(member.name || "").toUpperCase()}
         </p>
-        {member.assemblyName && (
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "Arial, sans-serif",
-              fontWeight: 700,
-              fontSize: 13,
-              color: "#111",
-              textAlign: "center",
-            }}
-          >
-            {member.assemblyName}{" "}
-            <span
+        {member.isOrganizer ? (
+          <>
+            <p
               style={{
-                display: "inline-block",
-                fontSize: 8,
+                margin: 0,
+                fontFamily: "Arial, sans-serif",
                 fontWeight: 700,
-                color: "#fff",
-                background: "#009245",
-                borderRadius: 3,
-                padding: "1px 4px",
-                marginLeft: 2,
-                textTransform: "uppercase",
+                fontSize: 13,
+                color: "#111",
+                textAlign: "center",
+                textTransform: "capitalize",
               }}
             >
-              Assm
-            </span>
-          </p>
-        )}
-        {member.district && (
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "Arial, sans-serif",
-              fontWeight: 700,
-              fontSize: 13,
-              color: "#111",
-              textAlign: "center",
-            }}
-          >
-            {member.district}{" "}
-            <span
-              style={{
-                display: "inline-block",
-                fontSize: 8,
-                fontWeight: 700,
-                color: "#fff",
-                background: "#009245",
-                borderRadius: 3,
-                padding: "1px 4px",
-                marginLeft: 2,
-                textTransform: "uppercase",
-              }}
-            >
-              Dist
-            </span>
-          </p>
-        )}
-        {member.zone && (
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "Arial, sans-serif",
-              fontWeight: 700,
-              fontSize: 13,
-              color: "#111",
-              textAlign: "center",
-            }}
-          >
-            {member.zone}
-          </p>
+              {member.bizCategory || "Organizer"}
+            </p>
+            {member.district && (
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#111",
+                  textAlign: "center",
+                  textTransform: "capitalize",
+                }}
+              >
+                {member.district}
+              </p>
+            )}
+            {member.assemblyName && (
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#111",
+                  textAlign: "center",
+                  textTransform: "capitalize",
+                }}
+              >
+                {member.assemblyName}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            {member.assemblyName && (
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#111",
+                  textAlign: "center",
+                }}
+              >
+                {member.assemblyName}{" "}
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: 8,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: "#009245",
+                    borderRadius: 3,
+                    padding: "1px 4px",
+                    marginLeft: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Assm
+                </span>
+              </p>
+            )}
+            {member.district && (
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#111",
+                  textAlign: "center",
+                }}
+              >
+                {member.district}{" "}
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: 8,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: "#009245",
+                    borderRadius: 3,
+                    padding: "1px 4px",
+                    marginLeft: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Dist
+                </span>
+              </p>
+            )}
+            {member.zone && (
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#111",
+                  textAlign: "center",
+                }}
+              >
+                {member.zone}
+              </p>
+            )}
+          </>
         )}
         <p
           style={{
@@ -1492,7 +1592,7 @@ export default function MemberCard() {
             marginBottom: 6,
           }}
         >
-          My Membership Card
+          {member.isOrganizer ? "My Organizer Card" : "My Membership Card"}
         </h1>
         <p
           style={{
@@ -1529,7 +1629,7 @@ export default function MemberCard() {
             marginBottom: 16,
           }}
         >
-          Member Details
+          {member.isOrganizer ? "Organizer Details" : "Member Details"}
         </h3>
         <div
           style={{
@@ -1542,13 +1642,16 @@ export default function MemberCard() {
             { label: "Name", value: member.name },
             { label: "Phone", value: member.phone },
             { label: "District", value: member.district },
-            { label: "Assembly", value: member.assemblyName },
-            { label: "Zone", value: member.zone },
+            member.isOrganizer
+              ? { label: "Role / Position", value: member.bizCategory }
+              : null,
+            { label: member.isOrganizer ? "Wing" : "Assembly", value: member.assemblyName },
+            !member.isOrganizer ? { label: "Zone", value: member.zone } : null,
             { label: "Blood", value: member.bloodGroup },
             { label: "EPIC No.", value: member.epicNo || "—" },
             { label: "DOB", value: member.dob || "—" },
           ]
-            .filter((r) => r.value)
+            .filter((r) => r && r.value)
             .map(({ label, value }) => (
               <div key={label}>
                 <div

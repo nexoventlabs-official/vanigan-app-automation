@@ -14,6 +14,13 @@ const Admin = require('../models/Admin');
 (async () => {
   await mongoose.connect(process.env.MONGODB_URI);
 
+  try {
+    await mongoose.connection.collection('admins').dropIndex('email_1');
+    console.log('Dropped obsolete email_1 unique index from admins collection');
+  } catch (e) {
+    // Ignore if index doesn't exist
+  }
+
   const username = process.env.ADMIN_USERNAME || 'admin';
   const password = process.env.ADMIN_PASSWORD;
 
@@ -34,5 +41,18 @@ const Admin = require('../models/Admin');
     { upsert: true, new: true }
   );
   console.log('✅ Admin upserted:', { username: updated.username, role: updated.role });
+
+  const subUsername = process.env.SUBADMIN_USERNAME;
+  const subPassword = process.env.SUBADMIN_PASSWORD;
+  if (subUsername && subPassword) {
+    const subHash = await bcrypt.hash(subPassword, 10);
+    const subUpdated = await Admin.findOneAndUpdate(
+      { username: subUsername },
+      { $set: { passwordHash: subHash, role: 'admin' } },
+      { upsert: true, new: true }
+    );
+    console.log('✅ Subadmin upserted:', { username: subUpdated.username, role: subUpdated.role });
+  }
+
   await mongoose.disconnect();
 })();

@@ -942,6 +942,23 @@ router.get("/admin-list", auth, async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────
+   GET /admin-member/:phone
+   Admin: get a single VaniganMember's details
+───────────────────────────────────────────────────────────── */
+router.get("/admin-member/:phone", auth, async (req, res) => {
+  try {
+    const phone = String(req.params.phone || "").replace(/\D/g, "");
+    if (!phone) return res.status(400).json({ error: "phone required" });
+    const VaniganMember = await getMemberModel();
+    const member = await VaniganMember.findOne({ phone }).lean();
+    if (!member) return res.status(404).json({ error: "Member not found" });
+    res.json({ ok: true, member });
+  } catch (err) {
+    res.status(500).json({ error: safeError(err) });
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
    GET /referral-info?phone=
    Returns referral code, link, count, who referred this member,
    and list of members they referred.

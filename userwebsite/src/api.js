@@ -164,6 +164,13 @@ export const setMemberSession = (data) => {
       assemblyName: m.assemblyName || "",
       zone:         m.zone         || "",
       active:       m.active       !== false,
+      isOrganizer:  !!m.isOrganizer,
+      bizCategory:  m.bizCategory  || "",
+      dob:          m.dob          || "",
+      bloodGroup:   m.bloodGroup   || "",
+      age:          m.age          || 0,
+      businessAddress: m.businessAddress || "",
+      epicNo:       m.epicNo       || "",
     },
     // Only keep non-sensitive business fields needed for UI display
     business: b ? {

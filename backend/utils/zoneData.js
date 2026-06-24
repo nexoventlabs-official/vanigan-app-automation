@@ -50,7 +50,17 @@ const DISTRICT_ZONE = {
  */
 function getZoneByDistrict(district) {
   if (!district) return '';
-  const key = district.toUpperCase().trim();
+  let key = district.toUpperCase()
+    .replace(/\s+DISTRICT$/, '')
+    .replace(/\s+ZONE$/, '')
+    .replace(/\s+ASSEMBLY$/, '')
+    .trim();
+  
+  if (key.endsWith(' ZONE')) return key;
+  if (['KANCHI', 'CHENNAI', 'VELLORE', 'TIRUVANNAMALAI', 'VILLUPURAM', 'SALEM', 'COVAI', 'TRICHY', 'VIRUDHUNAGAR', 'THANJAI', 'MADURAI', 'TIRUNELVELI'].includes(key)) {
+    return key + ' ZONE';
+  }
+  
   return DISTRICT_ZONE[key] || '';
 }
 

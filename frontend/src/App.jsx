@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard.jsx';
 import Businesses from './pages/Businesses.jsx';
 import BusinessDetail from './pages/BusinessDetail.jsx';
 import Organizers from './pages/Organizers.jsx';
+import DirectOrganizer from './pages/DirectOrganizer.jsx';
+import Postings from './pages/Postings.jsx';
+import Wings from './pages/Wings.jsx';
 import Members from './pages/Members.jsx';
 import Plans from './pages/Plans.jsx';
 import Reviews from './pages/Reviews.jsx';
@@ -51,17 +54,20 @@ function App() {
           path="/"
           element={auth ? <Layout user={auth} setAuth={setAuth} /> : <Navigate to="/login" replace />}
         >
-          <Route index element={<Dashboard />} />
+          <Route index element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Dashboard />} />
           <Route path="businesses" element={<Businesses />} />
           <Route path="businesses/:id" element={<BusinessDetail />} />
           <Route path="organizers" element={<Organizers />} />
+          <Route path="directorg" element={<DirectOrganizer />} />
+          <Route path="postings" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Postings />} />
+          <Route path="wings" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Wings />} />
           <Route path="members" element={<Members />} />
-          <Route path="plans" element={<Plans />} />
-          <Route path="reviews" element={<Reviews />} />
-          <Route path="flow-images" element={<FlowImages />} />
-          <Route path="users" element={<Users />} />
-          <Route path="category-images" element={<CategoryImages />} />
-          <Route path="gallery" element={<Gallery />} />
+          <Route path="plans" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Plans />} />
+          <Route path="reviews" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Reviews />} />
+          <Route path="flow-images" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <FlowImages />} />
+          <Route path="users" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Users />} />
+          <Route path="category-images" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <CategoryImages />} />
+          <Route path="gallery" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Gallery />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

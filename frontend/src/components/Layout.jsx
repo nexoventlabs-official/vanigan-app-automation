@@ -3,11 +3,14 @@ import {
   LayoutDashboard,
   Briefcase,
   Users as UsersIcon,
+  UserPlus,
   UserCircle,
   Star,
   Sparkles,
   Image as ImageIcon,
   ShieldCheck,
+  Shield,
+  ShieldAlert,
   LogOut,
   Menu,
   LayoutGrid,
@@ -19,6 +22,9 @@ const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/businesses', label: 'Businesses', icon: Briefcase },
   { to: '/organizers', label: 'Organizers', icon: UsersIcon },
+  { to: '/directorg', label: 'Direct Organizer', icon: UserPlus },
+  { to: '/postings', label: 'Organizer Roles', icon: Shield },
+  { to: '/wings', label: 'Organizer Wings', icon: ShieldAlert },
   { to: '/members', label: 'Members', icon: UserCircle },
   { to: '/plans', label: 'Subscription Plans', icon: Sparkles },
   { to: '/reviews', label: 'Reviews', icon: Star },
@@ -39,7 +45,7 @@ export default function Layout({ user, setAuth }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#000000]">
+    <div className={`min-h-screen flex ${user?.username === 'vanigan' ? 'subadmin-theme' : 'bg-[#000000]'}`}>
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 w-64 text-white flex flex-col transition-transform duration-300 ${
@@ -67,7 +73,14 @@ export default function Layout({ user, setAuth }) {
         </div>
 
         <nav className="flex-1 py-6 space-y-1.5 px-4 overflow-y-auto" style={{ backgroundColor: '#000000' }}>
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {(() => {
+            let items = NAV;
+            if (user?.username === 'vanigan') {
+              const order = ['/members', '/organizers', '/directorg', '/businesses'];
+              items = order.map(path => NAV.find(item => item.to === path)).filter(Boolean);
+            }
+            return items;
+          })().map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

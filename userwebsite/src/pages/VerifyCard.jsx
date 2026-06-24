@@ -126,7 +126,7 @@ export default function VerifyCard({ params = {} }) {
             fontSize: '22px', fontWeight: 700,
             color: 'var(--color-rich-black)', marginBottom: 4,
           }}>
-            Verified Member
+            {member.isOrganizer ? 'Verified Organizer' : 'Verified Member'}
           </h1>
           <p style={{
             fontFamily: 'var(--font-pp-neue-montreal)',
@@ -152,7 +152,7 @@ export default function VerifyCard({ params = {} }) {
             textTransform: 'uppercase', letterSpacing: '0.08em',
             color: 'var(--color-cool-gray)', marginBottom: 16,
           }}>
-            Member Details
+            {member.isOrganizer ? 'Organizer Details' : 'Member Details'}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
             <DetailRow label="Name"         value={member.name} />
@@ -182,7 +182,7 @@ export default function VerifyCard({ params = {} }) {
               fontSize: '12px', fontWeight: 600,
               color: 'var(--color-deep-fern-green)',
             }}>
-              This is an authentic Vanigan membership card
+              {member.isOrganizer ? 'This is an authentic Vanigan organizer card' : 'This is an authentic Vanigan membership card'}
             </span>
           </div>
         </div>
@@ -221,13 +221,13 @@ export default function VerifyCard({ params = {} }) {
           fontSize: '24px', fontWeight: 700,
           color: 'var(--color-rich-black)', marginBottom: 6,
         }}>
-          Verify Membership Card
+          Verify Card
         </h1>
         <p style={{
           fontFamily: 'var(--font-pp-neue-montreal)',
           fontSize: '13px', color: 'var(--color-cool-gray)', lineHeight: 1.5,
         }}>
-          Enter the card PIN to view this member's details
+          Enter the card PIN to view details
         </p>
       </div>
 
@@ -245,7 +245,7 @@ export default function VerifyCard({ params = {} }) {
             color: 'var(--color-cool-gray)',
             textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4,
           }}>
-            Membership ID
+            Card ID
           </div>
           <div style={{
             fontFamily: 'var(--font-pp-neue-montreal)',
@@ -321,7 +321,7 @@ export default function VerifyCard({ params = {} }) {
         fontFamily: 'var(--font-pp-neue-montreal)',
         fontSize: '12px', color: 'var(--color-cool-gray)', lineHeight: 1.5,
       }}>
-        The PIN is known only to the cardholder. This page is for verifying an authentic Vanigan membership card.
+        The PIN is known only to the cardholder. This page is for verifying an authentic Vanigan card.
       </p>
     </div>
   );

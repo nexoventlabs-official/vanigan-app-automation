@@ -15,6 +15,8 @@ const businessRoutes = require('./routes/businesses');
 const organizerRoutes = require('./routes/organizers');
 const memberRoutes = require('./routes/members');
 const planRoutes = require('./routes/plans');
+const postingRoutes = require('./routes/postings');
+const wingRoutes = require('./routes/wings');
 const reviewRoutes = require('./routes/reviews');
 const districtRoutes = require('./routes/districts');
 const flowImageRoutes = require('./routes/flowImages');
@@ -106,6 +108,8 @@ app.use('/api/businesses', businessRoutes);
 app.use('/api/organizers', organizerRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/postings', postingRoutes);
+app.use('/api/wings', wingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/districts', districtRoutes);
 app.use('/api/flow-images', flowImageRoutes);
@@ -141,6 +145,11 @@ async function start() {
       tls: true,
     });
     console.log('[Mongo] connected');
+    try {
+      await mongoose.connection.collection('admins').dropIndex('email_1');
+    } catch (e) {
+      // Ignore if index doesn't exist
+    }
   } catch (err) {
     console.error('[Mongo] connection failed:', err.message);
     process.exit(1);
@@ -172,28 +181,47 @@ async function start() {
     getSeedConnection().catch(() => {});
   }
 
-// FIX C4: Block startup in production if ADMIN_PASSWORD is not set
   try {
     const Admin = require('./models/Admin');
     const bcrypt = require('bcryptjs');
+    
+    // Seed/upsert superadmin if configured or if count is 0
+    const superUsername = process.env.ADMIN_USERNAME || 'admin';
+    const superPassword = process.env.ADMIN_PASSWORD;
     const count = await Admin.countDocuments();
-    if (count === 0) {
-      const username = process.env.ADMIN_USERNAME || 'admin';
-      const password = process.env.ADMIN_PASSWORD;
-      if (!password) {
-        if (process.env.NODE_ENV === 'production') {
-          console.error('[Seed] CRITICAL: ADMIN_PASSWORD env var is not set. Refusing to seed a default admin in production. Set ADMIN_PASSWORD and restart.');
-          process.exit(1);
-        }
+    
+    if (count === 0 || superPassword) {
+      if (!superPassword && process.env.NODE_ENV === 'production') {
+        console.error('[Seed] CRITICAL: ADMIN_PASSWORD env var is not set. Refusing to seed a default admin in production. Set ADMIN_PASSWORD and restart.');
+        process.exit(1);
+      }
+      if (!superPassword) {
         console.warn('[Seed] WARNING: ADMIN_PASSWORD not set — using insecure default "admin". DO NOT use in production.');
       }
-      const finalPassword = password || 'admin';
+      const finalPassword = superPassword || 'admin';
       const passwordHash = await bcrypt.hash(finalPassword, 10);
-      await Admin.create({ username, passwordHash, role: 'superadmin' });
-      console.log(`[Seed] Default admin created: ${username}`);
+      await Admin.findOneAndUpdate(
+        { username: superUsername },
+        { $set: { passwordHash, role: 'superadmin' } },
+        { upsert: true, new: true }
+      );
+      console.log(`[Seed] Superadmin upserted: ${superUsername}`);
+    }
+
+    // Seed/upsert subadmin if configured
+    const subUsername = process.env.SUBADMIN_USERNAME;
+    const subPassword = process.env.SUBADMIN_PASSWORD;
+    if (subUsername && subPassword) {
+      const passwordHash = await bcrypt.hash(subPassword, 10);
+      await Admin.findOneAndUpdate(
+        { username: subUsername },
+        { $set: { passwordHash, role: 'admin' } },
+        { upsert: true, new: true }
+      );
+      console.log(`[Seed] Subadmin upserted: ${subUsername}`);
     }
   } catch (err) {
-    console.warn('[Seed] admin seed skipped:', err.message);
+    console.warn('[Seed] admin seed skipped/failed:', err.message);
   }
 
   // Ensure FlowImage slots exist

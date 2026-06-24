@@ -201,7 +201,7 @@ export default function BusinessDetail() {
       next.coverImage = biz.coverImage || '';
       next.galleryImages = Array.isArray(biz.galleryImages) ? biz.galleryImages : [];
       next.services = Array.isArray(biz.services)
-        ? biz.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', _file: null, ...s, _file: null }))
+        ? biz.services.slice(0, 6).map((s) => ({ name: '', price: '', detail: '', image: '', imagePublicId: '', ...s, _file: null }))
         : [];
       SOCIAL_IDS.forEach((k) => { next[k] = biz[k] || ''; });
       next._shownSocial = SOCIAL_IDS.filter((k) => biz[k]);

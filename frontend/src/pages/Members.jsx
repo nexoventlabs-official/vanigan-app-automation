@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, Trash2, AlertTriangle, MoreVertical, TrendingUp, X } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle, MoreVertical, TrendingUp, X, Eye } from 'lucide-react';
 import api from '../api';
+import CardModal from '../components/CardModal.jsx';
 
 /* ── Blue tick SVG ── */
 function BlueTick({ size = 14 }) {
@@ -59,39 +60,7 @@ function DeleteModal({ member, onConfirm, onCancel, loading }) {
   );
 }
 
-/* ── Promote Confirm Modal ── */
-function PromoteModal({ member, onConfirm, onCancel, loading }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-            <TrendingUp size={20} className="text-green-400" />
-          </div>
-          <div>
-            <h3 className="font-bold text-white text-lg">Promote to Organizer</h3>
-            <p className="text-sm text-gray-400">{member.name} · {member.membershipId}</p>
-          </div>
-        </div>
-        <p className="text-sm text-gray-300 mb-5 leading-relaxed">
-          This will create an <strong className="text-white">Organizer</strong> entry for this member using their name, photo, district and assembly. They will appear in the Organizers list. Their member profile stays unchanged.
-        </p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition text-sm font-medium">
-            Cancel
-          </button>
-          <button onClick={onConfirm} disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white transition text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
-            {loading
-              ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Promoting…</>
-              : <><TrendingUp size={14} /> Promote</>}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 /* ── 3-dot Action Menu ── */
 function ActionMenu({ member, onDelete, onPromote }) {
@@ -119,7 +88,7 @@ function ActionMenu({ member, onDelete, onPromote }) {
             onClick={(e) => { e.stopPropagation(); setOpen(false); onPromote(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-green-400 hover:bg-white/5 transition text-left"
           >
-            <TrendingUp size={14} /> Promote
+            <TrendingUp size={14} /> Make Organizer
           </button>
           <div className="my-1 border-t border-white/[0.06]" />
           <button
@@ -142,8 +111,8 @@ export default function Members() {
   const [q,       setQ]             = useState('');
   const [loading, setLoading]       = useState(true);
   const [deleteTarget,  setDeleteTarget]  = useState(null);
-  const [promoteTarget, setPromoteTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedCardMember, setSelectedCardMember] = useState(null);
 
   const LIMIT = 50;
 
@@ -184,23 +153,7 @@ export default function Members() {
     }
   };
 
-  const handlePromoteConfirm = async () => {
-    if (!promoteTarget) return;
-    setActionLoading(true);
-    try {
-      await api.post(`/member-auth/admin-promote/${promoteTarget.phone}`);
-      // Remove from members list — they're now an organizer
-      setMembers(prev => prev.filter(m => m.phone !== promoteTarget.phone));
-      setTotal(prev => prev - 1);
-      setPromoteTarget(null);
-      alert(`${promoteTarget.name} has been promoted to Organizer!`);
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || err.message;
-      alert('Promote failed: ' + msg);
-    } finally {
-      setActionLoading(false);
-    }
-  };
+
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -316,12 +269,21 @@ export default function Members() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <ActionMenu
-                        member={m}
-                        onDelete={() => setDeleteTarget(m)}
-                        onPromote={() => setPromoteTarget(m)}
-                      />
+                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <button
+                          onClick={() => setSelectedCardMember(m)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#66ff4c] hover:bg-white/5 transition-all"
+                          title="View Card"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <ActionMenu
+                          member={m}
+                          onDelete={() => setDeleteTarget(m)}
+                          onPromote={() => navigate(`/directorg?promotePhone=${m.phone}`)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -350,9 +312,9 @@ export default function Members() {
         <DeleteModal member={deleteTarget} onConfirm={handleDeleteConfirm}
           onCancel={() => setDeleteTarget(null)} loading={actionLoading} />
       )}
-      {promoteTarget && (
-        <PromoteModal member={promoteTarget} onConfirm={handlePromoteConfirm}
-          onCancel={() => setPromoteTarget(null)} loading={actionLoading} />
+
+      {selectedCardMember && (
+        <CardModal member={selectedCardMember} onClose={() => setSelectedCardMember(null)} />
       )}
     </div>
   );

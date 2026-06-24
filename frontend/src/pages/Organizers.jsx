@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, RefreshCw, Pencil, Trash2, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Search, RefreshCw, Pencil, Trash2, Image as ImageIcon, X, Eye } from 'lucide-react';
 import api from '../api';
-import DistrictAssemblySelect from '../components/DistrictAssemblySelect.jsx';
+import CardModal from '../components/CardModal.jsx';
 
-const BLANK = { name: '', description: '', role: '', district: '', assembly: '', phone: '', email: '', active: true, imageFile: null, image: '' };
 
 export default function Organizers() {
   const navigate   = useNavigate();
@@ -13,12 +12,11 @@ export default function Organizers() {
   const [page,     setPage]     = useState(1);
   const [loading,  setLoading]  = useState(true);
   const [q,        setQ]        = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [form,     setForm]     = useState(BLANK);
-  const [editingId,setEditingId]= useState(null);
-  const [saving,   setSaving]   = useState(false);
+  const [selectedCardMember, setSelectedCardMember] = useState(null);
+  const [cardLoading, setCardLoading] = useState(false);
 
   const LIMIT = 100;
+  const totalPages = Math.ceil(total / LIMIT);
 
   const load = useCallback(async (pg = 1, query = q) => {
     setLoading(true);
@@ -50,30 +48,25 @@ export default function Organizers() {
     }
   };
 
-  const openCreate = () => { setForm(BLANK); setEditingId(null); setShowForm(true); };
-  const openEdit = (it) => {
-    setForm({ ...BLANK, ...it, imageFile: null });
-    setEditingId(it._id);
-    setShowForm(true);
+  const handleViewCard = async (org) => {
+    if (!org.phone) return;
+    setCardLoading(true);
+    try {
+      const phone = String(org.phone).replace(/\D/g, '');
+      const r = await api.get('/member-auth/me', { params: { phone } });
+      if (r.data?.member) {
+        setSelectedCardMember({ ...r.data.member, isOrganizer: true, bizCategory: org.role || 'Organizer' });
+      } else {
+        alert('Could not find membership profile for this organizer.');
+      }
+    } catch (err) {
+      alert('Failed to load card details: ' + (err?.response?.data?.error || err.message));
+    } finally {
+      setCardLoading(false);
+    }
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!form.name) { alert('Name is required.'); return; }
-    setSaving(true);
-    try {
-      const fd = new FormData();
-      ['name','description','role','district','assembly','phone','email'].forEach(k => fd.append(k, form[k] || ''));
-      fd.append('active', String(form.active));
-      if (form.imageFile) fd.append('image', form.imageFile);
-      const opts = { headers: { 'Content-Type': 'multipart/form-data' } };
-      if (editingId) await api.put(`/organizers/${editingId}`, fd, opts);
-      else           await api.post('/organizers', fd, opts);
-      setShowForm(false);
-      load(page);
-    } catch (err) { alert(err.response?.data?.error || err.message); }
-    finally { setSaving(false); }
-  };
+
 
   const remove = async (id, e) => {
     e.stopPropagation();
@@ -89,7 +82,7 @@ export default function Organizers() {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Organizers</h1>
           <p className="text-sm text-gray-400 mt-1 font-semibold">{total} organizers · click a row to view their business</p>
         </div>
-        <button onClick={openCreate} className="btn-primary"><Plus size={16} /> New Organizer</button>
+        <button onClick={() => navigate('/directorg')} className="btn-primary"><Plus size={16} /> + Add Organizer</button>
       </div>
 
       {/* Search */}
@@ -103,6 +96,34 @@ export default function Organizers() {
           <button type="button" onClick={() => { setQ(''); load(1, ''); }} className="btn-secondary">Clear</button>
         </div>
       </form>
+
+      {/* Pagination controls at top */}
+      {!loading && items.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 text-sm text-gray-400 py-1">
+          <span>
+            Showing <strong className="text-white">{(page - 1) * LIMIT + 1}</strong> - <strong className="text-white">{Math.min(page * LIMIT, total)}</strong> of <strong className="text-white">{total}</strong> organizers
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => load(page - 1, q)}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition text-xs font-semibold"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs font-semibold">Page {page} / {totalPages}</span>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => load(page + 1, q)}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition text-xs font-semibold"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -148,9 +169,16 @@ export default function Organizers() {
                       {it.active ? 'Active' : 'Off'}
                     </span>
                   </td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <div className="flex gap-1 justify-end">
-                      <button onClick={() => openEdit(it)} className="p-1.5 rounded-xl hover:bg-white/[0.04] text-gray-400 hover:text-[#66ff4c] transition-all" title="Edit"><Pencil size={13} /></button>
+                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                    <div className="flex gap-1.5 justify-end items-center">
+                      <button
+                        onClick={() => handleViewCard(it)}
+                        className="p-1.5 rounded-xl hover:bg-white/[0.04] text-gray-400 hover:text-[#66ff4c] transition-all"
+                        title="View Card"
+                      >
+                        <Eye size={13} />
+                      </button>
+                      <button onClick={() => navigate(`/directorg?editPhone=${it.phone}`)} className="p-1.5 rounded-xl hover:bg-white/[0.04] text-gray-400 hover:text-[#66ff4c] transition-all" title="Edit"><Pencil size={13} /></button>
                       <button onClick={e => remove(it._id, e)} className="p-1.5 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all" title="Delete"><Trash2 size={13} /></button>
                     </div>
                   </td>
@@ -161,52 +189,43 @@ export default function Organizers() {
         </div>
       )}
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-40 bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm">
-          <form onSubmit={submit} className="card w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#0A0E17' }}>
-            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
-              <div className="font-black text-white text-lg">{editingId ? 'Edit Organizer' : 'New Organizer'}</div>
-              <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white"><X size={20} /></button>
-            </div>
-            <div className="p-5 space-y-3">
-              <div>
-                <label className="label">Name *</label>
-                <input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-              </div>
-              <div>
-                <label className="label">Role</label>
-                <input className="input" placeholder="e.g. Cluster Lead" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
-              </div>
-              <DistrictAssemblySelect required district={form.district} assembly={form.assembly}
-                onChange={({district, assembly}) => setForm(f => ({...f, district, assembly}))} />
-              <div>
-                <label className="label">Phone</label>
-                <input className="input" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
-              </div>
-              <div>
-                <label className="label">Email</label>
-                <input className="input" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
-              </div>
-              <div>
-                <label className="label">Description</label>
-                <textarea rows={2} className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-              </div>
-              <div>
-                <label className="label">Photo</label>
-                {form.image && !form.imageFile && <img src={form.image} alt="" className="w-16 h-16 rounded-lg object-cover mb-2 border" />}
-                <input type="file" accept="image/*" className="input" onChange={e => setForm({...form, imageFile: e.target.files?.[0] || null})} />
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="activeChk" checked={form.active} onChange={e => setForm({...form, active: e.target.checked})} />
-                <label htmlFor="activeChk" className="text-sm text-gray-300">Active</label>
-              </div>
-            </div>
-            <div className="px-5 pb-5 flex gap-3">
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'Saving…' : 'Save'}</button>
-            </div>
-          </form>
+      {/* Pagination controls at bottom */}
+      {!loading && items.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 text-sm text-gray-400 mt-4">
+          <span>
+            Showing <strong className="text-white">{(page - 1) * LIMIT + 1}</strong> - <strong className="text-white">{Math.min(page * LIMIT, total)}</strong> of <strong className="text-white">{total}</strong> organizers
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => load(page - 1, q)}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition text-xs font-semibold"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs font-semibold">Page {page} / {totalPages}</span>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => load(page + 1, q)}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition text-xs font-semibold"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      {selectedCardMember && (
+        <CardModal member={selectedCardMember} onClose={() => setSelectedCardMember(null)} />
+      )}
+
+      {cardLoading && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm">
+          <div className="animate-spin text-4xl mb-4 text-[#66ff4c]">⟳</div>
+          <p className="text-white text-sm font-semibold">Loading card details...</p>
         </div>
       )}
     </div>

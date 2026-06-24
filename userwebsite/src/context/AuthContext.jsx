@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { getMemberSession, setMemberSession, getAuthSession, setAuthSession } from '../api.js';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { getMemberSession, setMemberSession, getAuthSession, setAuthSession, memberGetMe } from '../api.js';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -16,6 +16,23 @@ export function AuthProvider({ children }) {
     setMemberSession(data);
     setMemberState(data);
   }, []);
+
+  useEffect(() => {
+    const phone = memberSession?.member?.phone;
+    if (phone) {
+      memberGetMe(phone)
+        .then((res) => {
+          if (res.data && res.data.member) {
+            // Keep business if it is already in session
+            const currentBiz = memberSession?.business || null;
+            memberLogin({ member: res.data.member, business: res.data.business || currentBiz });
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to sync member profile:", err);
+        });
+    }
+  }, [memberSession?.member?.phone]);
 
   const memberLogout = useCallback(() => {
     setMemberSession(null);

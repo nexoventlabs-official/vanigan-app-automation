@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vanigan ID Card - TNV-001234</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        background: #dce8df;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 18px;
+        color: #111;
+      }
+
+      .toolbar {
+        max-width: 900px;
+        margin: 0 auto 14px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar button,
+      .toolbar a {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: #0a8a43;
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .toolbar a {
+        background: #244b3d;
+      }
+
+      #page1-div {
+        background-image: url(https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png);
+        background-repeat: no-repeat;
+        background-size: 421px 573px;
+        background-position: center;
+      }
+      #page2-div {
+        background-image: url(https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png);
+        background-repeat: no-repeat;
+        background-size: 421px 590px;
+        background-position: center;
+      }
+
+      .card-wrap {
+        max-width: 560px;
+        margin: 0 auto;
+      }
+
+      .meta {
+        color: #2e5741;
+        margin-bottom: 10px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .card-face {
+        width: 421px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .front-photo-wrap {
+        position: absolute;
+        top: 182px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 137px;
+      }
+
+      .front-stack {
+        position: absolute;
+        top: 328px;
+        left: 28px;
+        right: 28px;
+        text-align: center;
+      }
+
+      .front-stack > * + * {
+        margin-top: 6px;
+      }
+
+      .front-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-face .row {
+        --bs-gutter-x: 0;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .card-face [class*="col-"] {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .photo {
+        display: block;
+        margin: 0 auto;
+        border: 5px solid #009245;
+        border-radius: 22px !important;
+        width: 137px;
+        height: 136px;
+        object-fit: cover;
+        padding: 0;
+      }
+
+      .front-text,
+      .back-text,
+      .label,
+      .value,
+      .small,
+      .name,
+      .designation,
+      .detail-line,
+      .id-number {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .name,
+      .designation,
+      .detail-line,
+      .id-number {
+        margin: 0;
+      }
+
+      .name {
+        font-size: 23px;
+        font-weight: 700;
+        color: #009245;
+        line-height: 1.08;
+      }
+
+      .designation,
+      .detail-line,
+      .id-number {
+        font-size: 19px;
+        font-weight: 700;
+        text-transform: capitalize;
+        line-height: 1.06;
+      }
+
+      .front-line {
+        text-align: center;
+        word-break: break-word;
+        padding: 0 18px;
+      }
+
+      .suffix-tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        background: #009245;
+        border-radius: 4px;
+        padding: 1px 5px;
+        margin-left: 4px;
+        vertical-align: middle;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1.4;
+      }
+
+      .id-number {
+        font-size: 18px;
+        letter-spacing: 0.2px;
+        margin-top: 2px;
+      }
+
+      .label {
+        text-align: left;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 1px 40px;
+      }
+
+      .back-content {
+        position: absolute;
+        top: 234px;
+        left: 22px;
+        right: 20px;
+      }
+
+      .back-details {
+        transform: translateY(-60px);
+      }
+
+      .back-row {
+        display: grid;
+        grid-template-columns: 46% 6% 48%;
+        align-items: start;
+        margin-bottom: 4px;
+      }
+
+      .back-label {
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .back-sep {
+        font-size: 26px;
+        line-height: 0.7;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .back-value {
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.12;
+        word-break: break-word;
+      }
+
+      .back-value.address {
+        line-height: 1.12;
+      }
+
+      .back-bottom {
+        display: grid;
+        grid-template-columns: 40% 60%;
+        align-items: start;
+        margin-top: -20px;
+      }
+
+      .qr-wrap {
+        padding-left: 20px;
+      }
+
+      .sign-wrap {
+        text-align: center;
+        padding-right: 10px;
+      }
+
+      .signature-img {
+        max-height: 48px;
+        max-width: 140px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+        transform: translateY(-8px);
+      }
+
+      .value {
+        text-align: left;
+        word-wrap: break-word;
+      }
+
+      .value p {
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.15;
+        margin: 0;
+      }
+
+      .value.address p {
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .small {
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 1.1;
+        margin: 0;
+      }
+
+      #page1-div,
+      #page2-div {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .signature-name {
+        text-align: center;
+        margin: 2px 0 0;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .contact-value {
+        background: rgba(255, 255, 255, 0.78);
+        display: inline-block;
+        padding: 0 4px;
+      }
+
+      @media print {
+        @page {
+          size: A4;
+          margin: 0;
+        }
+
+        body {
+          background: #fff;
+          padding: 0;
+          margin: 0;
+        }
+
+        .card-face {
+          transform: none !important;
+          margin: 0 auto !important;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .toolbar,
+        .meta,
+        .no-print {
+          display: none !important;
+        }
+
+        .app-container {
+          display: block !important;
+        }
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding: 10px;
+        }
+
+        .card-face {
+          transform: scale(0.88);
+          transform-origin: top center;
+          margin-bottom: -48px;
+        }
+      }
+
+      /* Editor Layout & Styles */
+      .app-container {
+        display: flex;
+        flex-direction: row;
+        max-width: 1100px;
+        margin: 0 auto;
+        gap: 30px;
+        align-items: flex-start;
+      }
+
+      .editor-section {
+        flex: 1.2;
+        min-width: 320px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 146, 69, 0.15);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 10px 30px rgba(0, 146, 69, 0.06);
+      }
+
+      .preview-section {
+        flex: 1;
+        position: sticky;
+        top: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .editor-title {
+        color: #009245;
+        font-weight: 800;
+        margin-bottom: 24px;
+        font-size: 24px;
+        border-bottom: 2px solid #009245;
+        padding-bottom: 10px;
+      }
+
+      .form-section-title {
+        color: #244b3d;
+        font-size: 15px;
+        font-weight: 700;
+        margin-top: 20px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-left: 3px solid #009245;
+        padding-left: 8px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 6px;
+      }
+
+      .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .form-control:focus, .form-select:focus {
+        border-color: #009245;
+        box-shadow: 0 0 0 3px rgba(0, 146, 69, 0.15);
+        outline: none;
+      }
+
+      /* Photo Upload Dropzone */
+      .photo-dropzone {
+        border: 2px dashed #009245;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        background: rgba(0, 146, 69, 0.02);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .photo-dropzone:hover {
+        background: rgba(0, 146, 69, 0.06);
+      }
+
+      .photo-dropzone input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .dropzone-text {
+        font-size: 13px;
+        color: #555;
+        margin: 0;
+      }
+
+      .dropzone-hint {
+        font-size: 11px;
+        color: #777;
+        margin-top: 4px;
+        margin-bottom: 0;
+      }
+
+      .no-print {
+        display: block;
+      }
+
+      @media (max-width: 991px) {
+        .app-container {
+          flex-direction: column-reverse;
+          gap: 20px;
+        }
+        .preview-section {
+          position: relative;
+          top: 0;
+          width: 100%;
+        }
+        .editor-section {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- ── EDITOR FORM (LEFT/TOP) ── -->
+      <div class="editor-section no-print">
+        <h2 class="editor-title">ID Card Editor</h2>
+        
+        <div class="form-section-title">Front Details</div>
+        
+        <div class="form-group">
+          <label>Profile Photo</label>
+          <div class="photo-dropzone">
+            <p class="dropzone-text">📸 Click or drag image here to upload</p>
+            <p class="dropzone-hint">Supports PNG, JPG, JPEG</p>
+            <input type="file" id="input-photo" accept="image/*" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-name">Full Name</label>
+          <input type="text" id="input-name" class="form-control w-100" value="SAMPLE MEMBER NAME" />
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="input-position">Position</label>
+            <input type="text" id="input-position" class="form-control w-100" value="State Coordinator" />
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="input-state">State</label>
+            <input type="text" id="input-state" class="form-control w-100" value="Tamilnadu" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="input-wing">Wing</label>
+            <input type="text" id="input-wing" class="form-control w-100" list="wings-list" value="Youth Wing" />
+            <datalist id="wings-list">
+              <option value="Youth Wing"></option>
+              <option value="Women's Wing"></option>
+              <option value="Traders Wing"></option>
+              <option value="IT Wing"></option>
+              <option value="Law Wing"></option>
+            </datalist>
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="input-id-number">ID Number</label>
+            <div class="input-group">
+              <input type="text" id="input-id-number" class="form-control" value="TNV-001234" />
+              <button class="btn btn-outline-success" type="button" id="btn-generate-id">Generate</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-title">Back Details</div>
+
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="input-dob">Date of Birth</label>
+            <input type="date" id="input-dob" class="form-control w-100" value="1985-01-01" />
+          </div>
+          <div class="col-md-3 form-group">
+            <label for="input-age">Age</label>
+            <input type="number" id="input-age" class="form-control w-100" value="40" readonly />
+          </div>
+          <div class="col-md-3 form-group">
+            <label for="input-blood-group">Blood Group</label>
+            <select id="input-blood-group" class="form-select w-100">
+              <option value="O+" selected>O+</option>
+              <option value="O-">O-</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-address">Address</label>
+          <textarea id="input-address" class="form-control w-100" rows="3">12, Gandhi Street, Anna Nagar, Chennai - 600040</textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="input-contact">Contact Number</label>
+            <input type="text" id="input-contact" class="form-control w-100" value="9876543210" />
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="input-sig-name">Signature Name</label>
+            <input type="text" id="input-sig-name" class="form-control w-100" value="SENTHIL KUMAR N" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CARD PREVIEW (RIGHT/BOTTOM) ── -->
+      <div class="preview-section">
+        <div class="toolbar">
+          <button type="button" onclick="window.print()">Print Card</button>
+          <a href="/">Back</a>
+        </div>
+        <div class="card-wrap">
+          <p class="meta">Generated: 05 Jun 2025, 10:30 AM</p>
+
+          <!-- ── FRONT ── -->
+          <div id="page1-div" class="card-face" style="height: 573px;">
+            <div class="front-photo-wrap">
+              <img id="card-photo" src="https://via.placeholder.com/137x136" crossorigin="anonymous" class="rounded img-thumbnail photo" />
+            </div>
+
+            <div class="front-stack">
+              <div class="front-line">
+                <p class="name" id="card-name">SAMPLE MEMBER NAME</p>
+              </div>
+              <div class="front-meta">
+                <div class="front-line">
+                  <p class="detail-line" id="card-position">State Coordinator</p>
+                </div>
+                <div class="front-line">
+                  <p class="detail-line" id="card-state">Tamilnadu</p>
+                </div>
+                <div class="front-line">
+                  <p class="detail-line" id="card-wing">Youth Wing</p>
+                </div>
+                <div class="front-line">
+                  <p class="id-number" id="card-id-number">TNV-001234</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── BACK ── -->
+          <div id="page2-div" class="card-face" style="min-height: 590px; margin-top: 20px;">
+            <div class="back-content">
+              <div class="back-details">
+                <div class="back-row">
+                  <div class="back-label">DATE OF BIRTH</div>
+                  <div class="back-sep">:</div>
+                  <div class="back-value" id="card-dob">01 Jan 1985</div>
+                </div>
+
+                <div class="back-row">
+                  <div class="back-label">AGE</div>
+                  <div class="back-sep">:</div>
+                  <div class="back-value" id="card-age">40</div>
+                </div>
+
+                <div class="back-row">
+                  <div class="back-label">BLOOD GROUP</div>
+                  <div class="back-sep">:</div>
+                  <div class="back-value" id="card-blood-group">O+</div>
+                </div>
+
+                <div class="back-row">
+                  <div class="back-label">ADDRESS</div>
+                  <div class="back-sep">:</div>
+                  <div class="back-value address" id="card-address">12, Gandhi Street, Anna Nagar, Chennai - 600040</div>
+                </div>
+
+                <div class="back-row" style="margin-top: 8px;">
+                  <div class="back-label">CONTACT</div>
+                  <div class="back-sep">:</div>
+                  <div class="back-value"><span class="contact-value" id="card-contact">9876543210</span></div>
+                </div>
+              </div>
+
+              <div class="back-bottom">
+                <div class="qr-wrap">
+                  <img id="card-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=96x88&data=TNV-001234" width="96" height="88" alt="QR Code" />
+                </div>
+                <div class="sign-wrap">
+                  <img id="card-sig-img" src="signature.png" alt="Signature" class="signature-img" />
+                  <p class="signature-name" id="card-sig-name">SENTHIL KUMAR N</p>
+                  <p class="small">Founder &amp; State President</p>
+                  <p class="small">Tamilnadu Vanigargalin Sangamam</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INTERACTIVE CONTROLLER ── -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Live update utility function
+        function setupLiveUpdate(inputId, cardId, transformFn) {
+          const input = document.getElementById(inputId);
+          const cardEl = document.getElementById(cardId);
+          if (input && cardEl) {
+            input.addEventListener('input', () => {
+              const val = input.value;
+              if (transformFn) {
+                cardEl.innerHTML = transformFn(val);
+              } else {
+                cardEl.textContent = val;
+              }
+            });
+          }
+        }
+
+        // Bind Front fields
+        setupLiveUpdate('input-name', 'card-name');
+        setupLiveUpdate('input-position', 'card-position');
+        setupLiveUpdate('input-state', 'card-state');
+        setupLiveUpdate('input-wing', 'card-wing');
+
+        // Bind ID number to text and QR code
+        const inputIdNumber = document.getElementById('input-id-number');
+        const cardIdNumber = document.getElementById('card-id-number');
+        const cardQrCode = document.getElementById('card-qr-code');
+        if (inputIdNumber) {
+          inputIdNumber.addEventListener('input', () => {
+            const val = inputIdNumber.value;
+            if (cardIdNumber) cardIdNumber.textContent = val;
+            if (cardQrCode) {
+              cardQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=96x88&data=${encodeURIComponent(val)}`;
+            }
+          });
+        }
+
+        // Dynamic ID Generator Button
+        const btnGenerateId = document.getElementById('btn-generate-id');
+        if (btnGenerateId && inputIdNumber) {
+          btnGenerateId.addEventListener('click', () => {
+            const prefix = "TNV-";
+            const randomDigits = Math.floor(100000 + Math.random() * 900000); // 6-digit number
+            const newId = prefix + randomDigits;
+            inputIdNumber.value = newId;
+            inputIdNumber.dispatchEvent(new Event('input'));
+          });
+        }
+
+        // Helper to format Date string (yyyy-mm-dd -> DD MMM YYYY)
+        function formatDate(dateString) {
+          if (!dateString) return "";
+          const date = new Date(dateString);
+          if (isNaN(date)) return dateString;
+          const day = String(date.getDate()).padStart(2, '0');
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const month = months[date.getMonth()];
+          const year = date.getFullYear();
+          return `${day} ${month} ${year}`;
+        }
+
+        // Helper to calculate Age based on date string
+        function calculateAge(dateString) {
+          if (!dateString) return "";
+          const today = new Date();
+          const birthDate = new Date(dateString);
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          return age >= 0 ? age : 0;
+        }
+
+        // DOB calendar handler with automatic age calculations
+        const dobInput = document.getElementById('input-dob');
+        const ageInput = document.getElementById('input-age');
+        const cardDob = document.getElementById('card-dob');
+        const cardAge = document.getElementById('card-age');
+
+        function updateDobAndAge() {
+          const val = dobInput.value;
+          if (val) {
+            const formattedDate = formatDate(val);
+            const calculatedAge = calculateAge(val);
+            
+            if (cardDob) cardDob.textContent = formattedDate;
+            if (ageInput) ageInput.value = calculatedAge;
+            if (cardAge) cardAge.textContent = calculatedAge;
+          }
+        }
+
+        if (dobInput) {
+          dobInput.addEventListener('change', updateDobAndAge);
+          // Initial trigger to match default
+          updateDobAndAge();
+        }
+
+        // Bind Blood Group dropdown
+        const bgInput = document.getElementById('input-blood-group');
+        const cardBg = document.getElementById('card-blood-group');
+        if (bgInput && cardBg) {
+          bgInput.addEventListener('change', () => {
+            cardBg.textContent = bgInput.value;
+          });
+        }
+
+        // Bind remaining Back fields
+        setupLiveUpdate('input-address', 'card-address');
+        setupLiveUpdate('input-contact', 'card-contact');
+        setupLiveUpdate('input-sig-name', 'card-sig-name');
+
+        // Photo Upload and Preview Handler
+        const photoInput = document.getElementById('input-photo');
+        const cardPhoto = document.getElementById('card-photo');
+        if (photoInput && cardPhoto) {
+          photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = function(event) {
+                cardPhoto.src = event.target.result;
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

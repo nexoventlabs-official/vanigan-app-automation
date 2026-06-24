@@ -103,4 +103,20 @@ async function getMemberListingModel() {
   return _models.Member;
 }
 
-module.exports = { getConnection, getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel, getOrganizerModel, getMemberListingModel };
+async function getPostingModel() {
+  if (_models.Posting) return _models.Posting;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Posting');
+  _models.Posting = conn.models['Posting'] || conn.model('Posting', rawSchema);
+  return _models.Posting;
+}
+
+async function getWingModel() {
+  if (_models.Wing) return _models.Wing;
+  const conn = await getConnection();
+  const { rawSchema } = require('../models/Wing');
+  _models.Wing = conn.models['Wing'] || conn.model('Wing', rawSchema);
+  return _models.Wing;
+}
+
+module.exports = { getConnection, getMemberModel, getBusinessModel, getReviewModel, getVaniganUserModel, getOrganizerModel, getMemberListingModel, getPostingModel, getWingModel };
