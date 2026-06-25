@@ -223,68 +223,106 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
           ) : (
             <>
               {member.assemblyName && (
-                <p
+                <div
                   style={{
-                    margin: "0 0 6px",
-                    fontSize: 19,
-                    fontWeight: 700,
-                    color: "#111",
+                    margin: "0 auto 6px",
+                    display: "table",
                     textAlign: "center",
-                    lineHeight: 1.2,
+                    lineHeight: "22px",
                   }}
                 >
-                  <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.assemblyName}</span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "#fff",
-                      background: "#009245",
-                      borderRadius: 4,
-                      padding: "2px 5px",
-                      marginLeft: 4,
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      lineHeight: "13px",
-                    }}
-                  >
-                    Assm
-                  </span>
-                </p>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      style={{
+                        display: "table-cell",
+                        verticalAlign: "middle",
+                        fontSize: 19,
+                        fontWeight: 700,
+                        color: "#111",
+                        fontFamily: "Arial, sans-serif",
+                      }}
+                    >
+                      {member.assemblyName}
+                    </div>
+                    <div
+                      style={{
+                        display: "table-cell",
+                        verticalAlign: "middle",
+                        paddingLeft: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#fff",
+                          background: "#009245",
+                          borderRadius: 4,
+                          height: 16,
+                          lineHeight: "16px",
+                          padding: "0 5px",
+                          textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        Assm
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
               {member.district && (
-                <p
+                <div
                   style={{
-                    margin: "0 0 6px",
-                    fontSize: 19,
-                    fontWeight: 700,
-                    color: "#111",
+                    margin: "0 auto 6px",
+                    display: "table",
                     textAlign: "center",
-                    lineHeight: 1.2,
+                    lineHeight: "22px",
                   }}
                 >
-                  <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.district}</span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "#fff",
-                      background: "#009245",
-                      borderRadius: 4,
-                      padding: "2px 5px",
-                      marginLeft: 4,
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      lineHeight: "13px",
-                    }}
-                  >
-                    Dist
-                  </span>
-                </p>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      style={{
+                        display: "table-cell",
+                        verticalAlign: "middle",
+                        fontSize: 19,
+                        fontWeight: 700,
+                        color: "#111",
+                        fontFamily: "Arial, sans-serif",
+                      }}
+                    >
+                      {member.district}
+                    </div>
+                    <div
+                      style={{
+                        display: "table-cell",
+                        verticalAlign: "middle",
+                        paddingLeft: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#fff",
+                          background: "#009245",
+                          borderRadius: 4,
+                          height: 16,
+                          lineHeight: "16px",
+                          padding: "0 5px",
+                          textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        Dist
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
               {member.zone && (
                 <p
