@@ -20,6 +20,10 @@ const uploads = [
     remote: '/var/www/vanigan/backend/services/memberDb.js'
   },
   {
+    local: path.join(localBase, 'backend', 'services', 'memberCard.js'),
+    remote: '/var/www/vanigan/backend/services/memberCard.js'
+  },
+  {
     local: path.join(localBase, 'backend', 'models', 'Posting.js'),
     remote: '/var/www/vanigan/backend/models/Posting.js'
   },

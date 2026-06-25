@@ -229,15 +229,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    textAlign: "center",
+                    lineHeight: 1.2,
                   }}
                 >
-                  <span>{member.assemblyName}</span>
+                  <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.assemblyName}</span>
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -261,15 +261,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    textAlign: "center",
+                    lineHeight: 1.2,
                   }}
                 >
-                  <span>{member.district}</span>
+                  <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.district}</span>
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -470,16 +470,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                   fontWeight: 700,
                   fontSize: 13,
                   color: "#111",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  lineHeight: "15px",
+                  textAlign: "center",
+                  lineHeight: 1.2,
                 }}
               >
-                <span>{member.assemblyName}</span>
+                <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.assemblyName}</span>
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -504,16 +503,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                   fontWeight: 700,
                   fontSize: 13,
                   color: "#111",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  lineHeight: "15px",
+                  textAlign: "center",
+                  lineHeight: 1.2,
                 }}
               >
-                <span>{member.district}</span>
+                <span style={{ display: "inline-block", verticalAlign: "middle" }}>{member.district}</span>
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
