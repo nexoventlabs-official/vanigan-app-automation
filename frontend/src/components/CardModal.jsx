@@ -229,12 +229,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {member.assemblyName}{" "}
+                  <span>{member.assemblyName}</span>
                   <span
                     style={{
-                      display: "inline",
+                      display: "inline-block",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -244,6 +247,7 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
+                      lineHeight: "13px",
                     }}
                   >
                     Assm
@@ -257,12 +261,15 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {member.district}{" "}
+                  <span>{member.district}</span>
                   <span
                     style={{
-                      display: "inline",
+                      display: "inline-block",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -272,6 +279,7 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
+                      lineHeight: "13px",
                     }}
                   >
                     Dist
@@ -462,15 +470,16 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                   fontWeight: 700,
                   fontSize: 13,
                   color: "#111",
-                  textAlign: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                   lineHeight: "15px",
                 }}
               >
-                {member.assemblyName}{" "}
+                <span>{member.assemblyName}</span>
                 <span
                   style={{
                     display: "inline-block",
-                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -495,15 +504,16 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                   fontWeight: 700,
                   fontSize: 13,
                   color: "#111",
-                  textAlign: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                   lineHeight: "15px",
                 }}
               >
-                {member.district}{" "}
+                <span>{member.district}</span>
                 <span
                   style={{
                     display: "inline-block",
-                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
