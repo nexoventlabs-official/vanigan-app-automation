@@ -178,8 +178,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   {member.assemblyName}{" "}
                   <span
                     style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
+                      display: "inline",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -189,7 +188,6 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
-                      lineHeight: "12px",
                     }}
                   >
                     Assm
@@ -208,8 +206,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   {member.district}{" "}
                   <span
                     style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
+                      display: "inline",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -219,7 +216,6 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
-                      lineHeight: "12px",
                     }}
                   >
                     Dist

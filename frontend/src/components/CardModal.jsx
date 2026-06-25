@@ -229,15 +229,12 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: "22px",
-                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.assemblyName}{" "}
                   <span
                     style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
+                      display: "inline",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -247,8 +244,6 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
-                      fontFamily: "Arial, sans-serif",
-                      lineHeight: "12px",
                     }}
                   >
                     Assm
@@ -262,15 +257,12 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: "22px",
-                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.district}{" "}
                   <span
                     style={{
-                      display: "inline-block",
-                      verticalAlign: "middle",
+                      display: "inline",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
@@ -280,8 +272,6 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                       marginLeft: 4,
                       textTransform: "uppercase",
                       whiteSpace: "nowrap",
-                      fontFamily: "Arial, sans-serif",
-                      lineHeight: "12px",
                     }}
                   >
                     Dist
