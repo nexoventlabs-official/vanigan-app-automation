@@ -110,6 +110,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
               color: "#009245",
               lineHeight: 1.08,
               wordBreak: "break-word",
+              fontFamily: "Arial, sans-serif",
             }}
           >
             {(member.name || "").toUpperCase()}
@@ -125,6 +126,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   color: "#111",
                   lineHeight: 1.06,
                   textTransform: "capitalize",
+                  fontFamily: "Arial, sans-serif",
                 }}
               >
                 {member.bizCategory || "Organizer"}
@@ -139,6 +141,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     color: "#111",
                     lineHeight: 1.06,
                     textTransform: "capitalize",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.district}
@@ -154,6 +157,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     color: "#111",
                     lineHeight: 1.06,
                     textTransform: "capitalize",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.assemblyName}
@@ -169,24 +173,23 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: 1.06,
                   }}
                 >
                   {member.assemblyName}{" "}
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
                       borderRadius: 4,
-                      padding: "1px 5px",
+                      padding: "2px 5px",
                       marginLeft: 4,
                       textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      lineHeight: 1.4,
-                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                      lineHeight: "12px",
                     }}
                   >
                     Assm
@@ -200,24 +203,23 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: 1.06,
                   }}
                 >
                   {member.district}{" "}
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
                       borderRadius: 4,
-                      padding: "1px 5px",
+                      padding: "2px 5px",
                       marginLeft: 4,
                       textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      lineHeight: 1.4,
-                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                      lineHeight: "12px",
                     }}
                   >
                     Dist
@@ -232,6 +234,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontWeight: 700,
                     color: "#111",
                     lineHeight: 1.06,
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.zone}
@@ -247,6 +250,8 @@ function CardFront({ member, display = "interactive", flipped = false }) {
               color: "#111",
               letterSpacing: "0.2px",
               marginTop: 2,
+              fontFamily: "Arial, sans-serif",
+              lineHeight: 1.1,
             }}
           >
             {member.membershipId || "TNV-000000"}
@@ -256,7 +261,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
     );
   }
 
-  // Interactive display (320×480, percentage-based positions)
+  // Interactive display (320×448, percentage-based positions)
   return (
     <div
       style={{
@@ -267,7 +272,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
         borderRadius: 18,
         overflow: "hidden",
         backgroundImage: `url(${FRONT_BG})`,
-        backgroundSize: "cover",
+        backgroundSize: "100% 100%",
         backgroundPosition: "center",
         boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
         transform: "rotateY(0deg)",
@@ -412,6 +417,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -420,6 +426,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     padding: "1px 4px",
                     marginLeft: 2,
                     textTransform: "uppercase",
+                    lineHeight: "10px",
                   }}
                 >
                   Assm
@@ -441,6 +448,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -449,6 +457,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     padding: "1px 4px",
                     marginLeft: 2,
                     textTransform: "uppercase",
+                    lineHeight: "10px",
                   }}
                 >
                   Dist
@@ -537,12 +546,15 @@ function CardBack({ member, display = "interactive", flipped = false }) {
   if (isCapture) {
     // Capture clone — exact TNVS pixel positions for back card
     // back-content: top:234px, left:22px, right:20px
-    // back-details: translateY(-60px) → effective top = 234-60 = 174px
-    const rowBase = {
+    const rowBaseCapture = {
       display: "grid",
       gridTemplateColumns: "46% 6% 48%",
+      alignItems: "center",
+      overflow: "visible",
+    };
+    const rowAddressCapture = {
+      ...rowBaseCapture,
       alignItems: "start",
-      overflow: "hidden",
     };
 
     return (
@@ -564,7 +576,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
 
         {/* Details — top:174px (234-60), left:22px, right:20px — exact TNVS */}
         <div style={{ position: "absolute", top: 174, left: 22, right: 20 }}>
-          <div style={{ ...rowBase, height: 20 }}>
+          <div style={{ ...rowBaseCapture, height: 24 }}>
             <div
               style={{
                 fontSize: 14,
@@ -577,8 +589,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
             <div
               style={{
-                fontSize: 26,
-                lineHeight: 0.7,
+                fontSize: 17,
+                lineHeight: 1.12,
                 textAlign: "center",
                 fontWeight: 700,
                 color: "#111",
@@ -598,7 +610,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+          <div style={{ ...rowBaseCapture, height: 24, marginBottom: 8 }}>
             <div
               style={{
                 fontSize: 14,
@@ -611,8 +623,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
             <div
               style={{
-                fontSize: 26,
-                lineHeight: 0.7,
+                fontSize: 17,
+                lineHeight: 1.12,
                 textAlign: "center",
                 fontWeight: 700,
                 color: "#111",
@@ -632,7 +644,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+          <div style={{ ...rowBaseCapture, height: 24, marginBottom: 8 }}>
             <div
               style={{
                 fontSize: 14,
@@ -645,8 +657,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
             <div
               style={{
-                fontSize: 26,
-                lineHeight: 0.7,
+                fontSize: 17,
+                lineHeight: 1.12,
                 textAlign: "center",
                 fontWeight: 700,
                 color: "#111",
@@ -667,7 +679,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
           </div>
 
           {/* ADDRESS — fixed height 76px keeps gap consistent */}
-          <div style={{ ...rowBase, height: 76, marginBottom: 10 }}>
+          <div style={{ ...rowAddressCapture, height: 84, marginBottom: 8 }}>
             <div
               style={{
                 fontSize: 14,
@@ -680,8 +692,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
             <div
               style={{
-                fontSize: 26,
-                lineHeight: 0.7,
+                fontSize: 17,
+                lineHeight: 1.12,
                 textAlign: "center",
                 fontWeight: 700,
                 color: "#111",
@@ -702,7 +714,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20 }}>
+          <div style={{ ...rowBaseCapture, height: 24 }}>
             <div
               style={{
                 fontSize: 14,
@@ -715,8 +727,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
             </div>
             <div
               style={{
-                fontSize: 26,
-                lineHeight: 0.7,
+                fontSize: 17,
+                lineHeight: 1.12,
                 textAlign: "center",
                 fontWeight: 700,
                 color: "#111",
@@ -820,7 +832,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
     );
   }
 
-  // Interactive display (320×480)
+  // Interactive display (320×448)
   const rowBase = {
     display: "grid",
     gridTemplateColumns: "46% 6% 48%",
@@ -853,7 +865,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
       <div
         style={{
           position: "absolute",
-          top: "28%",
+          top: "29.5%",
           left: 22,
           right: 20,
           backfaceVisibility: "hidden",
@@ -1258,35 +1270,33 @@ export function Card3D({ member }) {
     try {
       const combo = await buildComboCanvas(frontRef.current, backRef.current);
       const uid = member.membershipId || "vanigan-card";
-      if (navigator.canShare) {
-        const blob = await new Promise((res) =>
-          combo.toBlob(res, "image/png", 1.0),
-        );
-        const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
-        if (navigator.canShare({ files: [file] })) {
-          const referralUrl = `${SITE_URL}?ref=${uid}`;
-          await navigator.share({
-            title: "Vanigan Membership Card",
-            text: `I'm a Vanigan member! 🪪\nMembership ID: ${uid}\nJoin using my link: ${referralUrl}`,
-            files: [file],
-          });
-          setLoading(false);
-          setLoadMsg("");
-          return;
-        }
+      const blob = await new Promise((res) => combo.toBlob(res, "image/png", 1.0));
+      if (!blob) throw new Error("Failed to generate image blob");
+      
+      const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
+      const verifyUrl = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file]
+        });
+      } else {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        await navigator.clipboard.writeText(verifyUrl).catch(() => {});
       }
-      // Fallback — download
-      const link = document.createElement("a");
-      link.download = `${uid}_card.png`;
-      link.href = combo.toDataURL("image/png", 1.0);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     } catch (e) {
-      if (e.name !== "AbortError") alert("Share failed: " + e.message);
+      if (e.name !== "AbortError") {
+        console.error("Share failed:", e);
+        const verifyUrl = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        navigator.clipboard.writeText(verifyUrl).catch(() => {});
+      }
+    } finally {
+      setLoading(false);
+      setLoadMsg("");
     }
-    setLoading(false);
-    setLoadMsg("");
   }, [member]);
 
   return (
@@ -1372,12 +1382,12 @@ export function Card3D({ member }) {
         </div>
       </div>
 
-      {/* Interactive 3D card (display size 320×480) */}
+      {/* Interactive 3D card (display size 320×448) */}
       <div
         ref={cardRef}
         style={{
           width: 320,
-          height: 480,
+          height: 448,
           perspective: "1000px",
           cursor: "pointer",
         }}

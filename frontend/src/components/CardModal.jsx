@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import html2canvas from "html2canvas";
-import { X, Download, RotateCw } from "lucide-react";
+import { X, Download, RotateCw, Share2 } from "lucide-react";
 
 const FRONT_BG =
   "https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png";
@@ -34,7 +34,7 @@ function waitImages(el) {
   });
 }
 
-async function buildComboCanvas(frontEl, backEl) {
+export async function buildComboCanvas(frontEl, backEl) {
   const SCALE = 3; // 421*3=1263px per card — full quality
 
   await waitImages(frontEl);
@@ -84,7 +84,7 @@ async function buildComboCanvas(frontEl, backEl) {
 }
 
 /* ── CardFront component ── */
-function CardFront({ member, display = "interactive", flipped = false }) {
+export function CardFront({ member, display = "interactive", flipped = false }) {
   const isCapture = display === "capture";
 
   if (isCapture) {
@@ -169,6 +169,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
               color: "#009245",
               lineHeight: 1.08,
               wordBreak: "break-word",
+              fontFamily: "Arial, sans-serif",
             }}
           >
             {(member.name || "").toUpperCase()}
@@ -183,6 +184,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   color: "#111",
                   lineHeight: 1.06,
                   textTransform: "capitalize",
+                  fontFamily: "Arial, sans-serif",
                 }}
               >
                 {member.bizCategory || "Organizer"}
@@ -196,6 +198,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     color: "#111",
                     lineHeight: 1.06,
                     textTransform: "capitalize",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.district}
@@ -210,6 +213,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     color: "#111",
                     lineHeight: 1.06,
                     textTransform: "capitalize",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.assemblyName}
@@ -225,24 +229,26 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: 1.06,
+                    lineHeight: "22px",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.assemblyName}{" "}
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
                       borderRadius: 4,
-                      padding: "1px 5px",
+                      padding: "2px 5px",
                       marginLeft: 4,
                       textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      lineHeight: 1.4,
-                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                      fontFamily: "Arial, sans-serif",
+                      lineHeight: "12px",
                     }}
                   >
                     Assm
@@ -256,24 +262,26 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontSize: 19,
                     fontWeight: 700,
                     color: "#111",
-                    lineHeight: 1.06,
+                    lineHeight: "22px",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.district}{" "}
                   <span
                     style={{
                       display: "inline-block",
+                      verticalAlign: "middle",
                       fontSize: 10,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
                       borderRadius: 4,
-                      padding: "1px 5px",
+                      padding: "2px 5px",
                       marginLeft: 4,
                       textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      lineHeight: 1.4,
-                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                      fontFamily: "Arial, sans-serif",
+                      lineHeight: "12px",
                     }}
                   >
                     Dist
@@ -288,6 +296,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     fontWeight: 700,
                     color: "#111",
                     lineHeight: 1.06,
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   {member.zone}
@@ -303,6 +312,8 @@ function CardFront({ member, display = "interactive", flipped = false }) {
               color: "#111",
               letterSpacing: "0.2px",
               marginTop: 2,
+              fontFamily: "Arial, sans-serif",
+              lineHeight: 1.1,
             }}
           >
             {member.membershipId || "TNV-000000"}
@@ -312,7 +323,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
     );
   }
 
-  // Interactive display (320×480)
+  // Interactive display (320×448)
   return (
     <div
       style={{
@@ -323,7 +334,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
         borderRadius: 18,
         overflow: "hidden",
         backgroundImage: `url(${FRONT_BG})`,
-        backgroundSize: "cover",
+        backgroundSize: "100% 100%",
         backgroundPosition: "center",
         boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
         transform: "rotateY(0deg)",
@@ -462,12 +473,14 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   fontSize: 13,
                   color: "#111",
                   textAlign: "center",
+                  lineHeight: "15px",
                 }}
               >
                 {member.assemblyName}{" "}
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -476,6 +489,8 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     padding: "1px 4px",
                     marginLeft: 2,
                     textTransform: "uppercase",
+                    lineHeight: "10px",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   Assm
@@ -491,12 +506,14 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                   fontSize: 13,
                   color: "#111",
                   textAlign: "center",
+                  lineHeight: "15px",
                 }}
               >
                 {member.district}{" "}
                 <span
                   style={{
                     display: "inline-block",
+                    verticalAlign: "middle",
                     fontSize: 8,
                     fontWeight: 700,
                     color: "#fff",
@@ -505,6 +522,8 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     padding: "1px 4px",
                     marginLeft: 2,
                     textTransform: "uppercase",
+                    lineHeight: "10px",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
                   Dist
@@ -546,7 +565,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
 }
 
 /* ── CardBack component ── */
-function CardBack({ member, display = "interactive", flipped = false }) {
+export function CardBack({ member, display = "interactive", flipped = false }) {
   const isCapture = display === "capture";
   const qrData = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
   const qrSize = isCapture ? 96 : 90;
@@ -582,6 +601,17 @@ function CardBack({ member, display = "interactive", flipped = false }) {
   };
 
   if (isCapture) {
+    const rowBaseCapture = {
+      display: "grid",
+      gridTemplateColumns: "46% 6% 48%",
+      alignItems: "center",
+      overflow: "visible",
+    };
+    const rowAddressCapture = {
+      ...rowBaseCapture,
+      alignItems: "start",
+    };
+
     return (
       <div
         style={{
@@ -599,51 +629,51 @@ function CardBack({ member, display = "interactive", flipped = false }) {
         />
 
         <div style={{ position: "absolute", top: 174, left: 22, right: 20 }}>
-          <div style={{ ...rowBase, height: 20 }}>
+          <div style={{ ...rowBaseCapture, height: 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>
               DATE OF BIRTH
             </div>
-            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
+            <div style={{ fontSize: 17, lineHeight: 1.12, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
             <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: "#111" }}>
               {formatDob(member.dob)}
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+          <div style={{ ...rowBaseCapture, height: 24, marginBottom: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>
               AGE
             </div>
-            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
+            <div style={{ fontSize: 17, lineHeight: 1.12, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
             <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: "#111" }}>
               {member.age || "—"}
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20, marginBottom: 10 }}>
+          <div style={{ ...rowBaseCapture, height: 24, marginBottom: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>
               BLOOD GROUP
             </div>
-            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
+            <div style={{ fontSize: 17, lineHeight: 1.12, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
             <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: "#111" }}>
               {member.bloodGroup || "—"}
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 76, marginBottom: 10 }}>
+          <div style={{ ...rowAddressCapture, height: 84, marginBottom: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>
               ADDRESS
             </div>
-            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
+            <div style={{ fontSize: 17, lineHeight: 1.12, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
             <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.12, wordBreak: "break-word", color: "#111" }}>
               {addressRaw}
             </div>
           </div>
 
-          <div style={{ ...rowBase, height: 20 }}>
+          <div style={{ ...rowBaseCapture, height: 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>
               CONTACT
             </div>
-            <div style={{ fontSize: 26, lineHeight: 0.7, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
+            <div style={{ fontSize: 17, lineHeight: 1.12, textAlign: "center", fontWeight: 700, color: "#111" }}>:</div>
             <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.12, color: "#111" }}>
               <span style={{ background: "rgba(255,255,255,0.78)", display: "inline-block", padding: "0 4px" }}>
                 {member.phone || "—"}
@@ -700,7 +730,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
     );
   }
 
-  // Interactive display (320×480)
+  // Interactive display (320×448)
   const rowSingle = { ...rowBase, height: 20, marginBottom: 0 };
 
   return (
@@ -726,7 +756,7 @@ function CardBack({ member, display = "interactive", flipped = false }) {
       <div
         style={{
           position: "absolute",
-          top: "28%",
+          top: "29.5%",
           left: 22,
           right: 20,
           backfaceVisibility: "hidden",
@@ -859,6 +889,43 @@ export default function CardModal({ member, onClose }) {
     }
   }, [member]);
 
+  const handleShare = useCallback(async () => {
+    if (!frontRef.current || !backRef.current) return;
+    setLoading(true);
+    setLoadMsg("Preparing card for sharing...");
+    try {
+      const combo = await buildComboCanvas(frontRef.current, backRef.current);
+      const uid = member.membershipId || "vanigan-card";
+      
+      const blob = await new Promise((resolve) => combo.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("Failed to generate image blob");
+      
+      const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
+      const verifyUrl = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file]
+        });
+      } else {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        await navigator.clipboard.writeText(verifyUrl).catch(() => {});
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        console.error("Share failed:", e);
+        const verifyUrl = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        navigator.clipboard.writeText(verifyUrl).catch(() => {});
+      }
+    } finally {
+      setLoading(false);
+      setLoadMsg("");
+    }
+  }, [member]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
       {/* Loading overlay */}
@@ -879,64 +946,101 @@ export default function CardModal({ member, onClose }) {
         </div>
       </div>
 
-      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md p-6 relative flex flex-col items-center shadow-2xl">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md md:max-w-2xl p-6 relative flex flex-col md:flex-row gap-8 items-center md:items-start shadow-2xl max-h-[95vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition z-10"
         >
           <X size={20} />
         </button>
 
-        <h3 className="font-extrabold text-white text-lg tracking-tight mb-4 text-center">
-          Membership Card Preview
-        </h3>
-
-        {/* 3D Flippable Card Frame */}
-        <div
-          onClick={() => setFlipped(!flipped)}
-          style={{
-            width: 320,
-            height: 480,
-            perspective: "1000px",
-            cursor: "pointer",
-            marginBottom: 16,
-          }}
-        >
+        {/* Left Side: Card Frame & Flip Hint */}
+        <div className="flex flex-col items-center select-none flex-shrink-0">
           <div
+            onClick={() => setFlipped(!flipped)}
             style={{
-              width: "100%",
-              height: "100%",
-              position: "relative",
-              transformStyle: "preserve-3d",
-              WebkitTransformStyle: "preserve-3d",
-              transition: "transform 0.6s cubic-bezier(0.4,0,0.2,1)",
-              transform: `rotateY(${flipped ? 180 : 0}deg)`,
+              width: 320,
+              height: 448,
+              perspective: "1000px",
+              cursor: "pointer",
+              marginBottom: 12,
             }}
           >
-            <CardFront member={member} flipped={flipped} />
-            <CardBack member={member} flipped={flipped} />
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                transformStyle: "preserve-3d",
+                WebkitTransformStyle: "preserve-3d",
+                transition: "transform 0.6s cubic-bezier(0.4,0,0.2,1)",
+                transform: `rotateY(${flipped ? 180 : 0}deg)`,
+              }}
+            >
+              <CardFront member={member} flipped={flipped} />
+              <CardBack member={member} flipped={flipped} />
+            </div>
           </div>
+
+          <p className="text-gray-400 text-xs text-center font-medium">
+            {flipped ? "↩ Click card to see front" : "↩ Click card to flip & see back"}
+          </p>
         </div>
 
-        {/* Flip Hint */}
-        <p className="text-gray-400 text-xs mb-6 text-center font-medium">
-          {flipped ? "↩ Click card to see front" : "↩ Click card to flip & see back"}
-        </p>
+        {/* Right Side: Title, Info & Action Buttons */}
+        <div className="flex-1 flex flex-col justify-between w-full md:self-center space-y-6">
+          <div>
+            <h3 className="font-extrabold text-white text-xl tracking-tight text-center md:text-left">
+              Card Preview
+            </h3>
+            <p className="text-gray-400 text-xs mt-1 font-semibold text-center md:text-left">
+              Preview and verify member & organizer credentials.
+            </p>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={() => setFlipped(!flipped)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition text-sm font-semibold"
-          >
-            <RotateCw size={15} /> Flip Card
-          </button>
-          <button
-            onClick={handleDownload}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#66ff4c]/10 border border-[#66ff4c]/30 text-[#66ff4c] hover:bg-[#66ff4c]/20 transition text-sm font-semibold"
-          >
-            <Download size={15} /> Download Card
-          </button>
+          {/* Details Box */}
+          <div className="bg-[#000]/30 border border-white/[0.04] rounded-xl p-4 space-y-2.5 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 font-medium">Full Name</span>
+              <span className="text-white font-bold">{member.name || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 font-medium">Card ID</span>
+              <span className="text-white font-mono font-bold">{member.membershipId || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 font-medium">Designation / Role</span>
+              <span className="text-[#66ff4c] font-bold">{member.bizCategory || 'Member'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 font-medium">District / Wing</span>
+              <span className="text-white font-bold">
+                {[member.district, member.assemblyName].filter(Boolean).join(' / ') || '—'}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons Stack */}
+          <div className="flex flex-col gap-2.5 w-full">
+            <button
+              onClick={() => setFlipped(!flipped)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition text-xs font-bold uppercase tracking-wider"
+            >
+              <RotateCw size={14} /> Flip Card
+            </button>
+            <button
+              onClick={handleDownload}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#66ff4c]/10 border border-[#66ff4c]/30 text-[#66ff4c] hover:bg-[#66ff4c]/20 transition text-xs font-bold uppercase tracking-wider"
+            >
+              <Download size={14} /> Download Card
+            </button>
+            <button
+              onClick={handleShare}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition text-xs font-bold uppercase tracking-wider"
+            >
+              <Share2 size={14} /> Share Card
+            </button>
+          </div>
         </div>
       </div>
     </div>

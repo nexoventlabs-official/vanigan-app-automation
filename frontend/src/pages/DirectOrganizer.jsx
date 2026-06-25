@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Plus, RefreshCw, Printer, AlertTriangle, ArrowLeft, Clipboard, Check } from 'lucide-react';
+import { ShieldCheck, Plus, RefreshCw, Printer, AlertTriangle, ArrowLeft, Clipboard, Check, Share2 } from 'lucide-react';
 import api from '../api';
 import Cropper from 'react-easy-crop';
+import { buildComboCanvas, CardFront, CardBack } from '../components/CardModal.jsx';
 
 async function getCroppedImg(imageSrc, pixelCrop) {
   const image = await new Promise((resolve, reject) => {
@@ -50,6 +51,10 @@ export default function DirectOrganizer() {
   const queryParams = new URLSearchParams(window.location.search);
   const promotePhone = queryParams.get('promotePhone');
   const editPhone = queryParams.get('editPhone');
+
+  // Success modal share refs
+  const successFrontRef = useRef(null);
+  const successBackRef = useRef(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -689,6 +694,41 @@ export default function DirectOrganizer() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareCard = async () => {
+    if (!successFrontRef.current || !successBackRef.current || !successData) return;
+    setSaving(true);
+    try {
+      const combo = await buildComboCanvas(successFrontRef.current, successBackRef.current);
+      const uid = successData.member?.membershipId || "vanigan-card";
+      
+      const blob = await new Promise((resolve) => combo.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("Failed to generate image blob");
+      
+      const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
+      const verifyUrl = `https://vanigan.digital?page=verify&id=${successData.member?.membershipId || "TNV-000000"}`;
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file]
+        });
+      } else {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        await navigator.clipboard.writeText(verifyUrl).catch(() => {});
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        console.error("Share failed:", e);
+        const verifyUrl = `https://vanigan.digital?page=verify&id=${successData.member?.membershipId || "TNV-000000"}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        window.open(whatsappUrl, "_blank");
+        navigator.clipboard.writeText(verifyUrl).catch(() => {});
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -1402,6 +1442,18 @@ export default function DirectOrganizer() {
         </div>
       )}
 
+      {/* Hidden high-res capture clones for sharing */}
+      {successData && (
+        <div style={{ position: "fixed", left: -9999, top: 0, pointerEvents: "none", zIndex: -1, opacity: 0 }}>
+          <div ref={successFrontRef} style={{ width: 421, position: "relative", overflow: "hidden" }}>
+            <CardFront member={successData.member} display="capture" />
+          </div>
+          <div ref={successBackRef} style={{ width: 421, position: "relative", overflow: "hidden", marginTop: 20 }}>
+            <CardBack member={successData.member} display="capture" />
+          </div>
+        </div>
+      )}
+
       {/* Success Modal */}
       {successData && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1435,40 +1487,51 @@ export default function DirectOrganizer() {
               </div>
             </div>
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-col gap-2">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCopyCredentials}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] text-white text-xs font-bold hover:bg-white/[0.04] flex items-center justify-center gap-1.5 transition-all"
+                >
+                  {copied ? <Check size={14} className="text-[#66ff4c]" /> : <Clipboard size={14} />}
+                  {copied ? 'Copied!' : 'Copy Credentials'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessData(null);
+                    if (isEditing) {
+                      navigate('/organizers');
+                    } else if (isPromotion) {
+                      navigate('/members');
+                    } else {
+                      setName('');
+                      setDob('');
+                      setPhone('');
+                      setAddress('');
+                      setBloodGroup('');
+                      setLevel('');
+                      setSelectedState('');
+                      setSelectedDistrict('');
+                      setSelectedAssembly('');
+                      setSelectedZone('');
+                      setSelectedArea('');
+                      setPhotoFile(null);
+                      setPhotoUrl('https://via.placeholder.com/137x136');
+                    }
+                  }}
+                  className="flex-1 btn-primary py-2.5 rounded-xl text-xs font-bold"
+                >
+                  {isEditing ? 'Go to Organizers' : (isPromotion ? 'Go to Members' : 'Create Another')}
+                </button>
+              </div>
               <button
-                onClick={handleCopyCredentials}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] text-white text-xs font-bold hover:bg-white/[0.04] flex items-center justify-center gap-1.5 transition-all"
+                type="button"
+                onClick={handleShareCard}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-bold uppercase tracking-wider"
               >
-                {copied ? <Check size={14} className="text-[#66ff4c]" /> : <Clipboard size={14} />}
-                {copied ? 'Copied!' : 'Copy Credentials'}
-              </button>
-              <button
-                onClick={() => {
-                  setSuccessData(null);
-                  if (isEditing) {
-                    navigate('/organizers');
-                  } else if (isPromotion) {
-                    navigate('/members');
-                  } else {
-                    setName('');
-                    setDob('');
-                    setPhone('');
-                    setAddress('');
-                    setBloodGroup('');
-                    setLevel('');
-                    setSelectedState('');
-                    setSelectedDistrict('');
-                    setSelectedAssembly('');
-                    setSelectedZone('');
-                    setSelectedArea('');
-                    setPhotoFile(null);
-                    setPhotoUrl('https://via.placeholder.com/137x136');
-                  }
-                }}
-                className="flex-1 btn-primary py-2.5 rounded-xl text-xs font-bold"
-              >
-                {isEditing ? 'Go to Organizers' : (isPromotion ? 'Go to Members' : 'Create Another')}
+                <Share2 size={14} /> Share Card
               </button>
             </div>
           </div>
