@@ -223,90 +223,60 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
           ) : (
             <>
               {member.assemblyName && (
-                <div
+                <p
                   style={{
-                    margin: "0 auto 6px",
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.15,
+                    fontFamily: "Arial, sans-serif",
+                    textAlign: "center",
                   }}
                 >
-                  <span
+                  {member.assemblyName}&nbsp;<span
                     style={{
-                      fontSize: 19,
-                      fontWeight: 700,
-                      color: "#111",
-                      fontFamily: "Arial, sans-serif",
-                      lineHeight: 1.15,
-                    }}
-                  >
-                    {member.assemblyName}
-                  </span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      fontSize: 10,
+                      display: "inline",
+                      fontSize: 11,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
-                      borderRadius: 4,
-                      height: 16,
-                      lineHeight: "16px",
-                      padding: "0 5px",
+                      borderRadius: 3,
+                      padding: "2px 5px",
                       textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      boxSizing: "border-box",
-                      marginLeft: 6,
-                      flexShrink: 0,
+                      verticalAlign: "middle",
+                      fontFamily: "Arial, sans-serif",
                     }}
-                  >
-                    Assm
-                  </span>
-                </div>
+                  >ASSM</span>
+                </p>
               )}
               {member.district && (
-                <div
+                <p
                   style={{
-                    margin: "0 auto 6px",
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    margin: "0 0 6px",
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#111",
+                    lineHeight: 1.15,
+                    fontFamily: "Arial, sans-serif",
+                    textAlign: "center",
                   }}
                 >
-                  <span
+                  {member.district}&nbsp;<span
                     style={{
-                      fontSize: 19,
-                      fontWeight: 700,
-                      color: "#111",
-                      fontFamily: "Arial, sans-serif",
-                      lineHeight: 1.15,
-                    }}
-                  >
-                    {member.district}
-                  </span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      fontSize: 10,
+                      display: "inline",
+                      fontSize: 11,
                       fontWeight: 700,
                       color: "#fff",
                       background: "#009245",
-                      borderRadius: 4,
-                      height: 16,
-                      lineHeight: "16px",
-                      padding: "0 5px",
+                      borderRadius: 3,
+                      padding: "2px 5px",
                       textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      boxSizing: "border-box",
-                      marginLeft: 6,
-                      flexShrink: 0,
+                      verticalAlign: "middle",
+                      fontFamily: "Arial, sans-serif",
                     }}
-                  >
-                    Dist
-                  </span>
-                </div>
+                  >DIST</span>
+                </p>
               )}
               {member.zone && (
                 <p
