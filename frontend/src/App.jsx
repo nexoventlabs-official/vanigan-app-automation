@@ -17,6 +17,7 @@ import FlowImages from './pages/FlowImages.jsx';
 import Users from './pages/Users.jsx';
 import CategoryImages from './pages/CategoryImages.jsx';
 import Gallery from './pages/Gallery.jsx';
+import Referrals from './pages/Referrals.jsx';
 
 function App() {
   const [auth, setAuth] = useState(null);
@@ -54,7 +55,7 @@ function App() {
           path="/"
           element={auth ? <Layout user={auth} setAuth={setAuth} /> : <Navigate to="/login" replace />}
         >
-          <Route index element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Dashboard />} />
+          <Route index element={<Dashboard />} />
           <Route path="businesses" element={<Businesses />} />
           <Route path="businesses/:id" element={<BusinessDetail />} />
           <Route path="organizers" element={<Organizers />} />
@@ -68,6 +69,7 @@ function App() {
           <Route path="users" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Users />} />
           <Route path="category-images" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <CategoryImages />} />
           <Route path="gallery" element={auth?.username === 'vanigan' ? <Navigate to="/members" replace /> : <Gallery />} />
+          <Route path="referrals" element={<Referrals />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

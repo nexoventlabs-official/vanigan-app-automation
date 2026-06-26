@@ -48,6 +48,10 @@ const uploads = [
     remote: '/var/www/vanigan/backend/routes/wings.js'
   },
   {
+    local: path.join(localBase, 'backend', 'routes', 'dashboard.js'),
+    remote: '/var/www/vanigan/backend/routes/dashboard.js'
+  },
+  {
     local: path.join(localBase, 'frontend.tar.gz'),
     remote: '/var/www/vanigan/frontend.tar.gz'
   },

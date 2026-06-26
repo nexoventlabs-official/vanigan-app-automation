@@ -34,25 +34,245 @@ function waitImages(el) {
   });
 }
 
-export async function buildComboCanvas(frontEl, backEl) {
-  const SCALE = 3; // 421*3=1263px per card — full quality
+/* ── Load a crossOrigin image into an HTMLImageElement ── */
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load: " + src));
+    img.src = src;
+  });
+}
 
-  await waitImages(frontEl);
+/* ── Draw rounded rectangle helper ── */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/* ── Draw the front card entirely on canvas (no html2canvas) ── */
+async function drawFrontCard(member) {
+  const S = 3; // scale
+  const W = CARD_W * S;
+
+  // Load background
+  const bgImg = await loadImage(FRONT_BG);
+  const H = Math.round(bgImg.naturalHeight * (W / bgImg.naturalWidth));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  ctx.drawImage(bgImg, 0, 0, W, H);
+
+  // Photo
+  const photoX = W / 2 - (137 * S) / 2;
+  const photoY = 182 * S;
+  const photoW = 137 * S;
+  const photoH = 136 * S;
+  const photoR = 22 * S;
+
+  if (member.photoUrl) {
+    try {
+      const photo = await loadImage(member.photoUrl);
+      ctx.save();
+      roundRect(ctx, photoX, photoY, photoW, photoH, photoR);
+      ctx.clip();
+      ctx.drawImage(photo, photoX, photoY, photoW, photoH);
+      ctx.restore();
+    } catch {
+      // fallback: initial letter
+      ctx.save();
+      roundRect(ctx, photoX, photoY, photoW, photoH, photoR);
+      ctx.clip();
+      ctx.fillStyle = "rgba(0,146,69,0.15)";
+      ctx.fillRect(photoX, photoY, photoW, photoH);
+      ctx.fillStyle = "#009245";
+      ctx.font = `bold ${56 * S}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        (member.name || "M").slice(0, 1).toUpperCase(),
+        photoX + photoW / 2,
+        photoY + photoH / 2
+      );
+      ctx.restore();
+    }
+  } else {
+    ctx.save();
+    roundRect(ctx, photoX, photoY, photoW, photoH, photoR);
+    ctx.clip();
+    ctx.fillStyle = "rgba(0,146,69,0.15)";
+    ctx.fillRect(photoX, photoY, photoW, photoH);
+    ctx.fillStyle = "#009245";
+    ctx.font = `bold ${56 * S}px Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(
+      (member.name || "M").slice(0, 1).toUpperCase(),
+      photoX + photoW / 2,
+      photoY + photoH / 2
+    );
+    ctx.restore();
+  }
+
+  // Text stack — starts at top:328px
+  let curY = 328 * S;
+  const centerX = W / 2;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  // Helper: draw one text line, return line height used
+  const lineH = (fs) => fs * 1.35;
+
+  // Name
+  ctx.fillStyle = "#009245";
+  ctx.font = `bold ${23 * S}px Arial, sans-serif`;
+  ctx.fillText((member.name || "").toUpperCase(), centerX, curY + 23 * S * 0.85);
+  curY += lineH(23 * S) + 6 * S;
+
+  if (member.isOrganizer) {
+    // Role
+    ctx.fillStyle = "#111111";
+    ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+    ctx.fillText(member.bizCategory || "Organizer", centerX, curY + 19 * S * 0.85);
+    curY += lineH(19 * S) + 6 * S;
+    // District
+    if (member.district) {
+      ctx.fillText(member.district, centerX, curY + 19 * S * 0.85);
+      curY += lineH(19 * S) + 6 * S;
+    }
+    // Assembly
+    if (member.assemblyName) {
+      ctx.fillText(member.assemblyName, centerX, curY + 19 * S * 0.85);
+      curY += lineH(19 * S) + 6 * S;
+    }
+  } else {
+    // Assembly + ASSM badge
+    if (member.assemblyName) {
+      ctx.fillStyle = "#111111";
+      ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+      const asmText = member.assemblyName;
+      const asmW = ctx.measureText(asmText).width;
+      const badgeLabel = "ASSM";
+      ctx.font = `bold ${11 * S}px Arial, sans-serif`;
+      const badgeW = ctx.measureText(badgeLabel).width + 10 * S;
+      const badgeH = 18 * S;
+      const gap = 6 * S;
+      const totalW = asmW + gap + badgeW;
+      const startX = centerX - totalW / 2;
+      const rowBaseline = curY + 19 * S * 0.82;
+
+      // Draw assembly name
+      ctx.fillStyle = "#111111";
+      ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+      ctx.textAlign = "left";
+      ctx.fillText(asmText, startX, rowBaseline);
+
+      // Draw badge pill
+      const badgeX = startX + asmW + gap;
+      const badgeY = rowBaseline - 14 * S;
+      ctx.fillStyle = "#009245";
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 3 * S);
+      ctx.fill();
+
+      // Badge text
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `bold ${11 * S}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeLabel, badgeX + badgeW / 2, badgeY + badgeH / 2);
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      curY += lineH(19 * S) + 6 * S;
+    }
+
+    // District + DIST badge
+    if (member.district) {
+      const distText = member.district;
+      ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+      const distW = ctx.measureText(distText).width;
+      const badgeLabel = "DIST";
+      ctx.font = `bold ${11 * S}px Arial, sans-serif`;
+      const badgeW = ctx.measureText(badgeLabel).width + 10 * S;
+      const badgeH = 18 * S;
+      const gap = 6 * S;
+      const totalW = distW + gap + badgeW;
+      const startX = centerX - totalW / 2;
+      const rowBaseline = curY + 19 * S * 0.82;
+
+      ctx.fillStyle = "#111111";
+      ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+      ctx.textAlign = "left";
+      ctx.fillText(distText, startX, rowBaseline);
+
+      const badgeX = startX + distW + gap;
+      const badgeY = rowBaseline - 14 * S;
+      ctx.fillStyle = "#009245";
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 3 * S);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `bold ${11 * S}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeLabel, badgeX + badgeW / 2, badgeY + badgeH / 2);
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      curY += lineH(19 * S) + 6 * S;
+    }
+
+    // Zone
+    if (member.zone) {
+      ctx.fillStyle = "#111111";
+      ctx.font = `bold ${19 * S}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(member.zone, centerX, curY + 19 * S * 0.85);
+      curY += lineH(19 * S) + 6 * S;
+    }
+  }
+
+  // Membership ID
+  ctx.fillStyle = "#111111";
+  ctx.font = `bold ${18 * S}px Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(member.membershipId || "TNV-000000", centerX, curY + 18 * S * 0.85);
+
+  return canvas;
+}
+
+export async function buildComboCanvas(frontEl, backEl, member) {
+  const SCALE = 3;
+
+  // Draw front with pure canvas (100% reliable badge positioning)
+  const frontCanvas = await drawFrontCard(member);
+
+  // Draw back with html2canvas (no complex inline layout there)
   await waitImages(backEl);
-  await new Promise((r) => setTimeout(r, 800)); // let fonts & images settle
-
-  const opts = {
+  await new Promise((r) => setTimeout(r, 600));
+  const backCanvas = await html2canvas(backEl, {
     scale: SCALE,
     useCORS: true,
     allowTaint: false,
     backgroundColor: "#ffffff",
     logging: false,
     imageTimeout: 15000,
-  };
-
-  const frontCanvas = await html2canvas(frontEl, opts);
-  await new Promise((r) => setTimeout(r, 200));
-  const backCanvas = await html2canvas(backEl, opts);
+  });
 
   // Combine side-by-side
   const gap = 60 * SCALE;
@@ -70,11 +290,7 @@ export async function buildComboCanvas(frontEl, backEl) {
   ctx.fillStyle = "#333333";
   ctx.textAlign = "center";
   ctx.fillText("Front", frontCanvas.width / 2, 15 * SCALE);
-  ctx.fillText(
-    "Back",
-    frontCanvas.width + gap + backCanvas.width / 2,
-    15 * SCALE,
-  );
+  ctx.fillText("Back", frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
 
   // Cards
   ctx.drawImage(frontCanvas, 0, labelH);
@@ -234,7 +450,7 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     textAlign: "center",
                   }}
                 >
-                  {member.assemblyName}&nbsp;<span
+                  {member.assemblyName}{" "}<span
                     style={{
                       display: "inline",
                       fontSize: 11,
@@ -262,7 +478,7 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
                     textAlign: "center",
                   }}
                 >
-                  {member.district}&nbsp;<span
+                  {member.district}{" "}<span
                     style={{
                       display: "inline",
                       fontSize: 11,
@@ -558,7 +774,7 @@ export function CardFront({ member, display = "interactive", flipped = false }) 
 export function CardBack({ member, display = "interactive", flipped = false }) {
   const isCapture = display === "capture";
   const qrData = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
-  const qrSize = isCapture ? 96 : 90;
+  const qrSize = isCapture ? 96 : 65;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize * 3}x${qrSize * 3}&data=${encodeURIComponent(qrData)}`;
 
   const formatDob = (dob) => {
@@ -816,8 +1032,8 @@ export function CardBack({ member, display = "interactive", flipped = false }) {
           <div>
             <img
               src={qrUrl}
-              width={90}
-              height={90}
+              width={qrSize}
+              height={qrSize}
               alt="QR Code"
               style={{ display: "block" }}
             />
@@ -863,7 +1079,7 @@ export default function CardModal({ member, onClose }) {
     setLoading(true);
     setLoadMsg("Generating high-quality card...");
     try {
-      const combo = await buildComboCanvas(frontRef.current, backRef.current);
+      const combo = await buildComboCanvas(frontRef.current, backRef.current, member);
       const uid = member.membershipId || "vanigan-card";
       const link = document.createElement("a");
       link.download = `${uid}_card.png`;
@@ -884,11 +1100,9 @@ export default function CardModal({ member, onClose }) {
     setLoading(true);
     setLoadMsg("Preparing card for sharing...");
     try {
-      const combo = await buildComboCanvas(frontRef.current, backRef.current);
+      const combo = await buildComboCanvas(frontRef.current, backRef.current, member);
       const uid = member.membershipId || "vanigan-card";
-      
       const blob = await new Promise((resolve) => combo.toBlob(resolve, "image/png"));
-      if (!blob) throw new Error("Failed to generate image blob");
       
       const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
       const verifyUrl = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;

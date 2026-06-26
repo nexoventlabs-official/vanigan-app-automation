@@ -15,11 +15,13 @@ import {
   Menu,
   LayoutGrid,
   Images,
+  Share2,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/referrals', label: 'References', icon: Share2 },
   { to: '/businesses', label: 'Businesses', icon: Briefcase },
   { to: '/organizers', label: 'Organizers', icon: UsersIcon },
   { to: '/directorg', label: 'Direct Organizer', icon: UserPlus },
@@ -76,7 +78,7 @@ export default function Layout({ user, setAuth }) {
           {(() => {
             let items = NAV;
             if (user?.username === 'vanigan') {
-              const order = ['/members', '/organizers', '/directorg', '/businesses'];
+              const order = ['/', '/referrals', '/members', '/organizers', '/directorg', '/businesses'];
               items = order.map(path => NAV.find(item => item.to === path)).filter(Boolean);
             }
             return items;

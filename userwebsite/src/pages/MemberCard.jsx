@@ -178,7 +178,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     textAlign: "center",
                   }}
                 >
-                  {member.assemblyName}&nbsp;<span
+                  {member.assemblyName}{" "}<span
                     style={{
                       display: "inline",
                       fontSize: 11,
@@ -206,7 +206,7 @@ function CardFront({ member, display = "interactive", flipped = false }) {
                     textAlign: "center",
                   }}
                 >
-                  {member.district}&nbsp;<span
+                  {member.district}{" "}<span
                     style={{
                       display: "inline",
                       fontSize: 11,
@@ -504,8 +504,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
 
   // QR encodes the verify-card URL so scanning opens the PIN-gated card view
   const qrData = `${SITE_URL}?page=verify&id=${member.membershipId || "TNV-000000"}`;
-  // QR size: 96px for capture (matches TNVS), 90px for interactive
-  const qrSize = isCapture ? 96 : 90;
+  // QR size: 96px for capture (matches TNVS), 65px for interactive
+  const qrSize = isCapture ? 96 : 65;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize * 3}x${qrSize * 3}&data=${encodeURIComponent(qrData)}`;
 
   const formatDob = (dob) => {
@@ -1059,8 +1059,8 @@ function CardBack({ member, display = "interactive", flipped = false }) {
           <div>
             <img
               src={qrUrl}
-              width={90}
-              height={90}
+              width={qrSize}
+              height={qrSize}
               alt="QR Code"
               style={{ display: "block" }}
             />

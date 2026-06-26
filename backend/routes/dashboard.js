@@ -5,10 +5,23 @@ const Plan = require('../models/Plan');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const InboundMessage = require('../models/InboundMessage');
-const { getOrganizerModel, getMemberListingModel } = require('../services/memberDb');
+const { getOrganizerModel, getMemberListingModel, getMemberModel } = require('../services/memberDb');
 const safeError = require('../utils/safeError');
 
 const router = express.Router();
+
+router.get('/referrals', auth, async (_req, res) => {
+  try {
+    const VaniganMember = await getMemberModel();
+    const members = await VaniganMember.find({})
+      .select('name phone membershipId referralCode referredBy referralCount photoUrl createdAt bizName bizCategory district assemblyName zone isOrganizer')
+      .sort({ name: 1 })
+      .lean();
+    res.json({ members });
+  } catch (err) {
+    res.status(500).json({ error: safeError(err) });
+  }
+});
 
 router.get('/stats', auth, async (_req, res) => {
   try {

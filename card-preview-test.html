@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Member Card Preview — Dummy Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 40px; font-family: Arial, sans-serif; }
+    h2 { color: #fff; margin: 0; }
+    #controls { display: flex; gap: 12px; }
+    button { background: #009245; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    button:hover { background: #007a38; }
+    #capture-area { display: flex; gap: 32px; }
+    .status { color: #aaa; font-size: 13px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Vanigan Member Card — Download Preview Test</h2>
+  <p style="color:#aaa;margin:0">Dummy member: GANESAN — Natham (Assm) — Dindigul (Dist)</p>
+
+  <div id="controls">
+    <button onclick="doDownload()">⬇ Download Card (Test Fix)</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <!-- Hidden capture area -->
+  <div id="capture-area" style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;">
+
+    <!-- FRONT card -->
+    <div id="front-card" style="width:421px;position:relative;overflow:hidden;font-family:Arial,sans-serif;">
+      <img src="https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png"
+           crossorigin="anonymous" alt=""
+           style="display:block;width:421px;height:auto;" />
+
+      <!-- Photo placeholder -->
+      <div style="position:absolute;top:182px;left:50%;transform:translateX(-50%);width:137px;">
+        <div style="width:137px;height:136px;border-radius:22px;background:rgba(0,146,69,0.15);display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:700;color:#009245;">
+          G
+        </div>
+      </div>
+
+      <!-- Text stack -->
+      <div style="position:absolute;top:328px;left:28px;right:28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0;">
+
+        <!-- Name -->
+        <p style="margin:0 0 6px;font-size:23px;font-weight:700;color:#009245;line-height:1.08;word-break:break-word;font-family:Arial,sans-serif;">
+          GANESAN
+        </p>
+
+        <!-- Assembly row — THE FIXED VERSION -->
+        <p style="margin:0 0 6px;font-size:19px;font-weight:700;color:#111;line-height:1.15;font-family:Arial,sans-serif;text-align:center;">
+          Natham&nbsp;<span style="display:inline;font-size:11px;font-weight:700;color:#fff;background:#009245;border-radius:3px;padding:2px 5px;text-transform:uppercase;vertical-align:middle;font-family:Arial,sans-serif;">ASSM</span>
+        </p>
+
+        <!-- District row — THE FIXED VERSION -->
+        <p style="margin:0 0 6px;font-size:19px;font-weight:700;color:#111;line-height:1.15;font-family:Arial,sans-serif;text-align:center;">
+          Dindigul&nbsp;<span style="display:inline;font-size:11px;font-weight:700;color:#fff;background:#009245;border-radius:3px;padding:2px 5px;text-transform:uppercase;vertical-align:middle;font-family:Arial,sans-serif;">DIST</span>
+        </p>
+
+        <!-- Membership ID -->
+        <p style="margin:0;font-size:18px;font-weight:700;color:#111;letter-spacing:0.2px;margin-top:2px;font-family:Arial,sans-serif;line-height:1.1;">
+          TNV-123456
+        </p>
+      </div>
+    </div>
+
+    <!-- BACK card -->
+    <div id="back-card" style="width:421px;position:relative;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
+      <img src="https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232519/vanigan/templates/ID_Back.png"
+           crossorigin="anonymous" alt=""
+           style="display:block;width:421px;height:auto;" />
+
+      <div style="position:absolute;top:174px;left:22px;right:20px;">
+        <div style="display:grid;grid-template-columns:46% 6% 48%;align-items:center;height:24px;">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;color:#111;">DATE OF BIRTH</div>
+          <div style="font-size:17px;text-align:center;font-weight:700;color:#111;">:</div>
+          <div style="font-size:17px;font-weight:700;color:#111;">15 Jun 1985</div>
+        </div>
+        <div style="display:grid;grid-template-columns:46% 6% 48%;align-items:center;height:24px;margin-bottom:8px;">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;color:#111;">AGE</div>
+          <div style="font-size:17px;text-align:center;font-weight:700;color:#111;">:</div>
+          <div style="font-size:17px;font-weight:700;color:#111;">41</div>
+        </div>
+        <div style="display:grid;grid-template-columns:46% 6% 48%;align-items:center;height:24px;margin-bottom:8px;">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;color:#111;">BLOOD GROUP</div>
+          <div style="font-size:17px;text-align:center;font-weight:700;color:#111;">:</div>
+          <div style="font-size:17px;font-weight:700;color:#111;">O+</div>
+        </div>
+        <div style="display:grid;grid-template-columns:46% 6% 48%;align-items:start;height:84px;margin-bottom:8px;">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;color:#111;">ADDRESS</div>
+          <div style="font-size:17px;text-align:center;font-weight:700;color:#111;">:</div>
+          <div style="font-size:14px;font-weight:700;line-height:1.12;word-break:break-word;color:#111;">42, Gandhi Street, Natham, Dindigul — 624401</div>
+        </div>
+        <div style="display:grid;grid-template-columns:46% 6% 48%;align-items:center;height:24px;">
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;color:#111;">CONTACT</div>
+          <div style="font-size:17px;text-align:center;font-weight:700;color:#111;">:</div>
+          <div style="font-size:17px;font-weight:700;color:#111;"><span style="background:rgba(255,255,255,0.78);display:inline-block;padding:0 4px;">9876543210</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:28px;padding:0 8px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=288x288&data=https://vanigan.digital/?page=verify%26id=TNV-123456"
+               crossorigin="anonymous" width="96" height="96" alt="QR" style="display:block;" />
+          <div style="text-align:center;">
+            <p style="margin:2px 0 0;font-size:14px;font-weight:700;color:#111;line-height:1.2;">SENTHIL KUMAR N</p>
+            <p style="margin:0;font-size:12px;font-weight:700;color:#111;line-height:1.15;">Founder &amp; State President</p>
+            <p style="margin:0;font-size:12px;font-weight:700;color:#111;line-height:1.15;">Tamilnadu Vanigargalin Sangamam</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visible preview (on-screen card using same fixed markup) -->
+  <div style="background:#fff;padding:24px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <p style="color:#555;font-size:12px;margin:0 0 12px;text-align:center;">Live preview (same rendering as download)</p>
+    <div style="width:421px;position:relative;overflow:hidden;font-family:Arial,sans-serif;">
+      <img src="https://res.cloudinary.com/dqndhcmu2/image/upload/v1773232516/vanigan/templates/ID_Front.png"
+           crossorigin="anonymous" alt=""
+           style="display:block;width:421px;height:auto;" />
+      <div style="position:absolute;top:182px;left:50%;transform:translateX(-50%);width:137px;">
+        <div style="width:137px;height:136px;border-radius:22px;background:rgba(0,146,69,0.15);display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:700;color:#009245;">G</div>
+      </div>
+      <div style="position:absolute;top:328px;left:28px;right:28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0;">
+        <p style="margin:0 0 6px;font-size:23px;font-weight:700;color:#009245;line-height:1.08;font-family:Arial,sans-serif;">GANESAN</p>
+        <p style="margin:0 0 6px;font-size:19px;font-weight:700;color:#111;line-height:1.15;font-family:Arial,sans-serif;">
+          Natham&nbsp;<span style="display:inline;font-size:11px;font-weight:700;color:#fff;background:#009245;border-radius:3px;padding:2px 5px;text-transform:uppercase;vertical-align:middle;">ASSM</span>
+        </p>
+        <p style="margin:0 0 6px;font-size:19px;font-weight:700;color:#111;line-height:1.15;font-family:Arial,sans-serif;">
+          Dindigul&nbsp;<span style="display:inline;font-size:11px;font-weight:700;color:#fff;background:#009245;border-radius:3px;padding:2px 5px;text-transform:uppercase;vertical-align:middle;">DIST</span>
+        </p>
+        <p style="margin:0;font-size:18px;font-weight:700;color:#111;margin-top:2px;font-family:Arial,sans-serif;">TNV-123456</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function waitImages(el) {
+      return new Promise((resolve) => {
+        const imgs = Array.from(el.querySelectorAll('img'));
+        if (!imgs.length) { resolve(); return; }
+        let pending = imgs.length;
+        const done = () => { if (--pending === 0) resolve(); };
+        imgs.forEach(img => {
+          if (img.complete && img.naturalWidth > 0) { done(); return; }
+          img.addEventListener('load', done, { once: true });
+          img.addEventListener('error', done, { once: true });
+        });
+        setTimeout(resolve, 10000);
+      });
+    }
+
+    async function doDownload() {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Generating card…';
+      const frontEl = document.getElementById('front-card');
+      const backEl  = document.getElementById('back-card');
+
+      // Make visible temporarily for html2canvas
+      frontEl.parentElement.style.opacity = '1';
+      frontEl.parentElement.style.top = '-9999px';
+
+      await waitImages(frontEl);
+      await waitImages(backEl);
+      await new Promise(r => setTimeout(r, 800));
+
+      const SCALE = 3;
+      const opts = { scale: SCALE, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false, imageTimeout: 15000 };
+
+      const frontCanvas = await html2canvas(frontEl, opts);
+      await new Promise(r => setTimeout(r, 200));
+      const backCanvas  = await html2canvas(backEl, opts);
+
+      frontEl.parentElement.style.opacity = '0';
+
+      // Combine
+      const gap    = 60 * SCALE;
+      const labelH = 24 * SCALE;
+      const combo  = document.createElement('canvas');
+      combo.width  = frontCanvas.width + gap + backCanvas.width;
+      combo.height = Math.max(frontCanvas.height, backCanvas.height) + labelH;
+
+      const ctx = combo.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, combo.width, combo.height);
+      ctx.font      = `bold ${16 * SCALE}px Arial, sans-serif`;
+      ctx.fillStyle = '#333333';
+      ctx.textAlign = 'center';
+      ctx.fillText('Front', frontCanvas.width / 2, 15 * SCALE);
+      ctx.fillText('Back',  frontCanvas.width + gap + backCanvas.width / 2, 15 * SCALE);
+      ctx.drawImage(frontCanvas, 0, labelH);
+      ctx.drawImage(backCanvas,  frontCanvas.width + gap, labelH);
+
+      const link = document.createElement('a');
+      link.download = 'TNV-123456_card.png';
+      link.href = combo.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      statusEl.textContent = '✓ Downloaded! Check your Downloads folder.';
+    }
+  </script>
+</body>
+</html>
