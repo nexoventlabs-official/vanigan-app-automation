@@ -699,41 +699,50 @@ export default function DirectOrganizer() {
   const handleShareCard = async () => {
     if (!successFrontRef.current || !successBackRef.current || !successData) return;
     setSaving(true);
+    let blob = null;
+    let uid = successData.member?.membershipId || "vanigan-card";
     try {
       const combo = await buildComboCanvas(successFrontRef.current, successBackRef.current);
-      const uid = successData.member?.membershipId || "vanigan-card";
-      
-      const blob = await new Promise((resolve) => combo.toBlob(resolve, "image/png"));
+      blob = await new Promise((resolve) => combo.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("Failed to generate image blob");
       
       const file = new File([blob], `${uid}_card.png`, { type: "image/png" });
-      const verifyUrl = `https://vanigan.digital?page=verify&id=${successData.member?.membershipId || "TNV-000000"}`;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file]
         });
       } else {
+        throw new Error("TriggerFallback");
+      }
+    } catch (e) {
+      if (e.name === "AbortError" || e.message === "AbortError") {
+        // User cancelled native sharing, do nothing
+      } else {
+        console.error("Native share failed or not supported:", e);
         let copiedToClipboard = false;
-        try {
-          if (navigator.clipboard && window.ClipboardItem) {
-            const data = [new ClipboardItem({ [blob.type]: blob })];
-            await navigator.clipboard.write(data);
-            copiedToClipboard = true;
+        if (blob) {
+          try {
+            if (navigator.clipboard && window.ClipboardItem) {
+              const data = [new ClipboardItem({ [blob.type]: blob })];
+              await navigator.clipboard.write(data);
+              copiedToClipboard = true;
+            }
+          } catch (clipErr) {
+            console.error("Clipboard image copy failed:", clipErr);
           }
-        } catch (clipErr) {
-          console.error("Clipboard image copy failed:", clipErr);
-        }
 
-        try {
-          const link = document.createElement("a");
-          link.download = `${uid}_card.png`;
-          link.href = URL.createObjectURL(blob);
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (dlErr) {
-          console.error("Download failed:", dlErr);
+          try {
+            const link = document.createElement("a");
+            link.download = `${uid}_card.png`;
+            link.href = URL.createObjectURL(blob);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (dlErr) {
+            console.error("Download failed:", dlErr);
+          }
         }
 
         const whatsappUrl = `https://api.whatsapp.com/send`;
@@ -744,14 +753,6 @@ export default function DirectOrganizer() {
         } else {
           alert("Card image downloaded! You can upload/paste it in the WhatsApp window that just opened.");
         }
-      }
-    } catch (e) {
-      if (e.name !== "AbortError") {
-        console.error("Share failed:", e);
-        const verifyUrl = `https://vanigan.digital?page=verify&id=${successData.member?.membershipId || "TNV-000000"}`;
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
-        window.open(whatsappUrl, "_blank");
-        navigator.clipboard.writeText(verifyUrl).catch(() => {});
       }
     } finally {
       setSaving(false);
