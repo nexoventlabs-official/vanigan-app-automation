@@ -46,8 +46,10 @@ export default function Layout({ user, setAuth }) {
     nav('/login');
   };
 
+  const isSubadmin = user?.username === 'vanigan';
+
   return (
-    <div className={`min-h-screen flex ${user?.username === 'vanigan' ? 'subadmin-theme' : 'bg-[#000000]'}`}>
+    <div className={`min-h-screen flex ${isSubadmin ? 'bg-slate-50' : 'bg-[#000000]'}`}>
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 w-64 text-white flex flex-col transition-transform duration-300 ${
@@ -77,7 +79,7 @@ export default function Layout({ user, setAuth }) {
         <nav className="flex-1 py-6 space-y-1.5 px-4 overflow-y-auto" style={{ backgroundColor: '#000000' }}>
           {(() => {
             let items = NAV;
-            if (user?.username === 'vanigan') {
+            if (isSubadmin) {
               const order = ['/', '/referrals', '/members', '/organizers', '/directorg', '/businesses'];
               items = order.map(path => NAV.find(item => item.to === path)).filter(Boolean);
             }
@@ -122,17 +124,17 @@ export default function Layout({ user, setAuth }) {
         />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 bg-[#000000] lg:pl-64">
-        <header className="bg-[#000000] border-b border-gray-800/60 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 lg:hidden">
-          <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-white hover:text-[#66ff4c] transition-colors">
+      <div className={`flex-1 flex flex-col min-w-0 lg:pl-64 ${isSubadmin ? 'bg-slate-50' : 'bg-[#000000]'}`}>
+        <header className={`border-b px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 lg:hidden ${isSubadmin ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#000000] border-gray-800/60 text-white'}`}>
+          <button onClick={() => setOpen(true)} className={`p-2 -ml-2 transition-colors ${isSubadmin ? 'text-slate-650 hover:text-[#009245]' : 'text-white hover:text-[#66ff4c]'}`}>
             <Menu size={22} />
           </button>
-          <div className="font-black text-sm text-white tracking-widest uppercase">Vanigan Console</div>
+          <div className="font-black text-sm tracking-widest uppercase">Vanigan Console</div>
           <div className="w-8" />
         </header>
 
-        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden bg-[#000000]">
-          <Outlet />
+        <main className={`flex-1 p-4 lg:p-6 overflow-x-hidden ${isSubadmin ? 'bg-slate-50' : 'bg-[#000000]'}`}>
+          <Outlet context={{ user }} />
         </main>
       </div>
     </div>

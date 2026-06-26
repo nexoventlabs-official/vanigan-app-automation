@@ -27,7 +27,12 @@ router.get('/stats', auth, async (_req, res) => {
   try {
     const Organizer = await getOrganizerModel();
     const Member = await getMemberListingModel();
-    const [businesses, organizers, members, plans, reviews, users, contacts] = await Promise.all([
+    const VaniganMember = await getMemberModel();
+    
+    const [
+      businesses, organizers, members, plans, reviews, users, contacts,
+      subadminMembers, subadminOrganizers, subadminReferrals
+    ] = await Promise.all([
       Business.countDocuments({ active: true }),
       Organizer.countDocuments({ active: true }),
       Member.countDocuments({ active: true }),
@@ -35,15 +40,35 @@ router.get('/stats', auth, async (_req, res) => {
       Review.countDocuments(),
       User.countDocuments(),
       InboundMessage.countDocuments(),
+      VaniganMember.countDocuments({ isOrganizer: { $ne: true } }),
+      VaniganMember.countDocuments({ isOrganizer: true }),
+      VaniganMember.countDocuments({ referredBy: { $exists: true, $ne: '' } }),
     ]);
 
     const recentReviews = await Review.find().sort({ createdAt: -1 }).limit(5).lean();
     const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5).lean();
 
+    const topReferrals = await VaniganMember.find({ referralCount: { $gt: 0 } })
+      .sort({ referralCount: -1 })
+      .limit(5)
+      .select('name phone membershipId referralCode referralCount photoUrl')
+      .lean();
+
+    const recentMembers = await VaniganMember.find({})
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name phone membershipId photoUrl createdAt')
+      .lean();
+
     res.json({
-      stats: { businesses, organizers, members, plans, reviews, users, contacts },
+      stats: { 
+        businesses, organizers, members, plans, reviews, users, contacts,
+        subadminMembers, subadminOrganizers, subadminReferrals 
+      },
       recentReviews,
       recentUsers,
+      topReferrals,
+      recentMembers
     });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
