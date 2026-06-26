@@ -1279,9 +1279,36 @@ export function Card3D({ member }) {
           files: [file]
         });
       } else {
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(verifyUrl)}`;
+        let copiedToClipboard = false;
+        try {
+          if (navigator.clipboard && window.ClipboardItem) {
+            const data = [new ClipboardItem({ [blob.type]: blob })];
+            await navigator.clipboard.write(data);
+            copiedToClipboard = true;
+          }
+        } catch (clipErr) {
+          console.error("Clipboard image copy failed:", clipErr);
+        }
+
+        try {
+          const link = document.createElement("a");
+          link.download = `${uid}_card.png`;
+          link.href = URL.createObjectURL(blob);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (dlErr) {
+          console.error("Download failed:", dlErr);
+        }
+
+        const whatsappUrl = `https://api.whatsapp.com/send`;
         window.open(whatsappUrl, "_blank");
-        await navigator.clipboard.writeText(verifyUrl).catch(() => {});
+
+        if (copiedToClipboard) {
+          alert("Card image copied to clipboard & downloaded! You can paste (Ctrl+V) the image directly in the WhatsApp window that just opened.");
+        } else {
+          alert("Card image downloaded! You can upload/paste it in the WhatsApp window that just opened.");
+        }
       }
     } catch (e) {
       if (e.name !== "AbortError") {
